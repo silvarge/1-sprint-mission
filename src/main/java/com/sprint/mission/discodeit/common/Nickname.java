@@ -10,7 +10,7 @@ public class Nickname implements Name {
             // 크게 닉네임은 잡을 거 없음
             this.name = name;
         }else{
-            throw new IllegalArgumentException("잘못된 형식입니다.");
+            throw new IllegalArgumentException("잘못된 Nickname 형식입니다.");
         }
     }
 
@@ -21,6 +21,10 @@ public class Nickname implements Name {
         }else{
             return false;
         }
+    }
+
+    public String getName() {
+        return name;
     }
 
     @Override

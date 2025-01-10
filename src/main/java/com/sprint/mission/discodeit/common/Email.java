@@ -11,7 +11,7 @@ public class Email {
             this.email = email;
             this.verified = false; // 인증 확인 로직
         }else {
-            throw new IllegalArgumentException("잘못된 형식입니다.");
+            throw new IllegalArgumentException("잘못된 Email 형식입니다.");
         }
     }
 

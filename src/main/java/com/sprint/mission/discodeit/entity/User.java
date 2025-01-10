@@ -1,5 +1,7 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.sprint.mission.discodeit.dto.UserReqDTO;
+import com.sprint.mission.discodeit.enums.RegionCode;
 import com.sprint.mission.discodeit.enums.UserType;
 import com.sprint.mission.discodeit.common.*;
 
@@ -7,6 +9,7 @@ import java.util.UUID;
 
 /* # User
  * - 사용자 객체
+ * -- 객체 생성의 책임
  */
 
 public class User {
@@ -15,7 +18,7 @@ public class User {
     private Nickname nickname;  // 별명 (사용자)
     private Email email;    // 이메일
     private Password passwd;    // 비밀번호 -> 추후에는 암호화 되어 저장된다고 생각하기
-    private Phone phone;    // 전화 번호 (Nullable)
+    private Phone phone;    // 전화 번호
     private UserType userType;  // 기본은 Common
     private boolean status; // 활성화(1)/비활성화(0) 상태 -> 생성 시 default로 1
     private String userImgPath;  //
@@ -24,44 +27,24 @@ public class User {
     private long updatedAt; // 업데이트 시간
     // 닉네임 등 서버 내 설정은 Profile로 따로 빼야 함
 
-    // 생성자 - 전화번호 - O / 자기소개 X
-    public User(String userName, String nickname, String email, String passwd, String regionCode, String phone, String imgPath, String introduce) {
+    // 생성자
+    public User(UserReqDTO userReqDTO) {
         id = UUID.randomUUID();
-        this.userName = new UserName(userName);
-        this.nickname = new Nickname(nickname);
-        this.email = new Email(email);
-        this.passwd = new Password(passwd);
-        this.phone = new Phone(phone, regionCode);
-        this.userType = UserType.COMMON;    // BOT은 어떻게 생성되는지 모른다
+        this.userName = new UserName(userReqDTO.getUserName());
+        this.nickname = new Nickname(userReqDTO.getNickname());
+        this.email = new Email(userReqDTO.getEmail());
+        this.passwd = new Password(userReqDTO.getPassword());
+        this.phone = new Phone(userReqDTO.getPhone(),userReqDTO.getRegionCode());
+        this.userType = UserType.COMMON;    // BOT은 어떻게 생성되는지 모른다.. 일단 COMMON으로 정해둠
         this.status = true;
-        this.userImgPath = imgPath;
-        this.introduce = introduce;
+        this.userImgPath = userReqDTO.getImgPath();
         createdAt = System.currentTimeMillis();
+        updatedAt = System.currentTimeMillis(); // 정의해두고 비워두기엔 너무 그럼 업데이트때 다시 불러오면 될 듯
+        this.introduce = userReqDTO.getIntroduce();
     }
 
-    // 전화번호 - O / 자기소개 X
-    public User(String userName, String nickname, String email, String passwd, String regionCode, String phone, String imgPath) {
-        id = UUID.randomUUID();
-        this.userName = new UserName(userName);
-        this.nickname = new Nickname(nickname);
-        this.email = new Email(email);
-        this.passwd = new Password(passwd);
-        this.phone = new Phone(phone, regionCode);
-        this.userType = UserType.COMMON;
-        this.status = true;
-        this.userImgPath = imgPath;
-        createdAt = System.currentTimeMillis();
-    }
-
-    // Update (Setter이긴 한데 Update라는 의미를 강조하고 싶음)
+    // Update (뭐 Setter이긴 한데 Update라는 의미를 강조하고 싶음)
     // TODO: updatedAt -> 내부 공통 메서드 처리 고려하기
-    public void updateUserInfo(String userName, String nickname, String email, String phone, String regionCode) {
-        if (userName != null) updateUserName(userName);
-        if (nickname != null) updateNickname(nickname);
-        if (email != null) updateEmail(email);
-        if (phone != null) updatePhone(phone, regionCode);
-    }
-
     public void updateUserName(String userName){
         // 사용자명(userName) 업데이트 - 고유한 값이기 때문에 불변 객체로 설정
         this.userName = new UserName(userName);
@@ -84,7 +67,7 @@ public class User {
     }
 
     public void updatePhone(String phone, String regionCode){
-        this.phone = new Phone(phone, regionCode);
+        this.phone = new Phone(phone, RegionCode.fromString(regionCode));
         updatedAt = System.currentTimeMillis();
     }
 
@@ -103,34 +86,43 @@ public class User {
         updatedAt = System.currentTimeMillis();
     }
 
-    public void updateIntroduce(){
+    public void updateIntroduce(String introduce){
         this.introduce = introduce;
         updatedAt = System.currentTimeMillis();
     }
 
     // Getter
+    // TODO: getter 적기.. (lombok이 있다는 것을 잊지말자)
     public UUID getId() {
         return id;
-    }
-
-    public Email getEmail() {
-        return email;
-    }
-
-    public Nickname getNickname() {
-        return nickname;
     }
 
     public UserName getUserName() {
         return userName;
     }
 
-    public UserType getUserType() {
-        return userType;
+    public Nickname getNickname() {
+        return nickname;
+    }
+
+    public Email getEmail() {
+        return email;
+    }
+
+    public Password getPasswd() {
+        return passwd;
     }
 
     public Phone getPhone() {
         return phone;
+    }
+
+    public UserType getUserType() {
+        return userType;
+    }
+
+    public boolean isStatus() {
+        return status;
     }
 
     public String getUserImgPath() {

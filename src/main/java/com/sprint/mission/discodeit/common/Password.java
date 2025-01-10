@@ -14,6 +14,10 @@ public class Password {
         }
     }
 
+    public String getPasswd() {
+        return passwd;
+    }
+
     public boolean validate(String passwd){
         String regex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@!%*#?&])[A-Za-z\\d@!%*#?&]{8,}$";
         return Pattern.matches(regex, passwd);
