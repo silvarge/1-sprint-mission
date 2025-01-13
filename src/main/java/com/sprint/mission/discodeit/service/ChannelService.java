@@ -16,6 +16,8 @@ public interface ChannelService {
     // 채널 생성
     public Long createChannel(ChannelReqDTO channelReqDTO);
 
+    // 멤버가 존재하는 것이 맞는지 여부 확인
+
     // 채널 조회
     // 특정 채널(단건)
     public ChannelResDTO getChannel(Long id);

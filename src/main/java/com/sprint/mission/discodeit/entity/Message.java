@@ -1,5 +1,7 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.sprint.mission.discodeit.dto.MessageReqDTO;
+
 import java.util.UUID;
 
 /** # Message
@@ -18,9 +20,23 @@ public class Message {
     private long updatedAt;
 
     // 생성자
-    Message() {
+    public Message(MessageReqDTO messageReqDTO) {
         id = UUID.randomUUID();
         createdAt = System.currentTimeMillis();
+        author = messageReqDTO.getAuthor();
+        channel = messageReqDTO.getChannel();
+        content = messageReqDTO.getContent();
+        status = true;
+    }
+
+    public void updateContent(String content){
+        this.content = content;
+        updatedAt = System.currentTimeMillis();
+    }
+
+    public void updateStatus(boolean status){
+        this.status = status;
+        updatedAt = System.currentTimeMillis();
     }
 
     // Getter
@@ -34,5 +50,21 @@ public class Message {
 
     public long getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Channel getChannel() {
+        return channel;
+    }
+
+    public User getAuthor() {
+        return author;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public boolean getStatus(){
+        return status;
     }
 }

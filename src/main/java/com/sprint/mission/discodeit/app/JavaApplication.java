@@ -1,8 +1,12 @@
 package com.sprint.mission.discodeit.app;
 
 import com.sprint.mission.discodeit.dto.*;
+import com.sprint.mission.discodeit.entity.Channel;
+import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.service.jcf.JCFChannelService;
+import com.sprint.mission.discodeit.service.jcf.JCFMessageService;
 import com.sprint.mission.discodeit.service.jcf.JCFUserService;
 
 import java.util.List;
@@ -204,23 +208,84 @@ public class JavaApplication {
         });
 
         System.out.println("------------------------------");
-
-
         // Message
+        JCFMessageService messageService = new JCFMessageService();
         // 1. 등록
+        // Channel에 사용자가 member로서 존재하는지 로직 확인 (현재는 true인 것으로 가정)
+
+        User author1 = userService.getUserToUserObj(1L);
+        Channel channel1 = channelService.getChannelToChannelObj(1L);
+
+        Long msg1 = messageService.createMessage(
+                new MessageReqDTO(author1, channel1, "메시지1")
+        );
+        Long msg2 = messageService.createMessage(new MessageReqDTO(author1, channel1, "메시지2"));
+        Long msg3 = messageService.createMessage(new MessageReqDTO(author1, channel1, "메시지3"));
+        Long msg4 = messageService.createMessage(new MessageReqDTO(author1, channel1, "메시지4"));
+        Long msg5 = messageService.createMessage(new MessageReqDTO(author1, channel1, "메시지5"));
+        System.out.println("메시지 생성 완료!");
+
+        System.out.println("------------------------------");
 
         // 2.1 조회(단건)
+        idx = 1L;
+        MessageResDTO findMsg = messageService.getMessage(idx);
+        System.out.println(String.format("ID(Index): %d, UUID: %s, ChannelUUID: %s, AuthorName: %s, Content: %s",
+                findMsg.getId(), findMsg.getUuid(), findMsg.getChannelUuid(), findMsg.getAuthorName(), findMsg.getContent()));
+
+        idx = 3L;
+        findMsg = messageService.getMessage(idx);
+        System.out.println(String.format("ID(Index): %d, UUID: %s, ChannelUUID: %s, AuthorName: %s, Content: %s",
+                findMsg.getId(), findMsg.getUuid(), findMsg.getChannelUuid(), findMsg.getAuthorName(), findMsg.getContent()));
+
+        System.out.println("------------------------------");
 
         // 2.2 조회(다건)
+        List<MessageResDTO> msgList = messageService.getAllMessage();
+        IntStream.range(0, msgList.size()).forEach(i -> {
+            MessageResDTO msg = msgList.get(i);
+            System.out.println(String.format("ID(Index): %d, UUID: %s, ChannelUUID: %s, AuthorName: %s, Content: %s",
+                    msg.getId(), msg.getUuid(), msg.getChannelUuid(), msg.getAuthorName(), msg.getContent()));
+        });
+        System.out.println("------------------------------");
 
         // 3.1 수정
+        idx = 2;
+        updateFlag = messageService.updateMessage(idx, new MessageUpdateDTO("HAPPy~"));
+        if(updateFlag){
+            // update가 되었다면
+            MessageResDTO msg = messageService.getMessage(idx);
+            System.out.println(String.format("[UPDATE LOG]\nID(Index): %d, UUID: %s, ChannelUUID: %s, AuthorName: %s, Content: %s",
+                    msg.getId(), msg.getUuid(), msg.getChannelUuid(), msg.getAuthorName(), msg.getContent()));
+        }else{
+            System.out.println("[UPDATE LOG]\n수정된 내용이 존재하지 않습니다.");
+        }
 
-        // 3.2 수정된 데이터 조회
+        idx = 3;
+        updateFlag = messageService.updateMessage(idx, new MessageUpdateDTO(null));
+        if(updateFlag){
+            // update가 되었다면
+            MessageResDTO msg = messageService.getMessage(idx);
+            System.out.println(String.format("ID(Index): %d, UUID: %s, ChannelUUID: %s, AuthorName: %s, Content: %s",
+                    msg.getId(), msg.getUuid(), msg.getChannelUuid(), msg.getAuthorName(), msg.getContent()));
+        }else{
+            System.out.println("[UPDATE LOG]\n수정된 내용이 존재하지 않습니다.");
+        }
+        System.out.println("------------------------------");
 
         // 4.1 삭제
+        idx = 2;
+        MessageResDTO msg = messageService.deleteMessage(idx);
+        System.out.println(String.format("ID(Index): %d, UUID: %s, ChannelUUID: %s, AuthorName: %s, Content: %s",
+                msg.getId(), msg.getUuid(), msg.getChannelUuid(), msg.getAuthorName(), msg.getContent()));
+        System.out.println("-----------[AFTER DELETE]----------");
 
         // 4.2 조회를 통해 삭제되었는지 확인
-
-
+        List<MessageResDTO> deleteList = messageService.getAllMessage();
+        IntStream.range(0, deleteList.size()).forEach(i -> {
+            MessageResDTO afterMsg = deleteList.get(i);
+            System.out.println(String.format("ID(Index): %d, UUID: %s, ChannelUUID: %s, AuthorName: %s, Content: %s",
+                    afterMsg.getId(), afterMsg.getUuid(), afterMsg.getChannelUuid(), afterMsg.getAuthorName(), afterMsg.getContent()));
+        });
     }
 }
