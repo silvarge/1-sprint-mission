@@ -1,25 +1,37 @@
 package com.sprint.mission.discodeit.service;
 
+import com.sprint.mission.discodeit.dto.ChannelReqDTO;
+import com.sprint.mission.discodeit.dto.ChannelResDTO;
+import com.sprint.mission.discodeit.dto.ChannelUpdateDTO;
+import com.sprint.mission.discodeit.entity.Channel;
+import com.sprint.mission.discodeit.entity.User;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
 public interface ChannelService {
 
     // 채널 생성
+    public Long createChannel(ChannelReqDTO channelReqDTO);
 
     // 채널 조회
     // 특정 채널(단건)
+    public ChannelResDTO getChannel(Long id);
+    public ChannelResDTO getChannel(String uuid);
     // 모든 채널
+    public List<ChannelResDTO> getAllChannel();
+    public Channel getChannelToChannelObj(Long id);
+    public Channel findChannelById(Long id);
+    public Optional<Map.Entry<Long, Channel>> findChannelByUUID(UUID uuid);
 
     // 채널 수정
-    // 채널 제목 수정
-    // 채널 소개 수정
-    // 채널 이미지 수정
-    // 채널 주인 양도 (소유권 이전)
-    // 채널에 멤버 추가
-    // 차단 멤버 추가
+    public boolean updateChannelInfo(Long id, ChannelUpdateDTO updateInfo);
 
     // 채널 삭제
-    // 채널 Status 변경
+    // 채널 Status 변경 -> inactive로
     // 채널 Hard Delete -> 진짜진짜삭제
-
+    public ChannelResDTO deleteChannel(Long id);
+    public ChannelResDTO deleteChannel(String uuid);
 }
-
-// TODO: DTO 만들자~!

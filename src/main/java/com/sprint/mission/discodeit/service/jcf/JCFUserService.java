@@ -8,7 +8,6 @@ import com.sprint.mission.discodeit.enums.RegionCode;
 import com.sprint.mission.discodeit.enums.UserType;
 import com.sprint.mission.discodeit.service.UserService;
 
-import javax.swing.plaf.synth.Region;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -72,7 +71,6 @@ public class JCFUserService implements UserService {
                 .filter(entry -> entry.getValue().getUserName().getName().equals(userName))
                 .findFirst();
     }
-
 
     @Override
     public boolean updateUser(Long id, UserUpdateDTO updateInfo) {
