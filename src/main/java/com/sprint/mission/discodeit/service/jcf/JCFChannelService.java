@@ -9,22 +9,21 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.repository.ChannelRepository;
+import com.sprint.mission.discodeit.repository.jcf.JCFChannelRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class JCFChannelService implements ChannelService {
 
     private final Validator validator = new ValidatorImpl();
-    private final Map<Long, Channel> channelData;
-    private final AtomicLong idGenerator;
+    private ChannelRepository channelRepository;
 
     public JCFChannelService() {
-        this.channelData = new HashMap<>();
-        this.idGenerator = new AtomicLong(1);
+        this.channelRepository = new JCFChannelRepository();
     }
 
     @Override
@@ -46,9 +45,8 @@ public class JCFChannelService implements ChannelService {
             Channel channel = new Channel(new ChannelReqDTO(
                     owner, serverName, description, iconImgPath
             ));
-            Long id = idGenerator.getAndIncrement();
-            channelData.put(id, channel);
-            return id;
+            Long channelId = channelRepository.saveChannel(channel);
+            return channelId;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -74,7 +72,7 @@ public class JCFChannelService implements ChannelService {
 
     @Override
     public List<ChannelResDTO> getAllChannel() {
-        return channelData.entrySet().stream()
+        return channelRepository.loadAllChannels().entrySet().stream()
                 .map(entry ->
                         new ChannelResDTO(entry.getKey(), entry.getValue(), entry.getValue().getOwner()))
                 .collect(Collectors.toList());
@@ -82,12 +80,12 @@ public class JCFChannelService implements ChannelService {
 
     @Override
     public Channel findChannelById(Long id) {
-        return channelData.get(id);
+        return channelRepository.loadChannel(id);
     }
 
     @Override
     public Optional<Map.Entry<Long, Channel>> findChannelByUUID(UUID uuid) {
-        return channelData.entrySet().stream()
+        return channelRepository.loadAllChannels().entrySet().stream()
                 .filter(entry -> entry.getValue().getId().equals(uuid))
                 .findFirst();
     }
@@ -120,7 +118,7 @@ public class JCFChannelService implements ChannelService {
                 channel.updateIconImgPath(updateInfo.getIconImgPath());
                 isUpdated = true;
             }
-            channelData.put(id, channel);
+            channelRepository.updateChannel(id, channel);
             return isUpdated;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -131,14 +129,14 @@ public class JCFChannelService implements ChannelService {
     @Override
     public ChannelResDTO deleteChannel(Long id) {
         ChannelResDTO deleteChannel = getChannel(id);
-        channelData.remove(deleteChannel.getId());
+        channelRepository.deleteChannel(id);
         return deleteChannel;
     }
 
     @Override
     public ChannelResDTO deleteChannel(String uuid) {
         ChannelResDTO deleteChannel = getChannel(uuid);
-        channelData.remove(deleteChannel.getId());
+        channelRepository.deleteChannel(deleteChannel.getId());
         return deleteChannel;
     }
 }

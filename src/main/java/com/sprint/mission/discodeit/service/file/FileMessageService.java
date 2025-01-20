@@ -16,18 +16,15 @@ import com.sprint.mission.discodeit.service.MessageService;
 
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class FileMessageService implements MessageService {
 
     private final Validator validator = new ValidatorImpl();
-    private final AtomicLong idGenerator;
     private MessageRepository messageRepository;
 
     public FileMessageService(Path directory) {
         this.messageRepository = new FileMessageRepository(directory);
-        this.idGenerator = new AtomicLong(1);
     }
 
     @Override
@@ -44,9 +41,8 @@ public class FileMessageService implements MessageService {
             }
 
             Message msg = new Message(new MessageReqDTO(author, channel, content));
-            Long id = idGenerator.getAndIncrement();
-            messageRepository.saveMessage(id, msg);
-            return id;
+            Long msgId = messageRepository.saveMessage(msg);
+            return msgId;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -109,7 +105,7 @@ public class FileMessageService implements MessageService {
                 msg.updateContent(updateInfo.getContent());
                 isUpdated = true;
             }
-            messageRepository.saveMessage(id, msg);
+            messageRepository.updateMessage(id, msg);
             return isUpdated;
         } catch (Exception e) {
             throw new RuntimeException(e);

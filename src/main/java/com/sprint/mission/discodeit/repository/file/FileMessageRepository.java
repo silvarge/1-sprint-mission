@@ -7,18 +7,19 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class FileMessageRepository implements MessageRepository {
     private final Path directory;
+    private final AtomicLong idGenerator = new AtomicLong(1);
 
     public FileMessageRepository(Path directory) {
         this.directory = directory;
         init(directory);
     }
 
-    @Override
-    public void init(Path directory) {
+    private void init(Path directory) {
         if (!Files.exists(directory)) {
             try {
                 Files.createDirectories(directory);
@@ -29,10 +30,12 @@ public class FileMessageRepository implements MessageRepository {
     }
 
     @Override
-    public void saveMessage(Long id, Message message) {
+    public Long saveMessage(Message message) {
+        Long id = idGenerator.getAndIncrement();
         Path filePath = directory.resolve(id + ".ser");
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
             oos.writeObject(message);
+            return id;
         } catch (IOException e) {
             throw new RuntimeException("Failed to save message data: " + id, e);
         }
@@ -81,11 +84,12 @@ public class FileMessageRepository implements MessageRepository {
     }
 
     @Override
-    public long getNextId() {
-        try {
-            return Files.list(directory).count() + 1;
+    public void updateMessage(Long id, Message message) {
+        Path filePath = directory.resolve(id + ".ser");
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
+            oos.writeObject(message);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to calculate next ID", e);
+            throw new RuntimeException("Failed to save message data: " + id, e);
         }
     }
 }

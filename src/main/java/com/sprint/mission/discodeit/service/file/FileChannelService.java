@@ -49,9 +49,8 @@ public class FileChannelService implements ChannelService {
             Channel channel = new Channel(new ChannelReqDTO(
                     owner, serverName, description, iconImgPath
             ));
-            Long id = idGenerator.getAndIncrement();
-            channelRepository.saveChannel(id, channel);
-            return id;
+            Long channelId = channelRepository.saveChannel(channel);
+            return channelId;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -129,7 +128,7 @@ public class FileChannelService implements ChannelService {
                 channel.updateIconImgPath(updateInfo.getIconImgPath());
                 isUpdated = true;
             }
-            channelRepository.saveChannel(id, channel);
+            channelRepository.updateChannel(id, channel);
             return isUpdated;
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -10,21 +10,20 @@ import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.repository.MessageRepository;
+import com.sprint.mission.discodeit.repository.jcf.JCFMessageRepository;
 import com.sprint.mission.discodeit.service.MessageService;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class JCFMessageService implements MessageService {
 
     private final Validator validator = new ValidatorImpl();
-    private final Map<Long, Message> messageData;
-    private final AtomicLong idGenerator;
+    private MessageRepository messageRepository;
 
     public JCFMessageService() {
-        this.messageData = new HashMap<>();
-        this.idGenerator = new AtomicLong(1);
+        this.messageRepository = new JCFMessageRepository();
     }
 
     @Override
@@ -41,9 +40,8 @@ public class JCFMessageService implements MessageService {
             }
 
             Message msg = new Message(new MessageReqDTO(author, channel, content));
-            Long id = idGenerator.getAndIncrement();
-            messageData.put(id, msg);
-            return id;
+            Long msgId = messageRepository.saveMessage(msg);
+            return msgId;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -68,7 +66,7 @@ public class JCFMessageService implements MessageService {
 
     @Override
     public List<MessageResDTO> getAllMessage() {
-        return messageData.entrySet().stream()
+        return messageRepository.loadAllMessages().entrySet().stream()
                 .map(entry ->
                         new MessageResDTO(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
@@ -76,7 +74,7 @@ public class JCFMessageService implements MessageService {
 
     @Override
     public List<MessageResDTO> getChannelMessage(String channelName) {
-        return messageData.entrySet().stream()
+        return messageRepository.loadAllMessages().entrySet().stream()
                 .filter(entry -> entry.getValue().getChannel().getId().equals(UUID.fromString(channelName)))
                 .map(entry ->
                         new MessageResDTO(entry.getKey(), entry.getValue()))
@@ -84,11 +82,11 @@ public class JCFMessageService implements MessageService {
     }
 
     public Message findMessageById(Long id) {
-        return messageData.get(id);
+        return messageRepository.loadMessage(id);
     }
 
     public Optional<Map.Entry<Long, Message>> findMessageByUUID(String uuid) {
-        return messageData.entrySet().stream()
+        return messageRepository.loadAllMessages().entrySet().stream()
                 .filter(entry -> entry.getValue().getId().equals(UUID.fromString(uuid)))
                 .findFirst();
     }
@@ -102,7 +100,7 @@ public class JCFMessageService implements MessageService {
                 msg.updateContent(updateInfo.getContent());
                 isUpdated = true;
             }
-            messageData.put(id, msg);
+            messageRepository.updateMessage(id, msg);
             return isUpdated;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -112,14 +110,14 @@ public class JCFMessageService implements MessageService {
     @Override
     public MessageResDTO deleteMessage(Long id) {
         MessageResDTO deleteMessage = getMessage(id);
-        messageData.remove(deleteMessage.getId());
+        messageRepository.deleteMessage(id);
         return deleteMessage;
     }
 
     @Override
     public MessageResDTO deleteMessage(String uuid) {
         MessageResDTO deleteMessage = getMessage(uuid);
-        messageData.remove(deleteMessage.getId());
+        messageRepository.deleteMessage(deleteMessage.getId());
         return deleteMessage;
     }
 }

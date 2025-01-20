@@ -20,18 +20,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class FileUserService implements UserService {
     // DB 대체로 생각함
     private final Validator validator = new ValidatorImpl();
     private UserRepository userRepository;
-    private final AtomicLong idGenerator;
 
     public FileUserService(Path directory) {
         this.userRepository = new FileUserRepository(directory);
-        this.idGenerator = new AtomicLong(1);
     }
 
 
@@ -66,9 +63,8 @@ public class FileUserService implements UserService {
             imgPath = StringUtils.isBlank(imgPath) ? "defaultImg.png" : imgPath;
 
             User user = new User(new UserReqDTO(username, nickname, email, password, regionCode, phone, imgPath));  // 유저 생성
-            Long id = idGenerator.getAndIncrement();    // 1++
-            userRepository.saveUser(id, user);
-            return id;
+            Long userId = userRepository.saveUser(user);
+            return userId;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -155,7 +151,7 @@ public class FileUserService implements UserService {
                 user.updateIntroduce(updateInfo.getIntroduce());
                 isUpdated = true;
             }
-            userRepository.saveUser(id, user); // DB에 반영
+            userRepository.updateUser(id, user); // DB에 반영
             return isUpdated;
 
         } catch (Exception e) {

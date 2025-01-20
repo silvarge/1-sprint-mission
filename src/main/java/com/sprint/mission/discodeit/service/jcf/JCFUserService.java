@@ -10,23 +10,24 @@ import com.sprint.mission.discodeit.enums.RegionCode;
 import com.sprint.mission.discodeit.enums.UserType;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.repository.jcf.JCFUserRepository;
 import com.sprint.mission.discodeit.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-// TODO: Exception Throw 하는 메소드 있는 곳은 try-catch 우선 적용해두기 (예외처리는 추후에)
 public class JCFUserService implements UserService {
     // DB 대체로 생각함
     private final Validator validator = new ValidatorImpl();
-    private final Map<Long, User> userData;
-    private final AtomicLong idGenerator;
+    private UserRepository userRepository;
 
     public JCFUserService() {
-        this.userData = new HashMap<>();    // 데이터 저장소
-        this.idGenerator = new AtomicLong(1);   // ID 초기값 1
+        this.userRepository = new JCFUserRepository();   // 데이터 저장소
     }
 
     @Override
@@ -60,9 +61,8 @@ public class JCFUserService implements UserService {
             imgPath = StringUtils.isBlank(imgPath) ? "defaultImg.png" : imgPath;
 
             User user = new User(new UserReqDTO(username, nickname, email, password, regionCode, phone, imgPath));  // 유저 생성
-            Long id = idGenerator.getAndIncrement();    // 1++
-            userData.put(id, user);
-            return id;
+            Long userId = userRepository.saveUser(user);
+            return userId;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -88,19 +88,19 @@ public class JCFUserService implements UserService {
 
     @Override
     public List<UserResDTO> getAllUser() {
-        return userData.entrySet().stream()
+        return userRepository.loadAllUsers().entrySet().stream()
                 .map(entry ->
                         new UserResDTO(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
     }
 
     public User findUserById(Long id) {
-        return userData.get(id);
+        return userRepository.loadUser(id);
     }
 
     // userName으로 User 객체와 해당 Long ID 반환
     public Optional<Map.Entry<Long, User>> findUserByUserName(String userName) {
-        return userData.entrySet().stream()
+        return userRepository.loadAllUsers().entrySet().stream()
                 .filter(entry -> entry.getValue().getUserName().getName().equals(userName))
                 .findFirst();
     }
@@ -108,8 +108,8 @@ public class JCFUserService implements UserService {
     @Override
     public boolean updateUser(Long id, UserUpdateDTO updateInfo) {
         boolean isUpdated = false;
-        User user = getUserToUserObj(id);
         try {
+            User user = getUserToUserObj(id);
             if (updateInfo.getUserName() != null && !user.getUserName().getName().equals(updateInfo.getUserName()) && validator.userNameValidator(updateInfo.getUserName())) {
                 user.updateUserName(updateInfo.getUserName());
                 isUpdated = true;
@@ -147,7 +147,7 @@ public class JCFUserService implements UserService {
                 user.updateIntroduce(updateInfo.getIntroduce());
                 isUpdated = true;
             }
-            userData.put(id, user); // DB에 반영
+            userRepository.updateUser(id, user); // DB에 반영
             return isUpdated;
 
         } catch (Exception e) {
@@ -158,14 +158,14 @@ public class JCFUserService implements UserService {
     @Override
     public UserResDTO deleteUser(Long id) {
         UserResDTO deleteUser = getUser(id);
-        userData.remove(deleteUser.getId());
+        userRepository.deleteUser(id);
         return deleteUser;
     }
 
     @Override
     public UserResDTO deleteUser(String userName) {
         UserResDTO deleteUser = getUser(userName);
-        userData.remove(deleteUser.getId());
+        userRepository.deleteUser(deleteUser.getId());
         return deleteUser;
     }
 }

@@ -7,18 +7,19 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class FileUserRepository implements UserRepository {
     private final Path directory;
+    private final AtomicLong idGenerator = new AtomicLong(1);
 
     public FileUserRepository(Path directory) {
         this.directory = directory;
         init(directory);
     }
 
-    @Override
-    public void init(Path directory) {
+    private void init(Path directory) {
         if (!Files.exists(directory)) {
             try {
                 Files.createDirectories(directory);
@@ -29,14 +30,15 @@ public class FileUserRepository implements UserRepository {
     }
 
     @Override
-    public void saveUser(Long id, User user) {
+    public Long saveUser(User user) {
+        Long id = idGenerator.getAndIncrement();
         Path filePath = directory.resolve(id + ".ser");
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
             oos.writeObject(user);
+            return id;
         } catch (IOException e) {
             throw new RuntimeException("Failed to save user data: " + id, e);
         }
-
     }
 
     @Override
@@ -82,12 +84,12 @@ public class FileUserRepository implements UserRepository {
     }
 
     @Override
-    public long getNextId() {
-        try {
-            return Files.list(directory).count() + 1;
+    public void updateUser(Long id, User user) {
+        Path filePath = directory.resolve(id + ".ser");
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
+            oos.writeObject(user);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to calculate next ID", e);
+            throw new RuntimeException("Failed to save user data: " + id, e);
         }
     }
-
 }

@@ -7,18 +7,19 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class FileChannelRepository implements ChannelRepository {
     private final Path directory;
+    private final AtomicLong idGenerator = new AtomicLong(1);
 
     public FileChannelRepository(Path directory) {
         this.directory = directory;
         init(directory);
     }
 
-    @Override
-    public void init(Path directory) {
+    private void init(Path directory) {
         if (!Files.exists(directory)) {
             try {
                 Files.createDirectories(directory);
@@ -30,10 +31,12 @@ public class FileChannelRepository implements ChannelRepository {
 
     // 데이터 저장
     @Override
-    public void saveChannel(Long id, Channel channel) {
+    public Long saveChannel(Channel channel) {
+        Long id = idGenerator.getAndIncrement();
         Path filePath = directory.resolve(id + ".ser");
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
             oos.writeObject(channel);
+            return id;
         } catch (IOException e) {
             throw new RuntimeException("Failed to save channel data: " + id, e);
         }
@@ -82,14 +85,13 @@ public class FileChannelRepository implements ChannelRepository {
         }
     }
 
-    // ID 초기값 계산 (디렉터리 내 파일 개수 기반)
     @Override
-    public long getNextId() {
-        try {
-            return Files.list(directory).count() + 1;
+    public void updateChannel(Long id, Channel channel) {
+        Path filePath = directory.resolve(id + ".ser");
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
+            oos.writeObject(channel);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to calculate next ID", e);
+            throw new RuntimeException("Failed to save channel data: " + id, e);
         }
     }
-
 }

@@ -21,6 +21,7 @@ public class JavaApplication {
         // User
         Path userDirectory = Paths.get(System.getProperty("user.dir"), "temp/user");
         UserService userService = new FileUserService(userDirectory);
+//        UserService userService = new JCFUserService();
 
         // 사용자 생성
         Long userId = userService.createUserData("username1", "nickname1", "email@mail.com", "password!1234", "KR", "010-1111-2222", null);
@@ -80,6 +81,7 @@ public class JavaApplication {
         // Channel
         Path channelDirectory = Paths.get(System.getProperty("user.dir"), "temp/channel");
         ChannelService channelService = new FileChannelService(channelDirectory);
+//        ChannelService channelService = new JCFChannelService();
 
         Optional<Map.Entry<Long, User>> owner = userService.findUserByUserName("username1");
         Optional<Map.Entry<Long, User>> owner2 = userService.findUserByUserName("username3");
@@ -141,6 +143,7 @@ public class JavaApplication {
         // Message
         Path messageDirectory = Paths.get(System.getProperty("user.dir"), "temp/message");
         MessageService messageService = new FileMessageService(messageDirectory);
+//        MessageService messageService = new JCFMessageService();
 
         User author1 = userService.getUserToUserObj(1L);
         Channel channel1 = channelService.getChannelToChannelObj(1L);
