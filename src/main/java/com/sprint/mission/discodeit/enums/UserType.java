@@ -1,5 +1,7 @@
 package com.sprint.mission.discodeit.enums;
 
+import org.apache.commons.lang3.StringUtils;
+
 public enum UserType {
     COMMON, // 일반 유저 (Default)
     BOT,    // 봇
@@ -7,7 +9,7 @@ public enum UserType {
 
     // TODO: 근데 왜 static일까........?
     public static UserType fromString(String value) {
-        if (value == null || value.isBlank()) {
+        if (StringUtils.isBlank(value)) {
             throw new IllegalArgumentException("UserType은 null이 될 수 없습니다.");
         }
         try {

@@ -1,9 +1,15 @@
 package com.sprint.mission.discodeit.service.jcf;
 
+import com.sprint.mission.discodeit.common.validation.Validator;
+import com.sprint.mission.discodeit.common.validation.ValidatorImpl;
 import com.sprint.mission.discodeit.dto.MessageReqDTO;
 import com.sprint.mission.discodeit.dto.MessageResDTO;
 import com.sprint.mission.discodeit.dto.MessageUpdateDTO;
+import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.exception.CustomException;
+import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.service.MessageService;
 
 import java.util.*;
@@ -12,18 +18,29 @@ import java.util.stream.Collectors;
 
 public class JCFMessageService implements MessageService {
 
+    private final Validator validator = new ValidatorImpl();
     private final Map<Long, Message> messageData;
     private final AtomicLong idGenerator;
 
-    public JCFMessageService(){
+    public JCFMessageService() {
         this.messageData = new HashMap<>();
         this.idGenerator = new AtomicLong(1);
     }
 
     @Override
-    public Long createMessage(MessageReqDTO messageReqDTO) {
+    public Long createMessage(User author, Channel channel, String content) {
         try {
-            Message msg = new Message(messageReqDTO);
+            if (author == null) {
+                throw new CustomException(ErrorCode.AUTHOR_CANNOT_BLANK);
+            }
+            if (channel == null) {
+                throw new CustomException(ErrorCode.CHANNEL_CANNOT_BLANK);
+            }
+            if (content == null) {
+                throw new CustomException(ErrorCode.CONTENT_CANANOT_BLANK);
+            }
+
+            Message msg = new Message(new MessageReqDTO(author, channel, content));
             Long id = idGenerator.getAndIncrement();
             messageData.put(id, msg);
             return id;
@@ -66,7 +83,10 @@ public class JCFMessageService implements MessageService {
                 .collect(Collectors.toList());
     }
 
-    public Message findMessageById(Long id) { return messageData.get(id); }
+    public Message findMessageById(Long id) {
+        return messageData.get(id);
+    }
+
     public Optional<Map.Entry<Long, Message>> findMessageByUUID(String uuid) {
         return messageData.entrySet().stream()
                 .filter(entry -> entry.getValue().getId().equals(UUID.fromString(uuid)))
@@ -78,7 +98,7 @@ public class JCFMessageService implements MessageService {
         boolean isUpdated = false;
         try {
             Message msg = getMessageToMsgObj(id);
-            if(updateInfo.getContent() != null && !msg.getContent().equals(updateInfo.getContent())){
+            if (updateInfo.getContent() != null && !msg.getContent().equals(updateInfo.getContent())) {
                 msg.updateContent(updateInfo.getContent());
                 isUpdated = true;
             }

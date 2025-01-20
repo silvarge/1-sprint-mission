@@ -1,6 +1,9 @@
 package com.sprint.mission.discodeit.dto;
 
-public class UserUpdateDTO implements UserDTO{
+import lombok.Getter;
+
+@Getter
+public class UserUpdateDTO implements UserDTO {
     private String userName;
     private String nickname;
     private String email;
@@ -10,7 +13,7 @@ public class UserUpdateDTO implements UserDTO{
     private String imgPath;
     private String introduce;
 
-    public UserUpdateDTO(String userName, String nickname, String email, String userType, String regionCode, String phone, String imgPath, String introduce){
+    public UserUpdateDTO(String userName, String nickname, String email, String userType, String regionCode, String phone, String imgPath, String introduce) {
         this.userName = userName;
         this.nickname = nickname;
         this.email = email;
@@ -19,41 +22,5 @@ public class UserUpdateDTO implements UserDTO{
         this.phone = phone;
         this.imgPath = imgPath;
         this.introduce = introduce;
-    }
-
-    // Getter
-    @Override
-    public String getUserName() {
-        return userName;
-    }
-
-    @Override
-    public String getNickname() {
-        return nickname;
-    }
-
-    @Override
-    public String getEmail() {
-        return email;
-    }
-
-    public String getUserType(){
-        return userType;
-    }
-
-    public String getRegionCode(){
-        return regionCode;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public String getImgPath() {
-        return imgPath;
-    }
-
-    public String getIntroduce() {
-        return introduce;
     }
 }

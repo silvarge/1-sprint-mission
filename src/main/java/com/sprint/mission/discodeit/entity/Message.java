@@ -1,15 +1,18 @@
 package com.sprint.mission.discodeit.entity;
 
 import com.sprint.mission.discodeit.dto.MessageReqDTO;
+import lombok.Getter;
 
 import java.util.UUID;
 
-/** # Message
+/**
+ * # Message
  * - 텍스트 채팅 객체
  * - 단체 대화만 한다고 가정 (언급 기능 등은 일단 고려하지 않음)
  * - 파일 첨부 기능 등이 아닌 단순 문자 채팅만 한다고 고려
  */
 
+@Getter
 public class Message {
     private UUID id;
     private User author;    // 작성자
@@ -29,42 +32,14 @@ public class Message {
         status = true;
     }
 
-    public void updateContent(String content){
+    public void updateContent(String content) {
         this.content = content;
         updatedAt = System.currentTimeMillis();
     }
 
-    public void updateStatus(boolean status){
+    public void updateStatus(boolean status) {
         this.status = status;
         updatedAt = System.currentTimeMillis();
     }
 
-    // Getter
-    public UUID getId() {
-        return id;
-    }
-
-    public long getCreatedAt() {
-        return createdAt;
-    }
-
-    public long getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public Channel getChannel() {
-        return channel;
-    }
-
-    public User getAuthor() {
-        return author;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public boolean getStatus(){
-        return status;
-    }
 }

@@ -1,18 +1,15 @@
 package com.sprint.mission.discodeit.common;
 
-import java.util.regex.Pattern;
+import lombok.Getter;
 
+@Getter
 public class Email {
     private String email;
-    private boolean verified;
+    private boolean verified;   // 이메일 인증
 
     public Email(String email) {
-        if(validate(email)){
-            this.email = email;
-            this.verified = false; // 인증 확인 로직
-        }else {
-            throw new IllegalArgumentException("잘못된 Email 형식입니다.");
-        }
+        this.email = email;
+        this.verified = false; // 인증 확인 로직
     }
 
     public void changeVerified() {
@@ -20,15 +17,8 @@ public class Email {
         this.verified = true;
     }
 
-    public boolean validate(String email){
-        return Pattern.matches("^[a-zA-Z0-9+-\\_.]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$", email);
-    }
-
-    public String getEmailAddress() {
-        return email;
-    }
-
-    public boolean getEmailVerified(){
-        return verified;
+    public void changeEmailAddr(String email) {
+        this.email = email;
+        this.verified = false;
     }
 }

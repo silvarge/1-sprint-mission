@@ -1,10 +1,17 @@
 package com.sprint.mission.discodeit.common;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
- * Name - 전반적인 이름(닉네임)
- * - UserName -> 사용자 이름
- * - Nickname -> 닉네임
+ * Name
  */
-public interface Name {
-    public boolean validate(String name);
+@Getter
+@Setter
+public class Name {
+    private String name;
+
+    public Name(String name) {
+        this.name = name;
+    }
 }
