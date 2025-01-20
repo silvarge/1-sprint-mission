@@ -10,11 +10,11 @@ import com.sprint.mission.discodeit.enums.RegionCode;
 import com.sprint.mission.discodeit.enums.UserType;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.repository.file.FileUserRepository;
 import com.sprint.mission.discodeit.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.*;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -26,79 +26,13 @@ import java.util.stream.Collectors;
 public class FileUserService implements UserService {
     // DB 대체로 생각함
     private final Validator validator = new ValidatorImpl();
-    private final Path directory;
+    private UserRepository userRepository;
     private final AtomicLong idGenerator;
 
     public FileUserService(Path directory) {
-        this.directory = directory;
-        init(directory);
-        this.idGenerator = new AtomicLong(1);   // ID 초기값 1
+        this.userRepository = new FileUserRepository(directory);
+        this.idGenerator = new AtomicLong(1);
     }
-
-    // 파일 입출력 관련 ========================
-    // 디렉토리 초기화
-    private void init(Path directory) {
-        if (!Files.exists(directory)) {
-            try {
-                Files.createDirectories(directory);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to create directory: " + directory, e);
-            }
-        }
-    }
-
-    // 유저 데이터 저장
-    private void saveUser(Long id, User user) {
-        Path filePath = directory.resolve(id + ".ser");
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
-            oos.writeObject(user);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to save user data: " + id, e);
-        }
-    }
-
-    // 유저 데이터 로드
-    private User loadUser(Long id) {
-        Path filePath = directory.resolve(id + ".ser");
-        if (!Files.exists(filePath)) {
-            throw new RuntimeException("User data not found for ID: " + id);
-        }
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filePath.toFile()))) {
-            return (User) ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException("Failed to load user data: " + id, e);
-        }
-    }
-
-    private Map<Long, User> loadAllUsers() {
-        try {
-            return Files.list(directory)
-                    .filter(Files::isRegularFile)
-                    .map(path -> {
-                        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(path.toFile()))) {
-                            User user = (User) ois.readObject();
-                            Long id = Long.valueOf(path.getFileName().toString().replace(".ser", ""));
-                            return Map.entry(id, user);
-                        } catch (IOException | ClassNotFoundException e) {
-                            throw new RuntimeException("Failed to load user data from file: " + path, e);
-                        }
-                    })
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load users from directory", e);
-        }
-    }
-
-    // ID 초기값 계산 (디렉터리 내 파일 개수 기반)
-    private long getNextId() {
-        try {
-            return Files.list(directory).count() + 1;
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to calculate next ID", e);
-        }
-    }
-
-    // 파일 입출력 관련 ========================
 
 
     @Override
@@ -133,7 +67,7 @@ public class FileUserService implements UserService {
 
             User user = new User(new UserReqDTO(username, nickname, email, password, regionCode, phone, imgPath));  // 유저 생성
             Long id = idGenerator.getAndIncrement();    // 1++
-            saveUser(id, user);
+            userRepository.saveUser(id, user);
             return id;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -143,18 +77,18 @@ public class FileUserService implements UserService {
     // TODO: Custom Exception으로 바꾸기~
     @Override
     public UserResDTO getUser(Long id) {
-        User user = Objects.requireNonNull(loadUser(id), "해당 ID의 사용자가 존재하지 않습니다.");
+        User user = Objects.requireNonNull(userRepository.loadUser(id), "해당 ID의 사용자가 존재하지 않습니다.");
         return new UserResDTO(id, user);
     }
 
     @Override
     public User getUserToUserObj(Long id) {
-        return Objects.requireNonNull(loadUser(id), "해당 ID의 사용자가 존재하지 않습니다.");
+        return Objects.requireNonNull(userRepository.loadUser(id), "해당 ID의 사용자가 존재하지 않습니다.");
     }
 
     @Override
     public UserResDTO getUser(String userName) {
-        return loadAllUsers().entrySet().stream()
+        return userRepository.loadAllUsers().entrySet().stream()
                 .filter(entry -> entry.getValue().getUserName().getName().equals(userName))
                 .findFirst()
                 .map(entry -> new UserResDTO(entry.getKey(), entry.getValue()))
@@ -163,18 +97,18 @@ public class FileUserService implements UserService {
 
     @Override
     public List<UserResDTO> getAllUser() {
-        return loadAllUsers().entrySet().stream()
+        return userRepository.loadAllUsers().entrySet().stream()
                 .map(entry -> new UserResDTO(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
     }
 
     public User findUserById(Long id) {
-        return loadUser(id);
+        return userRepository.loadUser(id);
     }
 
     // userName으로 User 객체와 해당 Long ID 반환
     public Optional<Map.Entry<Long, User>> findUserByUserName(String userName) {
-        return loadAllUsers().entrySet().stream()
+        return userRepository.loadAllUsers().entrySet().stream()
                 .filter(entry -> entry.getValue().getUserName().getName().equals(userName))
                 .findFirst();
     }
@@ -221,7 +155,7 @@ public class FileUserService implements UserService {
                 user.updateIntroduce(updateInfo.getIntroduce());
                 isUpdated = true;
             }
-            saveUser(id, user); // DB에 반영
+            userRepository.saveUser(id, user); // DB에 반영
             return isUpdated;
 
         } catch (Exception e) {
@@ -232,24 +166,14 @@ public class FileUserService implements UserService {
     @Override
     public UserResDTO deleteUser(Long id) {
         UserResDTO deleteUser = getUser(id);
-        Path filePath = directory.resolve(id + ".ser");
-        try {
-            Files.deleteIfExists(filePath);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        userRepository.deleteUser(id);
         return deleteUser;
     }
 
     @Override
     public UserResDTO deleteUser(String userName) {
         UserResDTO deleteUser = getUser(userName);
-        Path filePath = directory.resolve(deleteUser.getId() + ".ser");
-        try {
-            Files.deleteIfExists(filePath);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        userRepository.deleteUser(deleteUser.getId());
         return deleteUser;
     }
 }

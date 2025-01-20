@@ -9,11 +9,11 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.repository.ChannelRepository;
+import com.sprint.mission.discodeit.repository.file.FileChannelRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.*;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -22,79 +22,13 @@ import java.util.stream.Collectors;
 public class FileChannelService implements ChannelService {
 
     private final Validator validator = new ValidatorImpl();
-    private final Path directory;
     private final AtomicLong idGenerator;
+    private ChannelRepository channelRepository;
 
     public FileChannelService(Path directory) {
-        this.directory = directory;
-        init(directory);
+        this.channelRepository = new FileChannelRepository(directory);
         this.idGenerator = new AtomicLong(1);
     }
-
-    // 파일 입출력 관련 ========================
-    // 디렉토리 초기화
-    private void init(Path directory) {
-        if (!Files.exists(directory)) {
-            try {
-                Files.createDirectories(directory);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to create directory: " + directory, e);
-            }
-        }
-    }
-
-    // 데이터 저장
-    private void saveChannel(Long id, Channel channel) {
-        Path filePath = directory.resolve(id + ".ser");
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
-            oos.writeObject(channel);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to save channel data: " + id, e);
-        }
-    }
-
-    // 유저 데이터 로드
-    private Channel loadChannel(Long id) {
-        Path filePath = directory.resolve(id + ".ser");
-        if (!Files.exists(filePath)) {
-            throw new RuntimeException("Channel data not found for ID: " + id);
-        }
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filePath.toFile()))) {
-            return (Channel) ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException("Failed to load channel data: " + id, e);
-        }
-    }
-
-    private Map<Long, Channel> loadAllChannels() {
-        try {
-            return Files.list(directory)
-                    .filter(Files::isRegularFile)
-                    .map(path -> {
-                        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(path.toFile()))) {
-                            Channel channel = (Channel) ois.readObject();
-                            Long id = Long.valueOf(path.getFileName().toString().replace(".ser", ""));
-                            return Map.entry(id, channel);
-                        } catch (IOException | ClassNotFoundException e) {
-                            throw new RuntimeException("Failed to load user data from file: " + path, e);
-                        }
-                    })
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load channels from directory", e);
-        }
-    }
-
-    // ID 초기값 계산 (디렉터리 내 파일 개수 기반)
-    private long getNextId() {
-        try {
-            return Files.list(directory).count() + 1;
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to calculate next ID", e);
-        }
-    }
-    // 파일 입출력 관련 ========================
-
 
     @Override
     public Long createChannel(User owner, String serverName, String description, String iconImgPath) {
@@ -116,7 +50,7 @@ public class FileChannelService implements ChannelService {
                     owner, serverName, description, iconImgPath
             ));
             Long id = idGenerator.getAndIncrement();
-            saveChannel(id, channel);
+            channelRepository.saveChannel(id, channel);
             return id;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -125,19 +59,19 @@ public class FileChannelService implements ChannelService {
 
     @Override
     public ChannelResDTO getChannel(Long id) {
-        Channel channel = Objects.requireNonNull(loadChannel(id), "해당 ID의 채널이 존재하지 않습니다.");
+        Channel channel = Objects.requireNonNull(channelRepository.loadChannel(id), "해당 ID의 채널이 존재하지 않습니다.");
         return new ChannelResDTO(id, channel, channel.getOwner());
     }
 
     @Override
     public Channel getChannelToChannelObj(Long id) {
-        return Objects.requireNonNull(loadChannel(id), "해당 ID의 채널이 존재하지 않습니다.");
+        return Objects.requireNonNull(channelRepository.loadChannel(id), "해당 ID의 채널이 존재하지 않습니다.");
     }
 
     // TODO: 'Optional. get()' without 'isPresent()' check <- 확인
     @Override
     public ChannelResDTO getChannel(String uuid) {
-        Map<Long, Channel> allChannels = loadAllChannels();
+        Map<Long, Channel> allChannels = channelRepository.loadAllChannels();
         return allChannels.entrySet().stream()
                 .filter(entry -> entry.getValue().getId().toString().equals(uuid))
                 .findFirst()
@@ -148,7 +82,7 @@ public class FileChannelService implements ChannelService {
 
     @Override
     public List<ChannelResDTO> getAllChannel() {
-        return loadAllChannels().entrySet().stream()
+        return channelRepository.loadAllChannels().entrySet().stream()
                 .map(entry ->
                         new ChannelResDTO(entry.getKey(), entry.getValue(), entry.getValue().getOwner()))
                 .collect(Collectors.toList());
@@ -156,12 +90,12 @@ public class FileChannelService implements ChannelService {
 
     @Override
     public Channel findChannelById(Long id) {
-        return loadChannel(id);
+        return channelRepository.loadChannel(id);
     }
 
     @Override
     public Optional<Map.Entry<Long, Channel>> findChannelByUUID(UUID uuid) {
-        Map<Long, Channel> allChannels = loadAllChannels();
+        Map<Long, Channel> allChannels = channelRepository.loadAllChannels();
         return allChannels.entrySet().stream()
                 .filter(entry -> entry.getValue().getId().equals(uuid))
                 .findFirst();
@@ -195,7 +129,7 @@ public class FileChannelService implements ChannelService {
                 channel.updateIconImgPath(updateInfo.getIconImgPath());
                 isUpdated = true;
             }
-            saveChannel(id, channel);
+            channelRepository.saveChannel(id, channel);
             return isUpdated;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -206,24 +140,14 @@ public class FileChannelService implements ChannelService {
     @Override
     public ChannelResDTO deleteChannel(Long id) {
         ChannelResDTO deleteChannel = getChannel(id);
-        Path filePath = directory.resolve(id + ".ser");
-        try {
-            Files.deleteIfExists(filePath);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        channelRepository.deleteChannel(id);
         return deleteChannel;
     }
 
     @Override
     public ChannelResDTO deleteChannel(String uuid) {
         ChannelResDTO deleteChannel = getChannel(uuid);
-        Path filePath = directory.resolve(deleteChannel.getId() + ".ser");
-        try {
-            Files.deleteIfExists(filePath);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        channelRepository.deleteChannel(deleteChannel.getId());
         return deleteChannel;
     }
 }

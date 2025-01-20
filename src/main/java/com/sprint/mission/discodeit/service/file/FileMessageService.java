@@ -10,10 +10,10 @@ import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.repository.MessageRepository;
+import com.sprint.mission.discodeit.repository.file.FileMessageRepository;
 import com.sprint.mission.discodeit.service.MessageService;
 
-import java.io.*;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -22,78 +22,13 @@ import java.util.stream.Collectors;
 public class FileMessageService implements MessageService {
 
     private final Validator validator = new ValidatorImpl();
-    private final Path directory;
     private final AtomicLong idGenerator;
+    private MessageRepository messageRepository;
 
     public FileMessageService(Path directory) {
-        this.directory = directory;
-        init(directory);
+        this.messageRepository = new FileMessageRepository(directory);
         this.idGenerator = new AtomicLong(1);
     }
-
-    // 파일 입출력 관련 ========================
-    // 디렉토리 초기화
-    private void init(Path directory) {
-        if (!Files.exists(directory)) {
-            try {
-                Files.createDirectories(directory);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to create directory: " + directory, e);
-            }
-        }
-    }
-
-    // 데이터 저장
-    private void saveMessage(Long id, Message message) {
-        Path filePath = directory.resolve(id + ".ser");
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
-            oos.writeObject(message);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to save message data: " + id, e);
-        }
-    }
-
-    // 유저 데이터 로드
-    private Message loadMessage(Long id) {
-        Path filePath = directory.resolve(id + ".ser");
-        if (!Files.exists(filePath)) {
-            throw new RuntimeException("Message data not found for ID: " + id);
-        }
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filePath.toFile()))) {
-            return (Message) ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException("Failed to load message data: " + id, e);
-        }
-    }
-
-    private Map<Long, Message> loadAllMessages() {
-        try {
-            return Files.list(directory)
-                    .filter(Files::isRegularFile)
-                    .map(path -> {
-                        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(path.toFile()))) {
-                            Message message = (Message) ois.readObject();
-                            Long id = Long.valueOf(path.getFileName().toString().replace(".ser", ""));
-                            return Map.entry(id, message);
-                        } catch (IOException | ClassNotFoundException e) {
-                            throw new RuntimeException("Failed to load message data from file: " + path, e);
-                        }
-                    })
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load messages from directory", e);
-        }
-    }
-
-    // ID 초기값 계산 (디렉터리 내 파일 개수 기반)
-    private long getNextId() {
-        try {
-            return Files.list(directory).count() + 1;
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to calculate next ID", e);
-        }
-    }
-    // 파일 입출력 관련 ========================
 
     @Override
     public Long createMessage(User author, Channel channel, String content) {
@@ -110,7 +45,7 @@ public class FileMessageService implements MessageService {
 
             Message msg = new Message(new MessageReqDTO(author, channel, content));
             Long id = idGenerator.getAndIncrement();
-            saveMessage(id, msg);
+            messageRepository.saveMessage(id, msg);
             return id;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -119,13 +54,13 @@ public class FileMessageService implements MessageService {
 
     @Override
     public MessageResDTO getMessage(Long id) {
-        Message msg = Objects.requireNonNull(loadMessage(id), "해당 ID의 메시지가 존재하지 않습니다.");
+        Message msg = Objects.requireNonNull(messageRepository.loadMessage(id), "해당 ID의 메시지가 존재하지 않습니다.");
         return new MessageResDTO(id, msg);
     }
 
     @Override
     public MessageResDTO getMessage(String uuid) {
-        Map<Long, Message> allMessages = loadAllMessages();
+        Map<Long, Message> allMessages = messageRepository.loadAllMessages();
         return allMessages.entrySet().stream()
                 .filter(entry -> entry.getValue().getId().toString().equals(uuid))
                 .findFirst()
@@ -135,12 +70,12 @@ public class FileMessageService implements MessageService {
 
     @Override
     public Message getMessageToMsgObj(Long id) {
-        return Objects.requireNonNull(loadMessage(id), "해당 ID의 메시지가 존재하지 않습니다.");
+        return Objects.requireNonNull(messageRepository.loadMessage(id), "해당 ID의 메시지가 존재하지 않습니다.");
     }
 
     @Override
     public List<MessageResDTO> getAllMessage() {
-        return loadAllMessages().entrySet().stream()
+        return messageRepository.loadAllMessages().entrySet().stream()
                 .map(entry ->
                         new MessageResDTO(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
@@ -148,7 +83,7 @@ public class FileMessageService implements MessageService {
 
     @Override
     public List<MessageResDTO> getChannelMessage(String channelName) {
-        return loadAllMessages().entrySet().stream()
+        return messageRepository.loadAllMessages().entrySet().stream()
                 .filter(entry -> entry.getValue().getChannel().getId().equals(UUID.fromString(channelName)))
                 .map(entry ->
                         new MessageResDTO(entry.getKey(), entry.getValue()))
@@ -156,11 +91,11 @@ public class FileMessageService implements MessageService {
     }
 
     public Message findMessageById(Long id) {
-        return loadAllMessages().get(id);
+        return messageRepository.loadAllMessages().get(id);
     }
 
     public Optional<Map.Entry<Long, Message>> findMessageByUUID(String uuid) {
-        return loadAllMessages().entrySet().stream()
+        return messageRepository.loadAllMessages().entrySet().stream()
                 .filter(entry -> entry.getValue().getId().equals(UUID.fromString(uuid)))
                 .findFirst();
     }
@@ -174,7 +109,7 @@ public class FileMessageService implements MessageService {
                 msg.updateContent(updateInfo.getContent());
                 isUpdated = true;
             }
-            saveMessage(id, msg);
+            messageRepository.saveMessage(id, msg);
             return isUpdated;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -184,24 +119,14 @@ public class FileMessageService implements MessageService {
     @Override
     public MessageResDTO deleteMessage(Long id) {
         MessageResDTO deleteMessage = getMessage(id);
-        Path filePath = directory.resolve(id + ".ser");
-        try {
-            Files.deleteIfExists(filePath);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        messageRepository.deleteMessage(id);
         return deleteMessage;
     }
 
     @Override
     public MessageResDTO deleteMessage(String uuid) {
         MessageResDTO deleteMessage = getMessage(uuid);
-        Path filePath = directory.resolve(deleteMessage.getId() + ".ser");
-        try {
-            Files.deleteIfExists(filePath);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        messageRepository.deleteMessage(deleteMessage.getId());
         return deleteMessage;
     }
 }
