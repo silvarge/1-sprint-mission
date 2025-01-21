@@ -3,12 +3,21 @@ package com.sprint.mission.discodeit.app;
 import com.sprint.mission.discodeit.dto.*;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.repository.ChannelRepository;
+import com.sprint.mission.discodeit.repository.MessageRepository;
+import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.repository.file.FileChannelRepository;
+import com.sprint.mission.discodeit.repository.file.FileMessageRepository;
+import com.sprint.mission.discodeit.repository.file.FileUserRepository;
+import com.sprint.mission.discodeit.repository.jcf.JCFChannelRepository;
+import com.sprint.mission.discodeit.repository.jcf.JCFMessageRepository;
+import com.sprint.mission.discodeit.repository.jcf.JCFUserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.service.UserService;
-import com.sprint.mission.discodeit.service.file.FileChannelService;
-import com.sprint.mission.discodeit.service.file.FileMessageService;
-import com.sprint.mission.discodeit.service.file.FileUserService;
+import com.sprint.mission.discodeit.service.basic.BasicChannelService;
+import com.sprint.mission.discodeit.service.basic.BasicMessageService;
+import com.sprint.mission.discodeit.service.basic.BasicUserService;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,8 +29,12 @@ public class JavaApplication {
     public static void main(String[] args) {
         // User
         Path userDirectory = Paths.get(System.getProperty("user.dir"), "temp/user");
-        UserService userService = new FileUserService(userDirectory);
+
+//        UserService userService = new FileUserService(userDirectory);
 //        UserService userService = new JCFUserService();
+        UserRepository userRepository = new FileUserRepository(userDirectory);
+        UserRepository jcfUserRepository = new JCFUserRepository();
+        UserService userService = new BasicUserService(userRepository);
 
         // 사용자 생성
         Long userId = userService.createUserData("username1", "nickname1", "email@mail.com", "password!1234", "KR", "010-1111-2222", null);
@@ -80,8 +93,11 @@ public class JavaApplication {
 
         // Channel
         Path channelDirectory = Paths.get(System.getProperty("user.dir"), "temp/channel");
-        ChannelService channelService = new FileChannelService(channelDirectory);
+//        ChannelService channelService = new FileChannelService(channelDirectory);
 //        ChannelService channelService = new JCFChannelService();
+        ChannelRepository channelRepository = new FileChannelRepository(channelDirectory);
+        ChannelRepository jcfChannelRepository = new JCFChannelRepository();
+        ChannelService channelService = new BasicChannelService(channelRepository);
 
         Optional<Map.Entry<Long, User>> owner = userService.findUserByUserName("username1");
         Optional<Map.Entry<Long, User>> owner2 = userService.findUserByUserName("username3");
@@ -142,8 +158,11 @@ public class JavaApplication {
 
         // Message
         Path messageDirectory = Paths.get(System.getProperty("user.dir"), "temp/message");
-        MessageService messageService = new FileMessageService(messageDirectory);
+//        MessageService messageService = new FileMessageService(messageDirectory);
 //        MessageService messageService = new JCFMessageService();
+        MessageRepository messageRepository = new FileMessageRepository(messageDirectory);
+        MessageRepository jcfMessageRepository = new JCFMessageRepository();
+        MessageService messageService = new BasicMessageService(messageRepository);
 
         User author1 = userService.getUserToUserObj(1L);
         Channel channel1 = channelService.getChannelToChannelObj(1L);

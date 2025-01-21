@@ -1,4 +1,4 @@
-package com.sprint.mission.discodeit.service.file;
+package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.common.validation.Validator;
 import com.sprint.mission.discodeit.common.validation.ValidatorImpl;
@@ -10,21 +10,18 @@ import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
-import com.sprint.mission.discodeit.repository.file.FileChannelRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import org.apache.commons.lang3.StringUtils;
 
-import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class FileChannelService implements ChannelService {
-
+public class BasicChannelService implements ChannelService {
     private final Validator validator = new ValidatorImpl();
     private ChannelRepository channelRepository;
 
-    public FileChannelService(Path directory) {
-        this.channelRepository = new FileChannelRepository(directory);
+    public BasicChannelService(ChannelRepository channelRepository) {
+        this.channelRepository = channelRepository;
     }
 
     @Override
@@ -146,4 +143,5 @@ public class FileChannelService implements ChannelService {
         channelRepository.deleteChannel(deleteChannel.getId());
         return deleteChannel;
     }
+
 }
