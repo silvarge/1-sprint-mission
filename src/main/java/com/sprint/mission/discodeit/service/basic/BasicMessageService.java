@@ -13,7 +13,10 @@ import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.service.MessageService;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class BasicMessageService implements MessageService {
@@ -47,19 +50,16 @@ public class BasicMessageService implements MessageService {
 
     @Override
     public MessageResDTO getMessage(Long id) {
-        Message msg = Objects.requireNonNull(findMessageById(id), "해당 ID의 메시지가 존재하지 않습니다.");
+        Message msg = findMessageById(id);
+        if (msg == null) throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
         return new MessageResDTO(id, msg);
     }
 
     @Override
     public MessageResDTO getMessage(String uuid) {
-        Optional<Map.Entry<Long, Message>> msg = Objects.requireNonNull(findMessageByUUID(uuid), "해당 ID의 메시지가 존재하지 않습니다.");
+        Optional<Map.Entry<Long, Message>> msg = findMessageByUUID(uuid);
+        if (msg == null) throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
         return new MessageResDTO(msg.get().getKey(), msg.get().getValue());
-    }
-
-    @Override
-    public Message getMessageToMsgObj(Long id) {
-        return Objects.requireNonNull(findMessageById(id), "해당 ID의 메시지가 존재하지 않습니다.");
     }
 
     @Override
@@ -79,10 +79,12 @@ public class BasicMessageService implements MessageService {
                 .collect(Collectors.toList());
     }
 
+    @Override
     public Message findMessageById(Long id) {
         return messageRepository.loadMessage(id);
     }
 
+    @Override
     public Optional<Map.Entry<Long, Message>> findMessageByUUID(String uuid) {
         return messageRepository.loadAllMessages().entrySet().stream()
                 .filter(entry -> entry.getValue().getId().equals(UUID.fromString(uuid)))
@@ -93,7 +95,7 @@ public class BasicMessageService implements MessageService {
     public boolean updateMessage(Long id, MessageUpdateDTO updateInfo) {
         boolean isUpdated = false;
         try {
-            Message msg = getMessageToMsgObj(id);
+            Message msg = findMessageById(id);
             if (updateInfo.getContent() != null && !msg.getContent().equals(updateInfo.getContent())) {
                 msg.updateContent(updateInfo.getContent());
                 isUpdated = true;

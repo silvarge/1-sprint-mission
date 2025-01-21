@@ -78,11 +78,6 @@ public class FileUserService implements UserService {
     }
 
     @Override
-    public User getUserToUserObj(Long id) {
-        return Objects.requireNonNull(userRepository.loadUser(id), "해당 ID의 사용자가 존재하지 않습니다.");
-    }
-
-    @Override
     public UserResDTO getUser(String userName) {
         return userRepository.loadAllUsers().entrySet().stream()
                 .filter(entry -> entry.getValue().getUserName().getName().equals(userName))
@@ -113,7 +108,7 @@ public class FileUserService implements UserService {
     public boolean updateUser(Long id, UserUpdateDTO updateInfo) {
         boolean isUpdated = false;
         try {
-            User user = getUserToUserObj(id);
+            User user = findUserById(id);
             if (updateInfo.getUserName() != null && !user.getUserName().getName().equals(updateInfo.getUserName()) && validator.userNameValidator(updateInfo.getUserName())) {
                 user.updateUserName(updateInfo.getUserName());
                 isUpdated = true;

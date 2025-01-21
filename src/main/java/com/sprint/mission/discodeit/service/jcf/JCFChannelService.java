@@ -66,11 +66,6 @@ public class JCFChannelService implements ChannelService {
     }
 
     @Override
-    public Channel getChannelToChannelObj(Long id) {
-        return Objects.requireNonNull(findChannelById(id), "해당 ID의 채널이 존재하지 않습니다.");
-    }
-
-    @Override
     public List<ChannelResDTO> getAllChannel() {
         return channelRepository.loadAllChannels().entrySet().stream()
                 .map(entry ->
@@ -98,7 +93,7 @@ public class JCFChannelService implements ChannelService {
     public boolean updateChannelInfo(Long id, ChannelUpdateDTO updateInfo) {
         boolean isUpdated = false;
         try {
-            Channel channel = getChannelToChannelObj(id);
+            Channel channel = findChannelById(id);
             if (updateInfo.getOwner() != null && !channel.getOwner().getUserName().getName().equals(updateInfo.getOwner().getUserName().getName())) {
                 channel.updateOwner(updateInfo.getOwner());
                 isUpdated = true;

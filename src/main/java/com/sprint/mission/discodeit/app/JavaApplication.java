@@ -164,8 +164,8 @@ public class JavaApplication {
         MessageRepository jcfMessageRepository = new JCFMessageRepository();
         MessageService messageService = new BasicMessageService(messageRepository);
 
-        User author1 = userService.getUserToUserObj(1L);
-        Channel channel1 = channelService.getChannelToChannelObj(1L);
+        User author1 = userService.findUserById(1L);
+        Channel channel1 = channelService.findChannelById(1L);
 
         Long msgId = messageService.createMessage(author1, channel1, "메시지1");
         System.out.println("Message created with ID: " + msgId);

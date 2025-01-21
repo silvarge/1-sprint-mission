@@ -59,11 +59,6 @@ public class FileChannelService implements ChannelService {
         return new ChannelResDTO(id, channel, channel.getOwner());
     }
 
-    @Override
-    public Channel getChannelToChannelObj(Long id) {
-        return Objects.requireNonNull(channelRepository.loadChannel(id), "해당 ID의 채널이 존재하지 않습니다.");
-    }
-
     // TODO: 'Optional. get()' without 'isPresent()' check <- 확인
     @Override
     public ChannelResDTO getChannel(String uuid) {
@@ -105,7 +100,7 @@ public class FileChannelService implements ChannelService {
     public boolean updateChannelInfo(Long id, ChannelUpdateDTO updateInfo) {
         boolean isUpdated = false;
         try {
-            Channel channel = getChannelToChannelObj(id);
+            Channel channel = findChannelById(id);
             if (updateInfo.getOwner() != null && !channel.getOwner().getUserName().getName().equals(updateInfo.getOwner().getUserName().getName())) {
                 channel.updateOwner(updateInfo.getOwner());
                 isUpdated = true;

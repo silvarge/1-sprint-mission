@@ -1,6 +1,8 @@
 package com.sprint.mission.discodeit.repository.file;
 
 import com.sprint.mission.discodeit.entity.Channel;
+import com.sprint.mission.discodeit.exception.CustomException;
+import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 
 import java.io.*;
@@ -24,7 +26,7 @@ public class FileChannelRepository implements ChannelRepository {
             try {
                 Files.createDirectories(directory);
             } catch (IOException e) {
-                throw new RuntimeException("Failed to create directory: " + directory, e);
+                throw new CustomException(ErrorCode.FAILED_TO_CREATE_DIRECTORY);
             }
         }
     }
@@ -38,7 +40,7 @@ public class FileChannelRepository implements ChannelRepository {
             oos.writeObject(channel);
             return id;
         } catch (IOException e) {
-            throw new RuntimeException("Failed to save channel data: " + id, e);
+            throw new CustomException(ErrorCode.FAILED_TO_SAVE_DATA);
         }
     }
 
@@ -47,12 +49,12 @@ public class FileChannelRepository implements ChannelRepository {
     public Channel loadChannel(Long id) {
         Path filePath = directory.resolve(id + ".ser");
         if (!Files.exists(filePath)) {
-            throw new RuntimeException("Channel data not found for ID: " + id);
+            throw new CustomException(ErrorCode.CHANNEL_NOT_FOUND);
         }
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filePath.toFile()))) {
             return (Channel) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException("Failed to load channel data: " + id, e);
+            throw new CustomException(ErrorCode.FAILED_TO_LOAD_DATA);
         }
     }
 
@@ -67,12 +69,12 @@ public class FileChannelRepository implements ChannelRepository {
                             Long id = Long.valueOf(path.getFileName().toString().replace(".ser", ""));
                             return Map.entry(id, channel);
                         } catch (IOException | ClassNotFoundException e) {
-                            throw new RuntimeException("Failed to load user data from file: " + path, e);
+                            throw new CustomException(ErrorCode.FAILED_TO_LOAD_DATA);
                         }
                     })
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         } catch (IOException e) {
-            throw new RuntimeException("Failed to load channels from directory", e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -81,7 +83,7 @@ public class FileChannelRepository implements ChannelRepository {
         try {
             Files.deleteIfExists(directory.resolve(id + ".ser"));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new CustomException(ErrorCode.FAILED_TO_DELETE_DATA);
         }
     }
 
@@ -91,7 +93,7 @@ public class FileChannelRepository implements ChannelRepository {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
             oos.writeObject(channel);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to save channel data: " + id, e);
+            throw new CustomException(ErrorCode.FAILED_TO_UPDATE_DATA);
         }
     }
 }

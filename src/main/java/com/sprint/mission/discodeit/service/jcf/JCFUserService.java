@@ -76,11 +76,6 @@ public class JCFUserService implements UserService {
     }
 
     @Override
-    public User getUserToUserObj(Long id) {
-        return Objects.requireNonNull(findUserById(id), "해당 ID의 사용자가 존재하지 않습니다.");
-    }
-
-    @Override
     public UserResDTO getUser(String userName) {
         Optional<Map.Entry<Long, User>> user = Objects.requireNonNull(findUserByUserName(userName), "해당 이름의 사용자가 존재하지 않습니다.");
         return new UserResDTO(user.get().getKey(), user.get().getValue());
@@ -109,7 +104,7 @@ public class JCFUserService implements UserService {
     public boolean updateUser(Long id, UserUpdateDTO updateInfo) {
         boolean isUpdated = false;
         try {
-            User user = getUserToUserObj(id);
+            User user = findUserById(id);
             if (updateInfo.getUserName() != null && !user.getUserName().getName().equals(updateInfo.getUserName()) && validator.userNameValidator(updateInfo.getUserName())) {
                 user.updateUserName(updateInfo.getUserName());
                 isUpdated = true;

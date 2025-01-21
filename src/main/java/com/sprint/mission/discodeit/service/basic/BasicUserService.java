@@ -16,7 +16,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -66,21 +65,17 @@ public class BasicUserService implements UserService {
         }
     }
 
-    // TODO: Custom Exception으로 바꾸기~
     @Override
     public UserResDTO getUser(Long id) {
-        User user = Objects.requireNonNull(findUserById(id), "해당 ID의 사용자가 존재하지 않습니다.");
+        User user = findUserById(id);
+        if (user == null) throw new CustomException(ErrorCode.USER_NOT_FOUND);
         return new UserResDTO(id, user);
     }
 
     @Override
-    public User getUserToUserObj(Long id) {
-        return Objects.requireNonNull(findUserById(id), "해당 ID의 사용자가 존재하지 않습니다.");
-    }
-
-    @Override
     public UserResDTO getUser(String userName) {
-        Optional<Map.Entry<Long, User>> user = Objects.requireNonNull(findUserByUserName(userName), "해당 이름의 사용자가 존재하지 않습니다.");
+        Optional<Map.Entry<Long, User>> user = findUserByUserName(userName);
+        if (user == null) throw new CustomException(ErrorCode.USER_NOT_FOUND);
         return new UserResDTO(user.get().getKey(), user.get().getValue());
     }
 
@@ -107,7 +102,7 @@ public class BasicUserService implements UserService {
     public boolean updateUser(Long id, UserUpdateDTO updateInfo) {
         boolean isUpdated = false;
         try {
-            User user = getUserToUserObj(id);
+            User user = findUserById(id);
             if (updateInfo.getUserName() != null && !user.getUserName().getName().equals(updateInfo.getUserName()) && validator.userNameValidator(updateInfo.getUserName())) {
                 user.updateUserName(updateInfo.getUserName());
                 isUpdated = true;

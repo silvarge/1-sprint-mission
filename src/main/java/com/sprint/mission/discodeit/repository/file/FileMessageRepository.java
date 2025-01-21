@@ -1,6 +1,8 @@
 package com.sprint.mission.discodeit.repository.file;
 
 import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.exception.CustomException;
+import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 
 import java.io.*;
@@ -24,7 +26,7 @@ public class FileMessageRepository implements MessageRepository {
             try {
                 Files.createDirectories(directory);
             } catch (IOException e) {
-                throw new RuntimeException("Failed to create directory: " + directory, e);
+                throw new CustomException(ErrorCode.FAILED_TO_CREATE_DIRECTORY);
             }
         }
     }
@@ -37,7 +39,7 @@ public class FileMessageRepository implements MessageRepository {
             oos.writeObject(message);
             return id;
         } catch (IOException e) {
-            throw new RuntimeException("Failed to save message data: " + id, e);
+            throw new CustomException(ErrorCode.FAILED_TO_SAVE_DATA);
         }
     }
 
@@ -45,12 +47,12 @@ public class FileMessageRepository implements MessageRepository {
     public Message loadMessage(Long id) {
         Path filePath = directory.resolve(id + ".ser");
         if (!Files.exists(filePath)) {
-            throw new RuntimeException("Message data not found for ID: " + id);
+            throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
         }
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filePath.toFile()))) {
             return (Message) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException("Failed to load message data: " + id, e);
+            throw new CustomException(ErrorCode.FAILED_TO_LOAD_DATA);
         }
     }
 
@@ -65,12 +67,12 @@ public class FileMessageRepository implements MessageRepository {
                             Long id = Long.valueOf(path.getFileName().toString().replace(".ser", ""));
                             return Map.entry(id, message);
                         } catch (IOException | ClassNotFoundException e) {
-                            throw new RuntimeException("Failed to load message data from file: " + path, e);
+                            throw new CustomException(ErrorCode.FAILED_TO_LOAD_DATA);
                         }
                     })
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         } catch (IOException e) {
-            throw new RuntimeException("Failed to load messages from directory", e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -79,7 +81,7 @@ public class FileMessageRepository implements MessageRepository {
         try {
             Files.deleteIfExists(directory.resolve(id + ".ser"));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new CustomException(ErrorCode.FAILED_TO_DELETE_DATA);
         }
     }
 
@@ -89,7 +91,7 @@ public class FileMessageRepository implements MessageRepository {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
             oos.writeObject(message);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to save message data: " + id, e);
+            throw new CustomException(ErrorCode.FAILED_TO_UPDATE_DATA);
         }
     }
 }

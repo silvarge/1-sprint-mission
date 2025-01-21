@@ -13,7 +13,10 @@ import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class BasicChannelService implements ChannelService {
@@ -52,13 +55,9 @@ public class BasicChannelService implements ChannelService {
 
     @Override
     public ChannelResDTO getChannel(Long id) {
-        Channel channel = Objects.requireNonNull(channelRepository.loadChannel(id), "해당 ID의 채널이 존재하지 않습니다.");
+        Channel channel = findChannelById(id);
+        if (channel == null) throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
         return new ChannelResDTO(id, channel, channel.getOwner());
-    }
-
-    @Override
-    public Channel getChannelToChannelObj(Long id) {
-        return Objects.requireNonNull(channelRepository.loadChannel(id), "해당 ID의 채널이 존재하지 않습니다.");
     }
 
     // TODO: 'Optional. get()' without 'isPresent()' check <- 확인
@@ -69,7 +68,7 @@ public class BasicChannelService implements ChannelService {
                 .filter(entry -> entry.getValue().getId().toString().equals(uuid))
                 .findFirst()
                 .map(entry -> new ChannelResDTO(entry.getKey(), entry.getValue(), entry.getValue().getOwner()))
-                .orElseThrow(() -> new RuntimeException("해당 ID의 채널이 존재하지 않습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.CHANNEL_NOT_FOUND));
     }
 
 
@@ -94,15 +93,11 @@ public class BasicChannelService implements ChannelService {
                 .findFirst();
     }
 
-    // 채널 제목 수정
-    // 채널 소개 수정
-    // 채널 이미지 수정
-    // 채널 주인 양도 (소유권 이전)
     @Override
     public boolean updateChannelInfo(Long id, ChannelUpdateDTO updateInfo) {
         boolean isUpdated = false;
         try {
-            Channel channel = getChannelToChannelObj(id);
+            Channel channel = findChannelById(id);
             if (updateInfo.getOwner() != null && !channel.getOwner().getUserName().getName().equals(updateInfo.getOwner().getUserName().getName())) {
                 channel.updateOwner(updateInfo.getOwner());
                 isUpdated = true;

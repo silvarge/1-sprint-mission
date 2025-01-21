@@ -60,11 +60,6 @@ public class JCFMessageService implements MessageService {
     }
 
     @Override
-    public Message getMessageToMsgObj(Long id) {
-        return Objects.requireNonNull(findMessageById(id), "해당 ID의 메시지가 존재하지 않습니다.");
-    }
-
-    @Override
     public List<MessageResDTO> getAllMessage() {
         return messageRepository.loadAllMessages().entrySet().stream()
                 .map(entry ->
@@ -81,10 +76,12 @@ public class JCFMessageService implements MessageService {
                 .collect(Collectors.toList());
     }
 
+    @Override
     public Message findMessageById(Long id) {
         return messageRepository.loadMessage(id);
     }
 
+    @Override
     public Optional<Map.Entry<Long, Message>> findMessageByUUID(String uuid) {
         return messageRepository.loadAllMessages().entrySet().stream()
                 .filter(entry -> entry.getValue().getId().equals(UUID.fromString(uuid)))
@@ -95,7 +92,7 @@ public class JCFMessageService implements MessageService {
     public boolean updateMessage(Long id, MessageUpdateDTO updateInfo) {
         boolean isUpdated = false;
         try {
-            Message msg = getMessageToMsgObj(id);
+            Message msg = findMessageById(id);
             if (updateInfo.getContent() != null && !msg.getContent().equals(updateInfo.getContent())) {
                 msg.updateContent(updateInfo.getContent());
                 isUpdated = true;
