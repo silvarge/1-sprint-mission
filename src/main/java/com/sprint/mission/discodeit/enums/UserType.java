@@ -7,7 +7,7 @@ public enum UserType {
     BOT,    // 봇
     STAFF;   // 관리자
 
-    // TODO: 근데 왜 static일까........?
+    // TODO: 근데 왜 static일까
     public static UserType fromString(String value) {
         if (StringUtils.isBlank(value)) {
             throw new IllegalArgumentException("UserType은 null이 될 수 없습니다.");

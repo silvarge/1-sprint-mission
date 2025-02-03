@@ -39,60 +39,63 @@ public class User implements Serializable {
     // 생성자
     public User(UserReqDTO userReqDTO) {
         id = UUID.randomUUID();
-        this.userName = new Name(userReqDTO.getUserName());
-        this.nickname = new Name(userReqDTO.getNickname());
-        this.email = new Email(userReqDTO.getEmail());
-        this.password = new Password(userReqDTO.getPassword());
-        this.phone = new Phone(userReqDTO.getPhone(), userReqDTO.getRegionCode());
-        this.userType = UserType.COMMON;    // BOT은 어떻게 생성되는지 모른다.. 일단 COMMON으로 정해둠
+        this.userName = new Name(userReqDTO.userName());
+        this.nickname = new Name(userReqDTO.nickname());
+        this.email = new Email(userReqDTO.email());
+        this.password = new Password(userReqDTO.password());
+        this.phone = new Phone(userReqDTO.phone(), userReqDTO.regionCode());
+        this.userType = userReqDTO.userType();    // BOT은 어떻게 생성되는지 모른다.. 일단 COMMON으로 정해둠
         this.status = true;
-        this.userImgPath = userReqDTO.getImgPath();
+        this.userImgPath = userReqDTO.imgPath();
         createdAt = System.currentTimeMillis();
-        updatedAt = System.currentTimeMillis(); // 정의해두고 비워두기엔 너무 그럼 업데이트때 다시 불러오면 될 듯
-        this.introduce = userReqDTO.getIntroduce();
+        setUpdatedAt();
+        this.introduce = userReqDTO.introduce();
     }
 
     // Update (뭐 Setter이긴 한데 Update라는 의미를 강조하고 싶음)
-    // TODO: updatedAt -> 내부 공통 메서드 처리 고려하기
     public void updateUserName(String userName) {
         // 사용자명(userName) 업데이트 - 고유한 값이기 때문에 불변 객체로 설정
         this.userName = new Name(userName);
-        updatedAt = System.currentTimeMillis();
+        setUpdatedAt();
     }
 
     public void updateNickname(String nickname) {
         this.nickname.setName(nickname);
-        updatedAt = System.currentTimeMillis();
+        setUpdatedAt();
     }
 
     public void updateEmail(String email) {
         this.email.changeEmailAddr(email);
-        updatedAt = System.currentTimeMillis();
+        setUpdatedAt();
     }
 
-    public void updatePhone(String phoneNum, String regionCode) {
-        this.phone.setPhoneNum(phoneNum);
+    public void updatePhone(String phone, String regionCode) {
+        this.phone.setPhone(phone);
         this.phone.setRegionCode(RegionCode.fromString(regionCode));
-        updatedAt = System.currentTimeMillis();
+        setUpdatedAt();
     }
 
     public void updateUserType(UserType userType) {
         this.userType = userType;
-        updatedAt = System.currentTimeMillis();
+        setUpdatedAt();
     }
 
     public void updateStatus(boolean status) {
         this.status = status;
-        updatedAt = System.currentTimeMillis();
+        setUpdatedAt();
     }
 
     public void updateUserImg(String userImgPath) {
         this.userImgPath = userImgPath;
-        updatedAt = System.currentTimeMillis();
+        setUpdatedAt();
     }
 
     public void updateIntroduce(String introduce) {
         this.introduce = introduce;
+        setUpdatedAt();
+    }
+
+    void setUpdatedAt() {
         updatedAt = System.currentTimeMillis();
     }
 

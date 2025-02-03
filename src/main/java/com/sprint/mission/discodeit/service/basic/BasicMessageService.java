@@ -1,10 +1,9 @@
 package com.sprint.mission.discodeit.service.basic;
 
+import com.sprint.mission.discodeit.common.validation.MessageValidator;
 import com.sprint.mission.discodeit.common.validation.Validator;
-import com.sprint.mission.discodeit.common.validation.ValidatorImpl;
 import com.sprint.mission.discodeit.dto.MessageReqDTO;
 import com.sprint.mission.discodeit.dto.MessageResDTO;
-import com.sprint.mission.discodeit.dto.MessageUpdateDTO;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
@@ -15,13 +14,12 @@ import com.sprint.mission.discodeit.service.MessageService;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class BasicMessageService implements MessageService {
-    private final Validator validator = new ValidatorImpl();
-    private MessageRepository messageRepository;
+    private final Validator<Message, MessageReqDTO> messageValidator = new MessageValidator();
+    private final MessageRepository messageRepository;
 
     public BasicMessageService(MessageRepository messageRepository) {
         this.messageRepository = messageRepository;
@@ -30,19 +28,13 @@ public class BasicMessageService implements MessageService {
     @Override
     public Long createMessage(User author, Channel channel, String content) {
         try {
-            if (author == null) {
-                throw new CustomException(ErrorCode.AUTHOR_CANNOT_BLANK);
-            }
-            if (channel == null) {
-                throw new CustomException(ErrorCode.CHANNEL_CANNOT_BLANK);
-            }
-            if (content == null) {
-                throw new CustomException(ErrorCode.CONTENT_CANANOT_BLANK);
-            }
-
-            Message msg = new Message(new MessageReqDTO(author, channel, content));
-            Long msgId = messageRepository.saveMessage(msg);
-            return msgId;
+            MessageReqDTO msgDto = MessageReqDTO.builder()
+                    .author(author)
+                    .channel(channel)
+                    .content(content)
+                    .build();
+            messageValidator.validateCreate(msgDto);
+            return messageRepository.saveMessage(new Message(msgDto));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -52,21 +44,39 @@ public class BasicMessageService implements MessageService {
     public MessageResDTO getMessage(Long id) {
         Message msg = findMessageById(id);
         if (msg == null) throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
-        return new MessageResDTO(id, msg);
+        return MessageResDTO.builder()
+                .id(id)
+                .uuid(msg.getId())
+                .author(msg.getAuthor())
+                .channel(msg.getChannel())
+                .content(msg.getContent())
+                .build();
     }
 
     @Override
     public MessageResDTO getMessage(String uuid) {
-        Optional<Map.Entry<Long, Message>> msg = findMessageByUUID(uuid);
+        Map.Entry<Long, Message> msg = findMessageByUUID(uuid);
         if (msg == null) throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
-        return new MessageResDTO(msg.get().getKey(), msg.get().getValue());
+        return MessageResDTO.builder()
+                .id(msg.getKey())
+                .uuid(msg.getValue().getId())
+                .author(msg.getValue().getAuthor())
+                .channel(msg.getValue().getChannel())
+                .content(msg.getValue().getContent())
+                .build();
     }
 
     @Override
     public List<MessageResDTO> getAllMessage() {
         return messageRepository.loadAllMessages().entrySet().stream()
-                .map(entry ->
-                        new MessageResDTO(entry.getKey(), entry.getValue()))
+                .map(entry -> MessageResDTO.builder()
+                        .id(entry.getKey())
+                        .uuid(entry.getValue().getId())
+                        .author(entry.getValue().getAuthor())
+                        .channel(entry.getValue().getChannel())
+                        .content(entry.getValue().getContent())
+                        .build()
+                )
                 .collect(Collectors.toList());
     }
 
@@ -74,8 +84,14 @@ public class BasicMessageService implements MessageService {
     public List<MessageResDTO> getChannelMessage(String channelName) {
         return messageRepository.loadAllMessages().entrySet().stream()
                 .filter(entry -> entry.getValue().getChannel().getId().equals(UUID.fromString(channelName)))
-                .map(entry ->
-                        new MessageResDTO(entry.getKey(), entry.getValue()))
+                .map(entry -> MessageResDTO.builder()
+                        .id(entry.getKey())
+                        .uuid(entry.getValue().getId())
+                        .author(entry.getValue().getAuthor())
+                        .channel(entry.getValue().getChannel())
+                        .content(entry.getValue().getContent())
+                        .build()
+                )
                 .collect(Collectors.toList());
     }
 
@@ -85,21 +101,19 @@ public class BasicMessageService implements MessageService {
     }
 
     @Override
-    public Optional<Map.Entry<Long, Message>> findMessageByUUID(String uuid) {
+    public Map.Entry<Long, Message> findMessageByUUID(String uuid) {
         return messageRepository.loadAllMessages().entrySet().stream()
                 .filter(entry -> entry.getValue().getId().equals(UUID.fromString(uuid)))
-                .findFirst();
+                .findFirst()
+                .orElseThrow(() -> new CustomException(ErrorCode.CHANNEL_NOT_FOUND));
     }
 
     @Override
-    public boolean updateMessage(Long id, MessageUpdateDTO updateInfo) {
+    public boolean updateMessage(Long id, MessageReqDTO updateInfo) {
         boolean isUpdated = false;
         try {
             Message msg = findMessageById(id);
-            if (updateInfo.getContent() != null && !msg.getContent().equals(updateInfo.getContent())) {
-                msg.updateContent(updateInfo.getContent());
-                isUpdated = true;
-            }
+
             messageRepository.updateMessage(id, msg);
             return isUpdated;
         } catch (Exception e) {
@@ -117,8 +131,7 @@ public class BasicMessageService implements MessageService {
     @Override
     public MessageResDTO deleteMessage(String uuid) {
         MessageResDTO deleteMessage = getMessage(uuid);
-        messageRepository.deleteMessage(deleteMessage.getId());
+        messageRepository.deleteMessage(deleteMessage.id());
         return deleteMessage;
     }
-
 }

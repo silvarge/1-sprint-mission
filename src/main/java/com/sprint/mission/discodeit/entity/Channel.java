@@ -32,13 +32,13 @@ public class Channel implements Serializable {
     public Channel(ChannelReqDTO channelReqDTO) {
         id = UUID.randomUUID();
         createdAt = System.currentTimeMillis();
-        this.owner = channelReqDTO.getOwner();
-        this.serverName = new Name(channelReqDTO.getServerName());
-        this.description = channelReqDTO.getDescription();
-        this.iconImgPath = channelReqDTO.getIconImgPath();
+        this.owner = channelReqDTO.owner();
+        this.serverName = new Name(channelReqDTO.serverName());
+        this.description = channelReqDTO.description();
+        this.iconImgPath = channelReqDTO.iconImgPath();
         members = new ArrayList<>();
         bannedUser = new ArrayList<>();
-        status = true;  // 기본 생성 시 활성화 상태
+        this.status = true;  // 기본 생성 시 활성화 상태
     }
 
     // 중복 확인
@@ -46,47 +46,60 @@ public class Channel implements Serializable {
     // Setter (update)
     public void updateOwner(User user) {
         this.owner = user;
-        this.updatedAt = System.currentTimeMillis();
+        setUpdatedAt();
     }
 
     public void updateServerName(String name) {
         this.serverName.setName(name);
-        this.updatedAt = System.currentTimeMillis();
+        setUpdatedAt();
     }
 
     public void updateDescription(String content) {
         this.description = content;
-        this.updatedAt = System.currentTimeMillis();
+        setUpdatedAt();
     }
 
     public void updateIconImgPath(String imgPath) {
         this.iconImgPath = imgPath;
-        this.updatedAt = System.currentTimeMillis();
+        setUpdatedAt();
     }
 
     public void updateStatus(boolean status) {
         this.status = status;
-        this.updatedAt = System.currentTimeMillis();
+        setUpdatedAt();
     }
 
     public void addMember(User member) {
         this.members.add(member);
-        this.updatedAt = System.currentTimeMillis();
+        setUpdatedAt();
     }
 
     public void removeMember(User member) {
         this.members.remove(member);
-        this.updatedAt = System.currentTimeMillis();
+        setUpdatedAt();
     }
 
     public void addBannedUser(User bannedUser) {
         this.bannedUser.add(bannedUser);
-        this.updatedAt = System.currentTimeMillis();
+        setUpdatedAt();
     }
 
     public void removeBannedUser(User bannedUser) {
         this.bannedUser.remove(bannedUser);
-        this.updatedAt = System.currentTimeMillis();
+        setUpdatedAt();
     }
 
+    void setUpdatedAt() {
+        updatedAt = System.currentTimeMillis();
+    }
+
+    @Override
+    public String toString() {
+        return "Channel {" +
+                "id=" + id +
+                ", owner=" + owner +
+                ", serverName=" + serverName +
+                ", description='" + description + '\'' +
+                '}';
+    }
 }

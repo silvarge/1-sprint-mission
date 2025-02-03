@@ -22,7 +22,6 @@ import com.sprint.mission.discodeit.service.basic.BasicUserService;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
-import java.util.Optional;
 
 public class JavaApplication {
 
@@ -63,8 +62,10 @@ public class JavaApplication {
 
         // 사용자 정보 갱신
         boolean updateFlag = userService.updateUser(userId,
-                new UserUpdateDTO(null, "changeNickname", null, null,
-                        null, null, "TTT.jpeg", null));
+                UserReqDTO.builder()
+                        .nickname("changeNickname")
+                        .imgPath("TTT.jpeg")
+                        .build());
         if (updateFlag) {
             // update가 되었다면
             user = userService.getUser(userId);
@@ -99,22 +100,22 @@ public class JavaApplication {
         ChannelRepository jcfChannelRepository = new JCFChannelRepository();
         ChannelService channelService = new BasicChannelService(channelRepository);
 
-        Optional<Map.Entry<Long, User>> owner = userService.findUserByUserName("username1");
-        Optional<Map.Entry<Long, User>> owner2 = userService.findUserByUserName("username3");
+        Map.Entry<Long, User> owner = userService.findUserByUserName("username1");
+        Map.Entry<Long, User> owner2 = userService.findUserByUserName("username3");
 
-        Long channelId = channelService.createChannel(owner.get().getValue(), "server1", null, null);
+        Long channelId = channelService.createChannel(owner.getValue(), "server1", null, null);
         System.out.println("Channel created with ID: " + channelId);
 
-        channelId = channelService.createChannel(owner.get().getValue(), "server2", null, "ICON.jpg");
+        channelId = channelService.createChannel(owner.getValue(), "server2", null, "ICON.jpg");
         System.out.println("Channel created with ID: " + channelId);
 
-        channelId = channelService.createChannel(owner2.get().getValue(), "server3", "TEST", null);
+        channelId = channelService.createChannel(owner2.getValue(), "server3", "TEST", null);
         System.out.println("Channel created with ID: " + channelId);
 
-        channelId = channelService.createChannel(owner2.get().getValue(), "server9", "TTT", "ICONID.png");
+        channelId = channelService.createChannel(owner2.getValue(), "server9", "TTT", "ICONID.png");
         System.out.println("Channel created with ID: " + channelId);
 
-        channelId = channelService.createChannel(owner2.get().getValue(), "나는 서버다", "나는 서버다앙", "server.jpeg");
+        channelId = channelService.createChannel(owner2.getValue(), "나는 서버다", "나는 서버다앙", "server.jpeg");
         System.out.println("Channel created with ID: " + channelId);
 
         System.out.println("채널 생성 완료!");
@@ -133,7 +134,10 @@ public class JavaApplication {
 
         // 정보 갱신
         updateFlag = channelService.updateChannelInfo(channelId,
-                new ChannelUpdateDTO(null, "sssssssss서버", "HAPPY", null));
+                ChannelReqDTO.builder()
+                        .serverName("Ssssss서버")
+                        .description("Happy")
+                        .build());
         if (updateFlag) {
             // update가 되었다면
             channel = channelService.getChannel(channelId);
@@ -195,7 +199,7 @@ public class JavaApplication {
         messageService.getAllMessage().forEach(System.out::println);
 
         // 정보 갱신
-        updateFlag = messageService.updateMessage(msgId, new MessageUpdateDTO("HAPPy~"));
+        updateFlag = messageService.updateMessage(msgId, MessageReqDTO.builder().content("Happy!").build());
         if (updateFlag) {
             // update가 되었다면
             msg = messageService.getMessage(msgId);

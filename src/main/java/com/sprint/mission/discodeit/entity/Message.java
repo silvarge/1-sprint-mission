@@ -27,20 +27,33 @@ public class Message implements Serializable {
     public Message(MessageReqDTO messageReqDTO) {
         id = UUID.randomUUID();
         createdAt = System.currentTimeMillis();
-        author = messageReqDTO.getAuthor();
-        channel = messageReqDTO.getChannel();
-        content = messageReqDTO.getContent();
+        author = messageReqDTO.author();
+        channel = messageReqDTO.channel();
+        content = messageReqDTO.content();
         status = true;
+        setUpdatedAt();
     }
 
     public void updateContent(String content) {
         this.content = content;
-        updatedAt = System.currentTimeMillis();
+        setUpdatedAt();
     }
 
     public void updateStatus(boolean status) {
         this.status = status;
+        setUpdatedAt();
+    }
+
+    void setUpdatedAt() {
         updatedAt = System.currentTimeMillis();
     }
 
+    @Override
+    public String toString() {
+        return "Message{" +
+                "id=" + id +
+                ", author=" + author +
+                ", content='" + content + '\'' +
+                '}';
+    }
 }

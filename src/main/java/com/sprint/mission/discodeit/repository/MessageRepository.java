@@ -6,13 +6,13 @@ import java.util.Map;
 
 public interface MessageRepository {
 
-    public Long saveMessage(Message message);
+    Long saveMessage(Message message);
 
-    public Message loadMessage(Long id);
+    Message loadMessage(Long id);
 
-    public Map<Long, Message> loadAllMessages();
+    Map<Long, Message> loadAllMessages();
 
-    public void deleteMessage(Long id);
+    void deleteMessage(Long id);
 
-    public void updateMessage(Long id, Message message);
+    void updateMessage(Long id, Message message);
 }

@@ -6,33 +6,12 @@ package com.sprint.mission.discodeit.dto;
  * -- 완전 기본, 추가 필요하면 또 추가해야지
  */
 
-import com.sprint.mission.discodeit.entity.User;
-import lombok.Getter;
+import com.sprint.mission.discodeit.common.Email;
+import com.sprint.mission.discodeit.common.Name;
+import lombok.Builder;
 
-@Getter
-public class UserResDTO implements UserDTO {
-    private Long id;
-    private String uuid;
-    private String userName;
-    private String nickname;
-    private String email;
+import java.util.UUID;
 
-    public UserResDTO(Long id, User user) {
-        this.id = id;
-        this.uuid = user.getId().toString();
-        this.userName = user.getUserName().getName();
-        this.nickname = user.getNickname().getName();
-        this.email = user.getEmail().getEmail();
-    }
-
-    @Override
-    public String toString() {
-        return "UserResDTO{" +
-                "id=" + id +
-                ", uuid='" + uuid + '\'' +
-                ", userName='" + userName + '\'' +
-                ", nickname='" + nickname + '\'' +
-                ", email='" + email + '\'' +
-                '}';
-    }
+@Builder
+public record UserResDTO(Long id, UUID uuid, Name username, Name nickname, Email email) {
 }
