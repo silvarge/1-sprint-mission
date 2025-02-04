@@ -11,7 +11,7 @@ import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.UserService;
-import org.apache.commons.lang3.StringUtils;
+import io.micrometer.common.util.StringUtils;
 
 import java.util.List;
 import java.util.Map;

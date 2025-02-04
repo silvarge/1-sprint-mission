@@ -11,7 +11,7 @@ import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.file.FileChannelRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
-import org.apache.commons.lang3.StringUtils;
+import io.micrometer.common.util.StringUtils;
 
 import java.nio.file.Path;
 import java.util.List;

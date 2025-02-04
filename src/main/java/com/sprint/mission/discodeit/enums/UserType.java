@@ -1,6 +1,6 @@
 package com.sprint.mission.discodeit.enums;
 
-import org.apache.commons.lang3.StringUtils;
+import io.micrometer.common.util.StringUtils;
 
 public enum UserType {
     COMMON, // 일반 유저 (Default)

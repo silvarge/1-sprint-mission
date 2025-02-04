@@ -6,7 +6,7 @@ import com.sprint.mission.discodeit.enums.RegionCode;
 import com.sprint.mission.discodeit.enums.UserType;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
-import org.apache.commons.lang3.StringUtils;
+import io.micrometer.common.util.StringUtils;
 
 public class UserValidator implements Validator<User, UserReqDTO> {
     @Override
