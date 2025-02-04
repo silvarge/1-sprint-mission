@@ -23,4 +23,19 @@ public class CommonRepositoryConfig {
     public Path fileMessageStoragePath() {
         return Paths.get(System.getProperty("user.dir"), "/temp/message");
     }
+
+    @Bean
+    public Path fileBinaryContentStoragePath() {
+        return Paths.get(System.getProperty("user.dir"), "/temp/binaryContent");
+    }
+
+    @Bean
+    public Path fileReadStatusStoragePath() {
+        return Paths.get(System.getProperty("user.dir"), "/temp/readStatus");
+    }
+
+    @Bean
+    public Path fileUserStatusStoragePath() {
+        return Paths.get(System.getProperty("user.dir"), "/temp/userStatus");
+    }
 }

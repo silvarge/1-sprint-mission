@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.dto.ChannelReqDTO;
 import com.sprint.mission.discodeit.dto.ChannelResDTO;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.enums.ChannelType;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
@@ -26,7 +27,7 @@ public class BasicChannelService implements ChannelService {
     private final ChannelRepository channelRepository;
 
     @Override
-    public Long createChannel(User owner, String serverName, String description, String iconImgPath) {
+    public Long createChannel(User owner, String serverName, String description, String iconImgPath, ChannelType channelType) {
         // DTO에 user 객체 + 필요 정보 넣어서 전달되면
         // 생성
         try {
@@ -35,6 +36,7 @@ public class BasicChannelService implements ChannelService {
                     .serverName(serverName)
                     .description(StringUtils.isEmpty(description) ? "" : description)
                     .iconImgPath(StringUtils.isEmpty(iconImgPath) ? "defaultSeverIcon.png" : iconImgPath)
+                    .channelType(channelType)
                     .build();
 
             channelValidator.validateCreate(channelDto);

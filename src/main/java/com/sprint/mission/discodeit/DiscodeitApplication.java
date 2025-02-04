@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit;
 
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.enums.ChannelType;
 import com.sprint.mission.discodeit.service.ChannelService;
 import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.service.UserService;
@@ -21,7 +22,7 @@ public class DiscodeitApplication {
 
     // 코드잇 sprint3 베이스 코드 참고하여 생성
     static Channel setupChannel(ChannelService channelService, User owner) {
-        Long channelId = channelService.createChannel(owner, "server1", null, null);
+        Long channelId = channelService.createChannel(owner, "server1", null, null, ChannelType.fromString("common"));
         System.out.println("Channel created with ID: " + channelId);
         return channelService.findChannelById(channelId);
     }

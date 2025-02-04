@@ -18,11 +18,13 @@ public enum ErrorCode {
     INVALID_NICKNAME("VALID005", "별명이 유효하지 않습니다."),
     REGION_CODE_IS_NOT_NULL("VALID006", "Region Code는 Null이 될 수 없습니다."),
     USER_NOT_FOUND("USER001", "해당 사용자가 존재하지 않습니다."),
+    USER_TYPE_NOT_FOUND("USER002", "해당 사용자 종류는 존재하지 않습니다."),
 
     // Channel
     OWNER_CANNOT_BLANK("CHANNEL001", "서버 주인은 NULL이 될 수 없습니다."),
     SERVERNAME_CANNOT_BLANK("CHANNEL002", "서버 이름은 NULL이 될 수 없습니다."),
     CHANNEL_NOT_FOUND("CHANNEL003", "해당 채널이 존재하지 않습니다."),
+    CHANNEL_TYPE_NOT_FOUND("CHANNEL004", "해당 채널 종류는 존재하지 않습니다."),
 
     // Message
     AUTHOR_CANNOT_BLANK("MESSAGE001", "작성자는 NULL이 될 수 없습니다."),

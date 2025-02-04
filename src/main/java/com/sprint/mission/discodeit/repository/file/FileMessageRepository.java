@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
@@ -15,10 +16,11 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Repository
 public class FileMessageRepository implements MessageRepository {
     private final Path directory;
-    private final AtomicLong idGenerator = new AtomicLong(1);
+    private final AtomicLong idGenerator = new AtomicLong(0);
 
     public FileMessageRepository(@Qualifier("fileMessageStoragePath") Path directory) {
         this.directory = directory;
@@ -29,7 +31,7 @@ public class FileMessageRepository implements MessageRepository {
         if (!Files.exists(directory)) {
             try {
                 Files.createDirectories(directory);
-                System.out.println("[Message] Message storage directory created: " + directory.toAbsolutePath());
+                log.info("[Message] Message storage directory created: {}", directory.toAbsolutePath());
             } catch (IOException e) {
                 throw new CustomException(ErrorCode.FAILED_TO_CREATE_DIRECTORY);
             }

@@ -4,6 +4,7 @@ import com.sprint.mission.discodeit.dto.ChannelReqDTO;
 import com.sprint.mission.discodeit.dto.ChannelResDTO;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.enums.ChannelType;
 
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,7 @@ import java.util.UUID;
 public interface ChannelService {
 
     // 채널 생성
-    Long createChannel(User owner, String serverName, String description, String iconImgPath);
+    Long createChannel(User owner, String serverName, String description, String iconImgPath, ChannelType channelType);
 
     // 멤버가 존재하는 것이 맞는지 여부 확인
 

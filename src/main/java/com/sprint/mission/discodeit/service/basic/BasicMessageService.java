@@ -113,7 +113,6 @@ public class BasicMessageService implements MessageService {
         boolean isUpdated = false;
         try {
             Message msg = findMessageById(id);
-
             messageRepository.updateMessage(id, msg);
             return isUpdated;
         } catch (Exception e) {
