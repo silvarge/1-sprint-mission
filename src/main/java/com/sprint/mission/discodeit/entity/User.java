@@ -11,6 +11,7 @@ import lombok.Getter;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.UUID;
 
 /* # User
@@ -32,8 +33,8 @@ public class User implements Serializable {
     private boolean status; // 활성화(1)/비활성화(0) 상태 -> 생성 시 default로 1
     private String userImgPath;  //
     private String introduce;   // 자기 소개 (Nullable)
-    private long createdAt; // 생성 시간
-    private long updatedAt; // 업데이트 시간
+    private Instant createdAt; // 생성 시간
+    private Instant updatedAt; // 업데이트 시간
     // 닉네임 등 서버 내 설정은 Profile로 따로 빼야 함
 
     // 생성자
@@ -47,7 +48,7 @@ public class User implements Serializable {
         this.userType = userReqDTO.userType();    // BOT은 어떻게 생성되는지 모른다.. 일단 COMMON으로 정해둠
         this.status = true;
         this.userImgPath = userReqDTO.imgPath();
-        createdAt = System.currentTimeMillis();
+        createdAt = Instant.now();
         setUpdatedAt();
         this.introduce = userReqDTO.introduce();
     }
@@ -96,7 +97,7 @@ public class User implements Serializable {
     }
 
     void setUpdatedAt() {
-        updatedAt = System.currentTimeMillis();
+        updatedAt = Instant.now();
     }
 
     @Override

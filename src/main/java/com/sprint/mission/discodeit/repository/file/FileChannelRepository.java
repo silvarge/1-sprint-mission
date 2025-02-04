@@ -4,6 +4,9 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Repository;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -12,19 +15,21 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
+@Repository
 public class FileChannelRepository implements ChannelRepository {
     private final Path directory;
     private final AtomicLong idGenerator = new AtomicLong(1);
 
-    public FileChannelRepository(Path directory) {
+    public FileChannelRepository(@Qualifier("fileChannelStoragePath") Path directory) {
         this.directory = directory;
-        init(directory);
     }
 
-    private void init(Path directory) {
+    @PostConstruct  // 의존성 주입이 완료된 후 실행
+    private void init() {
         if (!Files.exists(directory)) {
             try {
                 Files.createDirectories(directory);
+                System.out.println("[Channel] Channel storage directory created: " + directory.toAbsolutePath());
             } catch (IOException e) {
                 throw new CustomException(ErrorCode.FAILED_TO_CREATE_DIRECTORY);
             }

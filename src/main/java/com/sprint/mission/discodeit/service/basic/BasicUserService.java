@@ -12,18 +12,18 @@ import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.UserService;
 import io.micrometer.common.util.StringUtils;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Service
+@RequiredArgsConstructor
 public class BasicUserService implements UserService {
     private final Validator<User, UserReqDTO> userValidator = new UserValidator();
     private final UserRepository userRepository;
-
-    public BasicUserService(UserRepository userRepository) {
-        this.userRepository = userRepository;   // 데이터 저장소
-    }
 
     @Override
     public Long createUserData(String username, String nickname, String email, String password, String regionCode, String phone, String imgPath) {

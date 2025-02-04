@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.dto.ChannelReqDTO;
 import lombok.Getter;
 
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -25,13 +26,13 @@ public class Channel implements Serializable {
     private List<User> members;     // 채널 가입자 리스트 - 근데 이건 나중에 객체로 빼는게 좋지 않을까..? 관리하기가 좀
     private List<User> bannedUser;  // 차단 사용자 리스트 - 근데 이건 나중에 객체로 빼는게 좋지 않을까..?
     private boolean status;     // 서버가 활성 상태인지 비활성화 상태인지 상태
-    private long createdAt;
-    private long updatedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
 
     // 생성자
     public Channel(ChannelReqDTO channelReqDTO) {
         id = UUID.randomUUID();
-        createdAt = System.currentTimeMillis();
+        createdAt = Instant.now();
         this.owner = channelReqDTO.owner();
         this.serverName = new Name(channelReqDTO.serverName());
         this.description = channelReqDTO.description();
@@ -90,7 +91,7 @@ public class Channel implements Serializable {
     }
 
     void setUpdatedAt() {
-        updatedAt = System.currentTimeMillis();
+        updatedAt = Instant.now();
     }
 
     @Override
