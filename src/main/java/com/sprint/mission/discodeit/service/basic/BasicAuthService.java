@@ -30,7 +30,7 @@ public class BasicAuthService implements AuthService {
             // 로그인 했으니 시간 업데이트
             userStatus.getValue().updateAccessedAt();
             userStatusRepository.update(userStatus.getKey(), userStatus.getValue());
-            
+
             return UserDTO.response.builder()
                     .id(user.getKey())
                     .uuid(user.getValue().getId())

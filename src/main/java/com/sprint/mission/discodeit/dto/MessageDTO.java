@@ -18,7 +18,6 @@ public class MessageDTO {
 
     @Builder
     public record update(Long id, UUID author, UUID channel, String content, List<MultipartFile> attachments) {
-
     }
 
 }
