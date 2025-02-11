@@ -1,6 +1,6 @@
 package com.sprint.mission.discodeit.common.validation;
 
-import com.sprint.mission.discodeit.dto.UserReqDTO;
+import com.sprint.mission.discodeit.dto.UserDTO;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.enums.RegionCode;
 import com.sprint.mission.discodeit.enums.UserType;
@@ -8,9 +8,9 @@ import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import io.micrometer.common.util.StringUtils;
 
-public class UserValidator implements Validator<User, UserReqDTO> {
+public class UserValidator implements Validator<User, UserDTO.request> {
     @Override
-    public void validateCreate(UserReqDTO entity) {
+    public void validateCreate(UserDTO.request entity) {
         if (!ValidatorExp.USERNAME.matches(entity.userName())) {
             throw new CustomException(ErrorCode.INVALID_USERNAME);
         }
@@ -37,7 +37,7 @@ public class UserValidator implements Validator<User, UserReqDTO> {
     }
 
     @Override
-    public User validateUpdate(User current, UserReqDTO update) {
+    public User validateUpdate(User current, UserDTO.request update) {
         boolean isUpdated = false;
         if (update.userName() != null && !current.getUserName().getName().equals(update.userName()) && ValidatorExp.USERNAME.matches(update.userName())) {
             current.updateUserName(update.userName());
@@ -64,11 +64,6 @@ public class UserValidator implements Validator<User, UserReqDTO> {
                 && (!current.getPhone().getPhone().equals(update.phone()) || current.getPhone().getRegionCode() != RegionCode.fromString(update.regionCode().toString().toUpperCase()))
                 && ValidatorExp.PHONE.matches(update.phone())) {
             current.updatePhone(update.phone(), update.regionCode().toString().toUpperCase());
-            isUpdated = true;
-        }
-
-        if (update.imgPath() != null && !current.getUserImgPath().equals(update.imgPath())) {
-            current.updateUserImg(update.imgPath());
             isUpdated = true;
         }
 

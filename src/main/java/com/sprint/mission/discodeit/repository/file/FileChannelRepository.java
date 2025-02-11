@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.repository.file;
 
 import com.sprint.mission.discodeit.entity.Channel;
+import com.sprint.mission.discodeit.enums.ChannelType;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
@@ -13,6 +14,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -40,7 +42,7 @@ public class FileChannelRepository implements ChannelRepository {
 
     // 데이터 저장
     @Override
-    public Long saveChannel(Channel channel) {
+    public Long save(Channel channel) {
         Long id = idGenerator.getAndIncrement();
         Path filePath = directory.resolve(id + ".ser");
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
@@ -53,7 +55,7 @@ public class FileChannelRepository implements ChannelRepository {
 
     // 유저 데이터 로드
     @Override
-    public Channel loadChannel(Long id) {
+    public Channel load(Long id) {
         Path filePath = directory.resolve(id + ".ser");
         if (!Files.exists(filePath)) {
             throw new CustomException(ErrorCode.CHANNEL_NOT_FOUND);
@@ -66,7 +68,17 @@ public class FileChannelRepository implements ChannelRepository {
     }
 
     @Override
-    public Map<Long, Channel> loadAllChannels() {
+    public Map.Entry<Long, Channel> load(UUID uuid) {
+        Map<Long, Channel> allChannels = loadAll();
+        return allChannels.entrySet().stream()
+                .filter(entry -> entry.getValue().getId().equals(uuid))
+                .findFirst()
+                .orElseThrow(() -> new CustomException(ErrorCode.CHANNEL_NOT_FOUND));
+    }
+
+
+    @Override
+    public Map<Long, Channel> loadAll() {
         try {
             return Files.list(directory)
                     .filter(Files::isRegularFile)
@@ -86,7 +98,17 @@ public class FileChannelRepository implements ChannelRepository {
     }
 
     @Override
-    public void deleteChannel(Long id) {
+    public void update(Long id, Channel channel) {
+        Path filePath = directory.resolve(id + ".ser");
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
+            oos.writeObject(channel);
+        } catch (IOException e) {
+            throw new CustomException(ErrorCode.FAILED_TO_UPDATE_DATA);
+        }
+    }
+
+    @Override
+    public void delete(Long id) {
         try {
             Files.deleteIfExists(directory.resolve(id + ".ser"));
         } catch (IOException e) {
@@ -95,12 +117,14 @@ public class FileChannelRepository implements ChannelRepository {
     }
 
     @Override
-    public void updateChannel(Long id, Channel channel) {
-        Path filePath = directory.resolve(id + ".ser");
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
-            oos.writeObject(channel);
-        } catch (IOException e) {
-            throw new CustomException(ErrorCode.FAILED_TO_UPDATE_DATA);
-        }
+    public Map<Long, Channel> findChannelsByUserId(UUID userId) {
+        return loadAll().entrySet().stream()
+                .filter(channel ->
+                        channel.getValue().getChannelType() == ChannelType.PUBLIC ||
+                                channel.getValue().getMembers().stream()                // Public은 전체 조회
+                                        .anyMatch(uuid -> uuid.equals(userId))    // Private의 경우 필터링
+                )
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
+
 }

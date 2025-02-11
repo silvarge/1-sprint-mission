@@ -3,16 +3,24 @@ package com.sprint.mission.discodeit.repository;
 import com.sprint.mission.discodeit.entity.Message;
 
 import java.util.Map;
+import java.util.UUID;
 
 public interface MessageRepository {
 
-    Long saveMessage(Message message);
+    Long save(Message message);
 
-    Message loadMessage(Long id);
+    Message load(Long id);
 
-    Map<Long, Message> loadAllMessages();
+    Map.Entry<Long, Message> load(UUID uuid);
 
-    void deleteMessage(Long id);
+    Map<Long, Message> loadAll();
 
-    void updateMessage(Long id, Message message);
+    Long delete(Long id);
+
+    void update(Long id, Message message);
+
+    // 조건 달린 상태
+    Map<Long, Message> findMessagesByChannelId(UUID uuid);
+
+    void deleteAllByChannelId(UUID channelId);
 }

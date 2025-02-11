@@ -1,6 +1,6 @@
 package com.sprint.mission.discodeit.entity;
 
-import com.sprint.mission.discodeit.dto.MessageReqDTO;
+import com.sprint.mission.discodeit.dto.MessageDTO;
 import lombok.Getter;
 
 import java.io.Serializable;
@@ -17,19 +17,19 @@ import java.util.UUID;
 @Getter
 public class Message implements Serializable {
     private UUID id;
-    private User author;    // 작성자
+    private UUID authorId;    // 작성자
     private String content; // 메시지 내용
-    private Channel channel;    // 메시지 대상 서버
+    private UUID channelId;    // 메시지 대상 서버
     private boolean status;     // 메시지 상태 (삭제 시 false -> 일정 시간 후 hard delete)
     private Instant createdAt;
     private Instant updatedAt;
 
     // 생성자
-    public Message(MessageReqDTO messageReqDTO) {
+    public Message(MessageDTO.request messageReqDTO) {
         id = UUID.randomUUID();
         createdAt = Instant.now();
-        author = messageReqDTO.author();
-        channel = messageReqDTO.channel();
+        authorId = messageReqDTO.author();
+        channelId = messageReqDTO.channel();
         content = messageReqDTO.content();
         status = true;
         setUpdatedAt();
@@ -53,7 +53,7 @@ public class Message implements Serializable {
     public String toString() {
         return "Message{" +
                 "id=" + id +
-                ", author=" + author +
+                ", author=" + authorId +
                 ", content='" + content + '\'' +
                 '}';
     }

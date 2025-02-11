@@ -2,77 +2,117 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.common.validation.ChannelValidator;
 import com.sprint.mission.discodeit.common.validation.Validator;
-import com.sprint.mission.discodeit.dto.ChannelReqDTO;
-import com.sprint.mission.discodeit.dto.ChannelResDTO;
+import com.sprint.mission.discodeit.dto.ChannelDTO;
+import com.sprint.mission.discodeit.dto.ReadStatusDTO;
 import com.sprint.mission.discodeit.entity.Channel;
-import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.enums.ChannelType;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
+import com.sprint.mission.discodeit.repository.MessageRepository;
+import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class BasicChannelService implements ChannelService {
-    private final Validator<Channel, ChannelReqDTO> channelValidator = new ChannelValidator();
+    private final Validator<Channel, ChannelDTO.request> channelValidator = new ChannelValidator();
     private final ChannelRepository channelRepository;
+    private final ReadStatusRepository readStatusRepository;
+    private final MessageRepository messageRepository;
 
     @Override
-    public Long createChannel(User owner, String serverName, String description, String iconImgPath, ChannelType channelType) {
-        // DTO에 user 객체 + 필요 정보 넣어서 전달되면
+    public Long createPublicChannel(ChannelDTO.request channelReqDTO) {
         // 생성
         try {
-            ChannelReqDTO channelDto = ChannelReqDTO.builder()
-                    .owner(owner)
-                    .serverName(serverName)
-                    .description(StringUtils.isEmpty(description) ? "" : description)
-                    .iconImgPath(StringUtils.isEmpty(iconImgPath) ? "defaultSeverIcon.png" : iconImgPath)
-                    .channelType(channelType)
+            ChannelDTO.request channelDto = ChannelDTO.request.builder()
+                    .owner(channelReqDTO.owner())
+                    .serverName(channelReqDTO.serverName())
+                    .description(StringUtils.isEmpty(channelReqDTO.description()) ? "" : channelReqDTO.description())
+                    .channelType(channelReqDTO.channelType())
+                    .recent(channelReqDTO.recent())
                     .build();
 
             channelValidator.validateCreate(channelDto);
-            return channelRepository.saveChannel(new Channel(channelDto));
+            return channelRepository.save(new Channel(channelDto));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public ChannelResDTO getChannel(Long id) {
-        Channel channel = findChannelById(id);
+    public Long createPrivateChannel(ChannelDTO.request channelReqDTO) {
+        try {
+            ChannelDTO.request channelDto = ChannelDTO.request.builder()
+                    .owner(channelReqDTO.owner())
+                    .serverName(channelReqDTO.serverName().isBlank() ? "" : channelReqDTO.serverName())
+                    .description(StringUtils.isEmpty(channelReqDTO.description()) ? "" : channelReqDTO.description())
+                    .channelType(channelReqDTO.channelType())
+                    .members(channelReqDTO.members())
+                    .recent(channelReqDTO.recent())
+                    .build();
+
+            channelValidator.validateCreate(channelDto);
+            Long channelId = channelRepository.save(new Channel(channelDto));
+            Channel channel = channelRepository.load(channelId);
+
+            if (channelReqDTO.members() != null && !channelReqDTO.members().isEmpty()) {
+                for (UUID userId : channelReqDTO.members()) {
+                    channel.addMember(userId);  // 멤버 추가
+                    readStatusRepository.save(new ReadStatus(
+                            ReadStatusDTO.request.builder()
+                                    .channelId(channel.getId())
+                                    .userId(userId)
+                                    .lastReadAt(channelDto.recent())
+                                    .build()));
+                }
+            }
+            return channelId;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public ChannelDTO.response find(Long id) {
+        Channel channel = channelRepository.load(id);
         if (channel == null) throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
 
-        return ChannelResDTO.builder()
+        System.out.println(readStatusRepository.loadAll());
+
+        return ChannelDTO.response.builder()
                 .id(id)
                 .uuid(channel.getId())
-                .owner(channel.getOwner())
+                .ownerId(channel.getOwnerId())
                 .serverName(channel.getServerName())
                 .description(channel.getDescription())
-                .iconImgPath(channel.getIconImgPath())
+                .members(channel.getMembers().isEmpty() ? Collections.emptyList() : channel.getMembers())  // UserId 목록 가져옴
+                .recentMessageTime(channel.getChannelType() == ChannelType.PUBLIC ? null : readStatusRepository.findUpToDateReadTimeByChannelId(channel.getId()))
                 .build();
     }
 
     @Override
-    public ChannelResDTO getChannel(String uuid) {
-        return channelRepository.loadAllChannels().entrySet().stream()
-                .filter(entry -> entry.getValue().getId().toString().equals(uuid))
+    public ChannelDTO.response find(UUID uuid) {
+        return channelRepository.loadAll().entrySet().stream()
+                .filter(entry -> entry.getValue().getId().equals(uuid))
                 .findFirst()
-                .map(entry -> ChannelResDTO.builder()
+                .map(entry -> ChannelDTO.response.builder()
                         .id(entry.getKey())
                         .uuid(entry.getValue().getId())
-                        .owner(entry.getValue().getOwner())
+                        .ownerId(entry.getValue().getOwnerId())
                         .serverName(entry.getValue().getServerName())
                         .description(entry.getValue().getDescription())
-                        .iconImgPath(entry.getValue().getIconImgPath())
+                        .members(entry.getValue().getMembers())  // UserId 목록 가져옴
+                        .recentMessageTime(entry.getValue().getChannelType() == ChannelType.PUBLIC ? null : readStatusRepository.findUpToDateReadTimeByChannelId(entry.getValue().getId()))
                         .build()
                 )
                 .orElseThrow(() -> new CustomException(ErrorCode.CHANNEL_NOT_FOUND));
@@ -80,41 +120,31 @@ public class BasicChannelService implements ChannelService {
 
 
     @Override
-    public List<ChannelResDTO> getAllChannel() {
-        return channelRepository.loadAllChannels().entrySet().stream()
-                .map(entry -> ChannelResDTO.builder()
+    public List<ChannelDTO.response> findAllByUserId(UUID userId) {
+        return channelRepository.findChannelsByUserId(userId).entrySet().stream()
+                .map(entry -> ChannelDTO.response.builder()
                         .id(entry.getKey())
                         .uuid(entry.getValue().getId())
-                        .owner(entry.getValue().getOwner())
+                        .ownerId(entry.getValue().getOwnerId())
                         .serverName(entry.getValue().getServerName())
                         .description(entry.getValue().getDescription())
-                        .iconImgPath(entry.getValue().getIconImgPath())
+                        .members(entry.getValue().getMembers())
+                        .recentMessageTime(entry.getValue().getChannelType() == ChannelType.PUBLIC ? null : readStatusRepository.findUpToDateReadTimeByChannelId(entry.getValue().getId()))
                         .build()
                 )
                 .collect(Collectors.toList());
     }
 
     @Override
-    public Channel findChannelById(Long id) {
-        return channelRepository.loadChannel(id);
-    }
-
-    @Override
-    public Map.Entry<Long, Channel> findChannelByUUID(UUID uuid) {
-        Map<Long, Channel> allChannels = channelRepository.loadAllChannels();
-        return allChannels.entrySet().stream()
-                .filter(entry -> entry.getValue().getId().equals(uuid))
-                .findFirst()
-                .orElseThrow(() -> new CustomException(ErrorCode.CHANNEL_NOT_FOUND));
-    }
-
-    @Override
-    public boolean updateChannelInfo(Long id, ChannelReqDTO updateInfo) {
+    public boolean update(ChannelDTO.update updateDTO) {
         boolean isUpdated = false;
         try {
-            Channel channel = findChannelById(id);
-
-            channelRepository.updateChannel(id, channel);
+            Channel channel = channelRepository.load(updateDTO.id());
+            if (channel.getChannelType() == ChannelType.PRIVATE) {
+                // TODO: Channel은 수정 못한다고 오류 터트려야만 - 새로운 ErrorCode 필요
+                throw new CustomException(ErrorCode.CHANNEL_NOT_FOUND);
+            }
+            channelRepository.update(updateDTO.id(), channel);
             return isUpdated;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -123,16 +153,24 @@ public class BasicChannelService implements ChannelService {
 
     // 채널 삭제
     @Override
-    public ChannelResDTO deleteChannel(Long id) {
-        ChannelResDTO deleteChannel = getChannel(id);
-        channelRepository.deleteChannel(id);
+    public ChannelDTO.response delete(Long id) {
+        ChannelDTO.response deleteChannel = find(id);
+
+        messageRepository.deleteAllByChannelId(deleteChannel.uuid());
+        readStatusRepository.deleteAllByChannelId(deleteChannel.uuid());
+
+        channelRepository.delete(id);
         return deleteChannel;
     }
 
     @Override
-    public ChannelResDTO deleteChannel(String uuid) {
-        ChannelResDTO deleteChannel = getChannel(uuid);
-        channelRepository.deleteChannel(deleteChannel.id());
+    public ChannelDTO.response delete(UUID uuid) {
+        ChannelDTO.response deleteChannel = find(uuid);
+
+        messageRepository.deleteAllByChannelId(uuid);
+        readStatusRepository.deleteAllByChannelId(uuid);
+
+        channelRepository.delete(deleteChannel.id());
         return deleteChannel;
     }
 }

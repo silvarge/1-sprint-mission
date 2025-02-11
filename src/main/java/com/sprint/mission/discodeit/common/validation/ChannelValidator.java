@@ -1,13 +1,13 @@
 package com.sprint.mission.discodeit.common.validation;
 
-import com.sprint.mission.discodeit.dto.ChannelReqDTO;
+import com.sprint.mission.discodeit.dto.ChannelDTO;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 
-public class ChannelValidator implements Validator<Channel, ChannelReqDTO> {
+public class ChannelValidator implements Validator<Channel, ChannelDTO.request> {
     @Override
-    public void validateCreate(ChannelReqDTO entity) {
+    public void validateCreate(ChannelDTO.request entity) {
         if (entity.owner() == null) {
             throw new CustomException(ErrorCode.OWNER_CANNOT_BLANK);
         }
@@ -18,9 +18,9 @@ public class ChannelValidator implements Validator<Channel, ChannelReqDTO> {
     }
 
     @Override
-    public Channel validateUpdate(Channel current, ChannelReqDTO update) {
+    public Channel validateUpdate(Channel current, ChannelDTO.request update) {
         boolean isUpdated = false;
-        if (update.owner() != null && !current.getOwner().getUserName().getName().equals(update.owner().getUserName().getName())) {
+        if (update.owner() != null && !current.getOwnerId().equals(update.owner())) {
             current.updateOwner(update.owner());
             isUpdated = true;
         }
@@ -35,10 +35,6 @@ public class ChannelValidator implements Validator<Channel, ChannelReqDTO> {
             isUpdated = true;
         }
 
-        if (update.iconImgPath() != null && !current.getIconImgPath().equals(update.iconImgPath())) {
-            current.updateIconImgPath(update.iconImgPath());
-            isUpdated = true;
-        }
         return isUpdated ? current : null;
     }
 }

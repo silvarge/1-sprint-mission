@@ -13,6 +13,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -39,7 +40,7 @@ public class FileUserRepository implements UserRepository {
     }
 
     @Override
-    public Long saveUser(User user) {
+    public Long save(User user) {
         Long id = idGenerator.getAndIncrement();
         Path filePath = directory.resolve(id + ".ser");
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
@@ -51,7 +52,7 @@ public class FileUserRepository implements UserRepository {
     }
 
     @Override
-    public User loadUser(Long id) {
+    public User load(Long id) {
         Path filePath = directory.resolve(id + ".ser");
         if (!Files.exists(filePath)) {
             throw new CustomException(ErrorCode.USER_NOT_FOUND);
@@ -64,7 +65,15 @@ public class FileUserRepository implements UserRepository {
     }
 
     @Override
-    public Map<Long, User> loadAllUsers() {
+    public Map.Entry<Long, User> load(UUID uuid) {
+        return loadAll().entrySet().stream()
+                .filter(entry -> entry.getValue().getId().equals(uuid))
+                .findFirst()
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    @Override
+    public Map<Long, User> loadAll() {
         try {
             return Files.list(directory)
                     .filter(Files::isRegularFile)
@@ -84,7 +93,7 @@ public class FileUserRepository implements UserRepository {
     }
 
     @Override
-    public void deleteUser(Long id) {
+    public void delete(Long id) {
         try {
             Files.deleteIfExists(directory.resolve(id + ".ser"));
         } catch (IOException e) {
@@ -93,12 +102,40 @@ public class FileUserRepository implements UserRepository {
     }
 
     @Override
-    public void updateUser(Long id, User user) {
+    public void update(Long id, User user) {
         Path filePath = directory.resolve(id + ".ser");
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
             oos.writeObject(user);
         } catch (IOException e) {
             throw new CustomException(ErrorCode.FAILED_TO_UPDATE_DATA);
         }
+    }
+
+    @Override
+    public boolean isExistByUserName(String userName) {
+        return loadAll().values().stream()
+                .anyMatch(entry -> entry.getUserName().getName().equals(userName));
+    }
+
+    @Override
+    public boolean isExistByEmail(String email) {
+        return loadAll().values().stream()
+                .anyMatch(entry -> entry.getEmail().getEmail().equals(email));
+    }
+
+    @Override
+    public boolean confirmLogin(String userName, String password) {
+        return loadAll().values().stream()
+                .anyMatch(entry ->
+                        entry.getUserName().getName().equals(userName) &&
+                                entry.getPassword().getPasswd().equals(password));
+    }
+
+    @Override
+    public Map.Entry<Long, User> findUserByUserName(String userName) {
+        return loadAll().entrySet().stream()
+                .filter(entry -> entry.getValue().getUserName().getName().equals(userName))
+                .findFirst()
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 }

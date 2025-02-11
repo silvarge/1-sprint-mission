@@ -1,13 +1,13 @@
 package com.sprint.mission.discodeit.common.validation;
 
-import com.sprint.mission.discodeit.dto.MessageReqDTO;
+import com.sprint.mission.discodeit.dto.MessageDTO;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 
-public class MessageValidator implements Validator<Message, MessageReqDTO> {
+public class MessageValidator implements Validator<Message, MessageDTO.request> {
     @Override
-    public void validateCreate(MessageReqDTO entity) {
+    public void validateCreate(MessageDTO.request entity) {
         if (entity.author() == null) {
             throw new CustomException(ErrorCode.AUTHOR_CANNOT_BLANK);
         }
@@ -20,7 +20,7 @@ public class MessageValidator implements Validator<Message, MessageReqDTO> {
     }
 
     @Override
-    public Message validateUpdate(Message current, MessageReqDTO update) {
+    public Message validateUpdate(Message current, MessageDTO.request update) {
         boolean isUpdated = false;
         if (update.content() != null && !current.getContent().equals(update.content())) {
             current.updateContent(update.content());

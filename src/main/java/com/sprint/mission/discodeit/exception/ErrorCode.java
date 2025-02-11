@@ -19,6 +19,7 @@ public enum ErrorCode {
     REGION_CODE_IS_NOT_NULL("VALID006", "Region Code는 Null이 될 수 없습니다."),
     USER_NOT_FOUND("USER001", "해당 사용자가 존재하지 않습니다."),
     USER_TYPE_NOT_FOUND("USER002", "해당 사용자 종류는 존재하지 않습니다."),
+    USER_IS_ALREADY_EXIST("USER003", "사용자가 이미 존재합니다."),
 
     // Channel
     OWNER_CANNOT_BLANK("CHANNEL001", "서버 주인은 NULL이 될 수 없습니다."),
@@ -37,7 +38,10 @@ public enum ErrorCode {
     FAILED_TO_SAVE_DATA("DATABASE002", "데이터 저장에 실패하였습니다."),
     FAILED_TO_LOAD_DATA("DATABASE003", "데이터 로딩에 실패하였습니다."),
     FAILED_TO_UPDATE_DATA("DATABASE004", "데이터 갱신에 실패하였습니다."),
-    FAILED_TO_DELETE_DATA("DATABASE005", "데이터 삭제에 실패하였습니다.");
+    FAILED_TO_DELETE_DATA("DATABASE005", "데이터 삭제에 실패하였습니다."),
+
+    // Binary content
+    FILE_NOT_FOUND("BINARY001", "해당 파일이 존재하지 않습니다.");
 
     //    private final HttpStatus status; <- status code인데 springboot에 들어가 있는 것 같당
     private final String code;

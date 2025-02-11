@@ -1,10 +1,13 @@
 package com.sprint.mission.discodeit.repository.jcf;
 
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.exception.CustomException;
+import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.repository.UserRepository;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class JCFUserRepository implements UserRepository {
@@ -16,7 +19,7 @@ public class JCFUserRepository implements UserRepository {
     }
 
     @Override
-    public Long saveUser(User user) {
+    public Long save(User user) {
         Long id = idGenerator.getAndIncrement();
         data.put(id, user);
         return id;
@@ -27,24 +30,61 @@ public class JCFUserRepository implements UserRepository {
     }
 
     @Override
-    public User loadUser(Long id) {
+    public User load(Long id) {
         return data.get(id);
     }
 
     @Override
-    public Map<Long, User> loadAllUsers() {
+    public Map.Entry<Long, User> load(UUID uuid) {
+        return loadAll().entrySet().stream()
+                .filter(entry -> entry.getValue().getId().equals(uuid))
+                .findFirst()
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    }
+
+
+    @Override
+    public Map<Long, User> loadAll() {
         return data;
     }
 
     @Override
-    public void deleteUser(Long id) {
+    public void delete(Long id) {
         if (data.remove(id) == null) {
-            throw new IllegalArgumentException("삭제할 사용자가 존재하지 않습니다.");
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
         }
     }
 
     @Override
-    public void updateUser(Long id, User user) {
+    public void update(Long id, User user) {
         data.put(id, user);
+    }
+
+    @Override
+    public boolean isExistByUserName(String userName) {
+        return loadAll().values().stream()
+                .anyMatch(entry -> entry.getUserName().getName().equals(userName));
+    }
+
+    @Override
+    public boolean isExistByEmail(String email) {
+        return loadAll().values().stream()
+                .anyMatch(entry -> entry.getEmail().getEmail().equals(email));
+    }
+
+    @Override
+    public boolean confirmLogin(String userName, String password) {
+        return loadAll().values().stream()
+                .anyMatch(entry ->
+                        entry.getUserName().getName().equals(userName) &&
+                                entry.getPassword().getPasswd().equals(password));
+    }
+
+    @Override
+    public Map.Entry<Long, User> findUserByUserName(String userName) {
+        return loadAll().entrySet().stream()
+                .filter(entry -> entry.getValue().getUserName().getName().equals(userName))
+                .findFirst()
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 }

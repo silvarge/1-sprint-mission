@@ -1,9 +1,10 @@
 package com.sprint.mission.discodeit.repository.file;
 
-import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.enums.ContentType;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
-import com.sprint.mission.discodeit.repository.MessageRepository;
+import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -19,11 +20,11 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
-public class FileMessageRepository implements MessageRepository {
+public class FileBinaryContentRepository implements BinaryContentRepository {
     private final Path directory;
     private final AtomicLong idGenerator = new AtomicLong(0);
 
-    public FileMessageRepository(@Qualifier("fileMessageStoragePath") Path directory) {
+    public FileBinaryContentRepository(@Qualifier("fileBinaryContentStoragePath") Path directory) {
         this.directory = directory;
     }
 
@@ -32,7 +33,7 @@ public class FileMessageRepository implements MessageRepository {
         if (!Files.exists(directory)) {
             try {
                 Files.createDirectories(directory);
-                log.info("[Message] Message storage directory created: {}", directory.toAbsolutePath());
+                log.info("[BinaryContent] BinaryContent storage directory created: {}", directory.toAbsolutePath());
             } catch (IOException e) {
                 throw new CustomException(ErrorCode.FAILED_TO_CREATE_DIRECTORY);
             }
@@ -40,11 +41,11 @@ public class FileMessageRepository implements MessageRepository {
     }
 
     @Override
-    public Long save(Message message) {
+    public Long save(BinaryContent binaryContent) {
         Long id = idGenerator.getAndIncrement();
         Path filePath = directory.resolve(id + ".ser");
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
-            oos.writeObject(message);
+            oos.writeObject(binaryContent);
             return id;
         } catch (IOException e) {
             throw new CustomException(ErrorCode.FAILED_TO_SAVE_DATA);
@@ -52,36 +53,28 @@ public class FileMessageRepository implements MessageRepository {
     }
 
     @Override
-    public Message load(Long id) {
+    public BinaryContent load(Long id) {
         Path filePath = directory.resolve(id + ".ser");
         if (!Files.exists(filePath)) {
-            throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
+            throw new CustomException(ErrorCode.FILE_NOT_FOUND);
         }
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filePath.toFile()))) {
-            return (Message) ois.readObject();
+            return (BinaryContent) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
             throw new CustomException(ErrorCode.FAILED_TO_LOAD_DATA);
         }
     }
 
     @Override
-    public Map.Entry<Long, Message> load(UUID uuid) {
-        return loadAll().entrySet().stream()
-                .filter(entry -> entry.getValue().getId().equals(uuid))
-                .findFirst()
-                .orElseThrow(() -> new CustomException(ErrorCode.MESSAGE_NOT_FOUND));
-    }
-
-    @Override
-    public Map<Long, Message> loadAll() {
+    public Map<Long, BinaryContent> loadAll() {
         try {
             return Files.list(directory)
                     .filter(Files::isRegularFile)
                     .map(path -> {
                         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(path.toFile()))) {
-                            Message message = (Message) ois.readObject();
+                            BinaryContent binaryContent = (BinaryContent) ois.readObject();
                             Long id = Long.valueOf(path.getFileName().toString().replace(".ser", ""));
-                            return Map.entry(id, message);
+                            return Map.entry(id, binaryContent);
                         } catch (IOException | ClassNotFoundException e) {
                             throw new CustomException(ErrorCode.FAILED_TO_LOAD_DATA);
                         }
@@ -93,34 +86,53 @@ public class FileMessageRepository implements MessageRepository {
     }
 
     @Override
-    public Long delete(Long id) {
+    public void delete(Long id) {
         try {
             Files.deleteIfExists(directory.resolve(id + ".ser"));
-            return id;
         } catch (IOException e) {
             throw new CustomException(ErrorCode.FAILED_TO_DELETE_DATA);
         }
     }
 
     @Override
-    public void update(Long id, Message message) {
-        Path filePath = directory.resolve(id + ".ser");
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
-            oos.writeObject(message);
-        } catch (IOException e) {
-            throw new CustomException(ErrorCode.FAILED_TO_UPDATE_DATA);
-        }
+    public boolean isBinaryContentExist(UUID referenceId) {
+        return loadAll().entrySet().stream()
+                .anyMatch(entry -> entry.getValue().getReferenceId().equals(referenceId));
     }
 
     @Override
-    public Map<Long, Message> findMessagesByChannelId(UUID uuid) {
+    public Map.Entry<Long, BinaryContent> findBinaryContentByUUID(UUID uuid) {
         return loadAll().entrySet().stream()
-                .filter(entry -> entry.getValue().getChannelId().equals(uuid))
+                .filter(entry -> entry.getValue().getId().equals(uuid))
+                .findFirst()
+                // TODO: ErrorCode 추가해야 함
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    @Override
+    public Map.Entry<Long, BinaryContent> findProfileImageByMessageId(UUID uuid) {
+        return loadAll().entrySet().stream()
+                .filter(entry -> entry.getValue().getReferenceId().equals(uuid)
+                        && entry.getValue().getContentType().equals(ContentType.PROFILE))
+                .findFirst()
+                // TODO: ErrorCode 추가해야 함
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    @Override
+    public Map<Long, BinaryContent> findMessageImageByMessageId(UUID uuid) {
+        return loadAll().entrySet().stream()
+                .filter(entry -> entry.getValue().getReferenceId().equals(uuid)
+                        && entry.getValue().getContentType().equals(ContentType.PICTURE))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     @Override
-    public void deleteAllByChannelId(UUID channelId) {
-        findMessagesByChannelId(channelId).keySet().forEach(this::delete);
+    public void deleteAllFileByReferenceId(UUID referenceId) {
+        loadAll().entrySet().stream()
+                .filter(entry -> entry.getValue().getReferenceId().equals(referenceId))
+                .map(Map.Entry::getKey)
+                .forEach(this::delete);
     }
+
 }

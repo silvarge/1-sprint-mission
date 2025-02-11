@@ -1,8 +1,9 @@
 package com.sprint.mission.discodeit.entity;
 
-import com.sprint.mission.discodeit.dto.UserStatusReqDTO;
+import com.sprint.mission.discodeit.dto.UserStatusDTO;
 import lombok.Getter;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
@@ -13,16 +14,16 @@ import java.util.UUID;
  */
 
 @Getter
-public class UserStatus {
+public class UserStatus implements Serializable {
     private UUID id;
-    private User user;
+    private UUID userId;
     private Instant accessedAt; // 접속 시간
     private Instant createdAt;
     private Instant updatedAt;  // 엔티티가 변경되었을 때
 
-    public UserStatus(UserStatusReqDTO userStatusReqDTO) {
+    public UserStatus(UserStatusDTO.request userStatusReqDTO) {
         this.id = UUID.randomUUID();
-        this.user = userStatusReqDTO.user();
+        this.userId = userStatusReqDTO.userId();
         this.accessedAt = userStatusReqDTO.accessedAt();
         this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
@@ -35,5 +36,16 @@ public class UserStatus {
 
     public boolean isOnline() {
         return Duration.between(Instant.now(), accessedAt).toMinutes() <= 5L;
+    }
+
+    @Override
+    public String toString() {
+        return "UserStatus{" +
+                "id=" + id +
+                ", userId=" + userId +
+                ", accessedAt=" + accessedAt +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
     }
 }

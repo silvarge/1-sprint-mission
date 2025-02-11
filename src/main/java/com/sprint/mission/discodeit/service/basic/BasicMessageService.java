@@ -2,18 +2,21 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.common.validation.MessageValidator;
 import com.sprint.mission.discodeit.common.validation.Validator;
-import com.sprint.mission.discodeit.dto.MessageReqDTO;
-import com.sprint.mission.discodeit.dto.MessageResDTO;
-import com.sprint.mission.discodeit.entity.Channel;
+import com.sprint.mission.discodeit.dto.BinaryContentDTO;
+import com.sprint.mission.discodeit.dto.MessageDTO;
+import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Message;
-import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.enums.ContentType;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -22,58 +25,76 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class BasicMessageService implements MessageService {
-    private final Validator<Message, MessageReqDTO> messageValidator = new MessageValidator();
+    private final Validator<Message, MessageDTO.request> messageValidator = new MessageValidator();
     private final MessageRepository messageRepository;
+    private final BinaryContentRepository binaryContentRepository;
+
+    private void saveAttachmentList(UUID messageId, List<MultipartFile> attachments) throws IOException {
+        for (MultipartFile attachment : attachments) {
+            binaryContentRepository.save(new BinaryContent(
+                    BinaryContentDTO.request.builder()
+                            .contentType(ContentType.PICTURE)
+                            .referenceId(messageId)
+                            .file(attachment.getBytes())
+                            .mimeType(attachment.getContentType())
+                            .filename(attachment.getOriginalFilename())
+                            .build()
+            ));
+        }
+    }
 
     @Override
-    public Long createMessage(User author, Channel channel, String content) {
+    public Long create(MessageDTO.request messageReqDTO) {
         try {
-            MessageReqDTO msgDto = MessageReqDTO.builder()
-                    .author(author)
-                    .channel(channel)
-                    .content(content)
-                    .build();
-            messageValidator.validateCreate(msgDto);
-            return messageRepository.saveMessage(new Message(msgDto));
+            messageValidator.validateCreate(messageReqDTO);
+            Long messageId = messageRepository.save(new Message(messageReqDTO));
+            UUID messageUUID = messageRepository.load(messageId).getId();
+            // 첨부파일이 존재하면 저장
+            if (messageReqDTO.attachments() != null && !messageReqDTO.attachments().isEmpty()) {
+                saveAttachmentList(messageUUID, messageReqDTO.attachments());
+            }
+
+            return messageId;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public MessageResDTO getMessage(Long id) {
-        Message msg = findMessageById(id);
+    public MessageDTO.response find(Long id) {
+        Message msg = messageRepository.load(id);
         if (msg == null) throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
-        return MessageResDTO.builder()
+        return MessageDTO.response.builder()
                 .id(id)
                 .uuid(msg.getId())
-                .author(msg.getAuthor())
-                .channel(msg.getChannel())
+                .author(msg.getAuthorId())
+                .channel(msg.getChannelId())
                 .content(msg.getContent())
                 .build();
     }
 
     @Override
-    public MessageResDTO getMessage(String uuid) {
-        Map.Entry<Long, Message> msg = findMessageByUUID(uuid);
+    public MessageDTO.response find(UUID uuid) {
+        Map.Entry<Long, Message> msg = messageRepository.load(uuid);
         if (msg == null) throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
-        return MessageResDTO.builder()
+        return MessageDTO.response.builder()
                 .id(msg.getKey())
                 .uuid(msg.getValue().getId())
-                .author(msg.getValue().getAuthor())
-                .channel(msg.getValue().getChannel())
+                .author(msg.getValue().getAuthorId())
+                .channel(msg.getValue().getChannelId())
                 .content(msg.getValue().getContent())
                 .build();
     }
 
     @Override
-    public List<MessageResDTO> getAllMessage() {
-        return messageRepository.loadAllMessages().entrySet().stream()
-                .map(entry -> MessageResDTO.builder()
+    public List<MessageDTO.response> findAllByChannelId(UUID channelUUID) {
+        Map<Long, Message> messageList = messageRepository.findMessagesByChannelId(channelUUID);
+        return messageList.entrySet().stream()
+                .map(entry -> MessageDTO.response.builder()
                         .id(entry.getKey())
                         .uuid(entry.getValue().getId())
-                        .author(entry.getValue().getAuthor())
-                        .channel(entry.getValue().getChannel())
+                        .channel(entry.getValue().getChannelId())
+                        .author(entry.getValue().getAuthorId())
                         .content(entry.getValue().getContent())
                         .build()
                 )
@@ -81,39 +102,26 @@ public class BasicMessageService implements MessageService {
     }
 
     @Override
-    public List<MessageResDTO> getChannelMessage(String channelName) {
-        return messageRepository.loadAllMessages().entrySet().stream()
-                .filter(entry -> entry.getValue().getChannel().getId().equals(UUID.fromString(channelName)))
-                .map(entry -> MessageResDTO.builder()
-                        .id(entry.getKey())
-                        .uuid(entry.getValue().getId())
-                        .author(entry.getValue().getAuthor())
-                        .channel(entry.getValue().getChannel())
-                        .content(entry.getValue().getContent())
-                        .build()
-                )
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public Message findMessageById(Long id) {
-        return messageRepository.loadMessage(id);
-    }
-
-    @Override
-    public Map.Entry<Long, Message> findMessageByUUID(String uuid) {
-        return messageRepository.loadAllMessages().entrySet().stream()
-                .filter(entry -> entry.getValue().getId().equals(UUID.fromString(uuid)))
-                .findFirst()
-                .orElseThrow(() -> new CustomException(ErrorCode.CHANNEL_NOT_FOUND));
-    }
-
-    @Override
-    public boolean updateMessage(Long id, MessageReqDTO updateInfo) {
+    public boolean update(MessageDTO.update updateDTO) {
         boolean isUpdated = false;
         try {
-            Message msg = findMessageById(id);
-            messageRepository.updateMessage(id, msg);
+            Message msg = messageRepository.load(updateDTO.id());   // 기존 메시지 조회
+            if (msg == null) {
+                throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
+            }
+
+            // 메시지 내용 업데이트
+            if (updateDTO.content() != null && !updateDTO.content().isEmpty()) {
+                msg.updateContent(updateDTO.content());
+            }
+
+            // 첨부파일이 존재하면 저장
+            if (updateDTO.attachments() != null && !updateDTO.attachments().isEmpty()) {
+                saveAttachmentList(msg.getId(), updateDTO.attachments());
+                binaryContentRepository.deleteAllFileByReferenceId(msg.getId());
+            }
+
+            messageRepository.update(updateDTO.id(), msg);
             return isUpdated;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -121,16 +129,23 @@ public class BasicMessageService implements MessageService {
     }
 
     @Override
-    public MessageResDTO deleteMessage(Long id) {
-        MessageResDTO deleteMessage = getMessage(id);
-        messageRepository.deleteMessage(id);
-        return deleteMessage;
+    public Long delete(Long id) {
+        UUID uuid = messageRepository.load(id).getId();
+        // 관련 도메인(첨부파일)도 함께 삭제
+        if (binaryContentRepository.isBinaryContentExist(uuid)) {
+            Map<Long, BinaryContent> binaryContents = binaryContentRepository.findMessageImageByMessageId(uuid);
+            binaryContents.keySet().forEach(binaryContentRepository::delete);
+        }
+        return messageRepository.delete(id);
     }
 
     @Override
-    public MessageResDTO deleteMessage(String uuid) {
-        MessageResDTO deleteMessage = getMessage(uuid);
-        messageRepository.deleteMessage(deleteMessage.id());
-        return deleteMessage;
+    public Long delete(UUID uuid) {
+        // 관련 도메인(첨부파일)도 함께 삭제
+        if (binaryContentRepository.isBinaryContentExist(uuid)) {
+            Map<Long, BinaryContent> binaryContents = binaryContentRepository.findMessageImageByMessageId(uuid);
+            binaryContents.keySet().forEach(binaryContentRepository::delete);
+        }
+        return messageRepository.delete(messageRepository.load(uuid).getKey());
     }
 }

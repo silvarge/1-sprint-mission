@@ -4,7 +4,7 @@ import com.sprint.mission.discodeit.common.Email;
 import com.sprint.mission.discodeit.common.Name;
 import com.sprint.mission.discodeit.common.Password;
 import com.sprint.mission.discodeit.common.Phone;
-import com.sprint.mission.discodeit.dto.UserReqDTO;
+import com.sprint.mission.discodeit.dto.UserDTO;
 import com.sprint.mission.discodeit.enums.RegionCode;
 import com.sprint.mission.discodeit.enums.UserType;
 import lombok.Getter;
@@ -31,14 +31,13 @@ public class User implements Serializable {
     private Phone phone;    // 전화 번호
     private UserType userType;  // 기본은 Common
     private boolean status; // 활성화(1)/비활성화(0) 상태 -> 생성 시 default로 1
-    private String userImgPath;  //
     private String introduce;   // 자기 소개 (Nullable)
     private Instant createdAt; // 생성 시간
     private Instant updatedAt; // 업데이트 시간
     // 닉네임 등 서버 내 설정은 Profile로 따로 빼야 함
 
     // 생성자
-    public User(UserReqDTO userReqDTO) {
+    public User(UserDTO.request userReqDTO) {
         id = UUID.randomUUID();
         this.userName = new Name(userReqDTO.userName());
         this.nickname = new Name(userReqDTO.nickname());
@@ -47,7 +46,6 @@ public class User implements Serializable {
         this.phone = new Phone(userReqDTO.phone(), userReqDTO.regionCode());
         this.userType = userReqDTO.userType();    // BOT은 어떻게 생성되는지 모른다.. 일단 COMMON으로 정해둠
         this.status = true;
-        this.userImgPath = userReqDTO.imgPath();
         createdAt = Instant.now();
         setUpdatedAt();
         this.introduce = userReqDTO.introduce();
@@ -83,11 +81,6 @@ public class User implements Serializable {
 
     public void updateStatus(boolean status) {
         this.status = status;
-        setUpdatedAt();
-    }
-
-    public void updateUserImg(String userImgPath) {
-        this.userImgPath = userImgPath;
         setUpdatedAt();
     }
 

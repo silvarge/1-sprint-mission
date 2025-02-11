@@ -1,42 +1,33 @@
 package com.sprint.mission.discodeit.service;
 
-import com.sprint.mission.discodeit.dto.ChannelReqDTO;
-import com.sprint.mission.discodeit.dto.ChannelResDTO;
-import com.sprint.mission.discodeit.entity.Channel;
-import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.enums.ChannelType;
+import com.sprint.mission.discodeit.dto.ChannelDTO;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 public interface ChannelService {
 
     // 채널 생성
-    Long createChannel(User owner, String serverName, String description, String iconImgPath, ChannelType channelType);
+    Long createPublicChannel(ChannelDTO.request channelReqDTO);
 
-    // 멤버가 존재하는 것이 맞는지 여부 확인
+    Long createPrivateChannel(ChannelDTO.request channelReqDTO);
 
     // 채널 조회
     // 특정 채널(단건)
-    ChannelResDTO getChannel(Long id);
+    ChannelDTO.response find(Long id);
 
-    ChannelResDTO getChannel(String uuid);
+    ChannelDTO.response find(UUID uuid);
 
     // 모든 채널
-    List<ChannelResDTO> getAllChannel();
-
-    Channel findChannelById(Long id);
-
-    Map.Entry<Long, Channel> findChannelByUUID(UUID uuid);
+    List<ChannelDTO.response> findAllByUserId(UUID userId);
 
     // 채널 수정
-    boolean updateChannelInfo(Long id, ChannelReqDTO updateInfo);
+    boolean update(ChannelDTO.update updateDTO);
 
     // 채널 삭제
     // 채널 Status 변경 -> inactive로
     // 채널 Hard Delete -> 진짜진짜삭제
-    ChannelResDTO deleteChannel(Long id);
+    ChannelDTO.response delete(Long id);
 
-    ChannelResDTO deleteChannel(String uuid);
+    ChannelDTO.response delete(UUID uuid);
 }

@@ -1,11 +1,15 @@
 package com.sprint.mission.discodeit.repository.jcf;
 
 import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.exception.CustomException;
+import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 public class JCFMessageRepository implements MessageRepository {
     private final Map<Long, Message> data;
@@ -16,31 +20,53 @@ public class JCFMessageRepository implements MessageRepository {
     }
 
     @Override
-    public Long saveMessage(Message message) {
+    public Long save(Message message) {
         Long id = idGenerator.getAndIncrement();
         data.put(id, message);
         return id;
     }
 
     @Override
-    public Message loadMessage(Long id) {
+    public Message load(Long id) {
         return data.get(id);
     }
 
     @Override
-    public Map<Long, Message> loadAllMessages() {
+    public Map.Entry<Long, Message> load(UUID uuid) {
+        return loadAll().entrySet().stream()
+                .filter(entry -> entry.getValue().getId().equals(uuid))
+                .findFirst()
+                .orElseThrow(() -> new CustomException(ErrorCode.MESSAGE_NOT_FOUND));
+    }
+
+    @Override
+    public Map<Long, Message> loadAll() {
         return data;
     }
 
     @Override
-    public void deleteMessage(Long id) {
+    public Long delete(Long id) {
         if (data.remove(id) == null) {
-            throw new IllegalArgumentException("삭제할 메시지가 존재하지 않습니다.");
+            throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
         }
+        return id;
     }
 
     @Override
-    public void updateMessage(Long id, Message message) {
+    public void update(Long id, Message message) {
         data.put(id, message);
     }
+
+    @Override
+    public Map<Long, Message> findMessagesByChannelId(UUID uuid) {
+        return loadAll().entrySet().stream()
+                .filter(entry -> entry.getValue().getChannelId().equals(uuid))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    @Override
+    public void deleteAllByChannelId(UUID channelId) {
+        findMessagesByChannelId(channelId).keySet().forEach(this::delete);
+    }
+
 }
