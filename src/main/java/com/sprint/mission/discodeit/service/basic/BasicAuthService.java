@@ -29,7 +29,6 @@ public class BasicAuthService implements AuthService {
                     .nickname(user.getValue().getNickname())
                     .build();
         }
-        // TODO: ErrorCode 추가 필요
-        throw new CustomException(ErrorCode.USER_NOT_FOUND);
+        throw new CustomException(ErrorCode.LOGIN_FAILED);
     }
 }

@@ -141,8 +141,7 @@ public class BasicChannelService implements ChannelService {
         try {
             Channel channel = channelRepository.load(updateDTO.id());
             if (channel.getChannelType() == ChannelType.PRIVATE) {
-                // TODO: Channel은 수정 못한다고 오류 터트려야만 - 새로운 ErrorCode 필요
-                throw new CustomException(ErrorCode.CHANNEL_NOT_FOUND);
+                throw new CustomException(ErrorCode.PRIVATE_CANNOT_MODIFY);
             }
             channelRepository.update(updateDTO.id(), channel);
             return isUpdated;

@@ -31,8 +31,7 @@ public class BasicUserStatusService implements UserStatusService {
     @Override
     public UserStatusDTO.response find(Long id) {
         UserStatus userStatus = userStatusRepository.load(id);
-        // TODO: ErrorCode 수정
-        if (userStatus == null) throw new CustomException(ErrorCode.USER_NOT_FOUND);
+        if (userStatus == null) throw new CustomException(ErrorCode.USER_STATUS_NOT_FOUND);
         return UserStatusDTO.response.builder()
                 .id(id)
                 .uuid(userStatus.getId())
@@ -44,8 +43,7 @@ public class BasicUserStatusService implements UserStatusService {
     @Override
     public UserStatusDTO.response find(UUID uuid) {
         Map.Entry<Long, UserStatus> userStatus = userStatusRepository.load(uuid);
-        // TODO: ErrorCode 수정
-        if (userStatus == null) throw new CustomException(ErrorCode.USER_NOT_FOUND);
+        if (userStatus == null) throw new CustomException(ErrorCode.USER_STATUS_NOT_FOUND);
         return UserStatusDTO.response.builder()
                 .id(userStatus.getKey())
                 .uuid(userStatus.getValue().getId())
@@ -74,8 +72,7 @@ public class BasicUserStatusService implements UserStatusService {
         try {
             UserStatus userStatus = userStatusRepository.load(updateDTO.id());
             if (userStatus == null) {
-                // TODO: ERRORCODE 추가
-                throw new CustomException(ErrorCode.USER_NOT_FOUND);
+                throw new CustomException(ErrorCode.USER_STATUS_NOT_FOUND);
             }
 
             // 값 변경 로직 추가
@@ -97,8 +94,7 @@ public class BasicUserStatusService implements UserStatusService {
         try {
             Map.Entry<Long, UserStatus> userStatus = userStatusRepository.findUserStatusByUserId(userId);
             if (userStatus == null) {
-                // TODO: ERRORCODE 추가
-                throw new CustomException(ErrorCode.USER_NOT_FOUND);
+                throw new CustomException(ErrorCode.USER_STATUS_NOT_FOUND);
             }
 
             // 값 변경 로직 추가

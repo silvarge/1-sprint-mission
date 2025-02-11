@@ -68,11 +68,10 @@ public class FileUserStatusRepository implements UserStatusRepository {
 
     @Override
     public Map.Entry<Long, UserStatus> load(UUID uuid) {
-        // TODO: ErrorCode 추가
         return loadAll().entrySet().stream()
                 .filter(entry -> entry.getValue().getId().equals(uuid))
                 .findFirst()
-                .orElseThrow(() -> new CustomException(ErrorCode.CHANNEL_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_STATUS_NOT_FOUND));
     }
 
     @Override
@@ -118,11 +117,10 @@ public class FileUserStatusRepository implements UserStatusRepository {
     // DB였으면 그냥 내부에서 쿼리문으로 처리했을텐데 일단 File/JCF다보니 이런 방식으로 하게 됨
     @Override
     public Map.Entry<Long, UserStatus> findUserStatusByUserId(UUID userId) {
-        // TODO: ErrorCode 추가
         return loadAll().entrySet().stream()
                 .filter(entry -> entry.getValue().getUserId().equals(userId))
                 .findFirst()
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_STATUS_NOT_FOUND));
     }
 
     @Override

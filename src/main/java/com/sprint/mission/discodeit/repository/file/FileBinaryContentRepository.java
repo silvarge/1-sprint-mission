@@ -107,8 +107,7 @@ public class FileBinaryContentRepository implements BinaryContentRepository {
         return loadAll().entrySet().stream()
                 .filter(entry -> entry.getValue().getId().equals(uuid))
                 .findFirst()
-                // TODO: ErrorCode 추가해야 함
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
     }
 
     @Override
@@ -117,8 +116,7 @@ public class FileBinaryContentRepository implements BinaryContentRepository {
                 .filter(entry -> entry.getValue().getReferenceId().equals(uuid)
                         && entry.getValue().getContentType().equals(ContentType.PROFILE))
                 .findFirst()
-                // TODO: ErrorCode 추가해야 함
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
     }
 
     @Override

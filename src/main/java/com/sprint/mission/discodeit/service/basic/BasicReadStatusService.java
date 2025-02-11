@@ -22,7 +22,6 @@ public class BasicReadStatusService implements ReadStatusService {
     @Override
     public Long create(ReadStatusDTO.request readStatusReqDto) {
         try {
-            // TODO: Validate 필요
             return readStatusRepository.save(new ReadStatus(readStatusReqDto));
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -72,8 +71,7 @@ public class BasicReadStatusService implements ReadStatusService {
         ReadStatus readStatus = readStatusRepository.load(updateDTO.id());
 
         if (readStatus == null) {
-            // TODO: ErrorCode 수정
-            throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
+            throw new CustomException(ErrorCode.READ_STATUS_NOT_FOUND);
         }
 
         if (updateDTO.lastReadAt() != null) {
