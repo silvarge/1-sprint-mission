@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit;
 
+import com.sprint.mission.discodeit.dto.AuthDTO;
 import com.sprint.mission.discodeit.dto.ChannelDTO;
 import com.sprint.mission.discodeit.dto.MessageDTO;
 import com.sprint.mission.discodeit.dto.UserDTO;
@@ -118,6 +119,7 @@ public class DiscodeitApplication {
         UserStatusService userStatusService = context.getBean(UserStatusService.class);
         ReadStatusService readStatusService = context.getBean(ReadStatusService.class);
         BinaryContentService binaryContentService = context.getBean(BinaryContentService.class);
+        AuthService authService = context.getBean(AuthService.class);
 
         Long userId = setupUser(userService);
         Long userId2 = setupUser2(userService);
@@ -130,6 +132,8 @@ public class DiscodeitApplication {
         log.info("Channel: {}", channelService.findAllByUserId(userService.find(userId2).uuid()));
         log.info("ReadStatus: {}", readStatusService.findAllByUserId(userService.find(userId2).uuid()));
         log.info("Message: {}", messageService.findAllByChannelId(channelService.find(channel).uuid()));
+
+        log.info("Login: {}", authService.login(AuthDTO.loginReq.builder().username("USERNAME").password("!00password").build()));
 
     }
 }
