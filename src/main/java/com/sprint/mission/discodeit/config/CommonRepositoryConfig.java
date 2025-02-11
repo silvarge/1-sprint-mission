@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -9,33 +10,47 @@ import java.nio.file.Paths;
 @Configuration
 public class CommonRepositoryConfig {
 
+    @Value("${discodeit.repository.type:jcf}")
+    private String repositoryType;
+
+    @Value("${discodeit.repository.file-directory:temp}")
+    private String baseDirectory;
+
+    private Path getFileStoragePath(String subPath) {
+        if ("file".equalsIgnoreCase(repositoryType)) {  // 대소문자 구분 없이 비교
+            return Paths.get(System.getProperty("user.dir"), "temp", subPath);
+        } else {
+            return Paths.get(System.getProperty("user.dir"), baseDirectory, subPath);
+        }
+    }
+
     @Bean
     public Path fileUserStoragePath() {
-        return Paths.get(System.getProperty("user.dir"), "/temp/user");
+        return getFileStoragePath("user");
     }
 
     @Bean
     public Path fileChannelStoragePath() {
-        return Paths.get(System.getProperty("user.dir"), "/temp/channel");
+        return getFileStoragePath("channel");
     }
 
     @Bean
     public Path fileMessageStoragePath() {
-        return Paths.get(System.getProperty("user.dir"), "/temp/message");
+        return getFileStoragePath("message");
     }
 
     @Bean
     public Path fileBinaryContentStoragePath() {
-        return Paths.get(System.getProperty("user.dir"), "/temp/binaryContent");
+        return getFileStoragePath("binaryContent");
     }
 
     @Bean
     public Path fileReadStatusStoragePath() {
-        return Paths.get(System.getProperty("user.dir"), "/temp/readStatus");
+        return getFileStoragePath("readStatus");
     }
 
     @Bean
     public Path fileUserStatusStoragePath() {
-        return Paths.get(System.getProperty("user.dir"), "/temp/userStatus");
+        return getFileStoragePath("userStatus");
     }
 }

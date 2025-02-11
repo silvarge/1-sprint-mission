@@ -1,7 +1,8 @@
 package com.sprint.mission.discodeit;
 
-import com.sprint.mission.discodeit.dto.ChannelReqDTO;
-import com.sprint.mission.discodeit.dto.MessageReqDTO;
+import com.sprint.mission.discodeit.dto.ChannelDTO;
+import com.sprint.mission.discodeit.dto.MessageDTO;
+import com.sprint.mission.discodeit.dto.UserDTO;
 import com.sprint.mission.discodeit.enums.ChannelType;
 import com.sprint.mission.discodeit.enums.RegionCode;
 import com.sprint.mission.discodeit.enums.UserType;
@@ -22,7 +23,7 @@ public class DiscodeitApplication {
     // 코드잇 sprint3 베이스 코드 참고하여 생성
     static Long setupUser(UserService userService) {
         Long userId = userService.create(
-                UserReqDTO.builder()
+                UserDTO.request.builder()
                         .userName("name")
                         .email("mail@mail.com")
                         .phone("010-0001-0002")
@@ -36,7 +37,12 @@ public class DiscodeitApplication {
         log.info("User created with ID: {}", userId);
         log.info("User : {}", userService.find(userId));
 
-        boolean isUpdated = userService.update(userId);
+        boolean isUpdated = userService.update(
+                UserDTO.update.builder()
+                        .id(userId)
+                        .userReqDTO(UserDTO.request.builder().userName("USERNAME").build())
+                        .build()
+        );
         log.info("User Update Success: {}", isUpdated);
         log.info("UserList\n{}", userService.findAll());
 
@@ -45,7 +51,7 @@ public class DiscodeitApplication {
 
     static Long setupUser2(UserService userService) {
         Long userId = userService.create(
-                UserReqDTO.builder()
+                UserDTO.request.builder()
                         .userName("name2")
                         .email("mail2@mail.com")
                         .phone("010-0201-0002")
@@ -63,7 +69,7 @@ public class DiscodeitApplication {
 
     // 코드잇 sprint3 베이스 코드 참고하여 생성
     static Long setupChannel(ChannelService channelService, UUID owner) {
-        Long channelId = channelService.createPublicChannel(ChannelReqDTO.builder()
+        Long channelId = channelService.createPublicChannel(ChannelDTO.request.builder()
                 .owner(owner)
                 .serverName("serverName1")
                 .description("description!!!")
@@ -77,7 +83,7 @@ public class DiscodeitApplication {
     }
 
     static Long setupPrivateChannel(ChannelService channelService, UUID owner, UUID user2) {
-        Long channelId = channelService.createPrivateChannel(ChannelReqDTO.builder()
+        Long channelId = channelService.createPrivateChannel(ChannelDTO.request.builder()
                 .owner(owner)
                 .serverName("serverName1")
                 .description("description!!!")
@@ -93,7 +99,7 @@ public class DiscodeitApplication {
 
     // 코드잇 sprint3 베이스 코드 참고하여 생성
     static void messageCreateTest(MessageService messageService, UUID channel, UUID author) {
-        Long msgId = messageService.create(MessageReqDTO.builder()
+        Long msgId = messageService.create(MessageDTO.request.builder()
                 .author(author)
                 .channel(channel)
                 .content("CONTENTS")
