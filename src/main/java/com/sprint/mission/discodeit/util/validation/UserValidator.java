@@ -1,4 +1,4 @@
-package com.sprint.mission.discodeit.common.validation;
+package com.sprint.mission.discodeit.util.validation;
 
 import com.sprint.mission.discodeit.dto.UserDTO;
 import com.sprint.mission.discodeit.entity.User;

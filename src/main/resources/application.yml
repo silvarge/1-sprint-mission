@@ -6,3 +6,12 @@ discodeit:
   repository:
     type: jcf # jcf | file
     file-directory: temp
+
+server:
+  tomcat:
+    uri-encoding: utf-8
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true

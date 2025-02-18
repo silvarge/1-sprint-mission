@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.common.Name;
 import com.sprint.mission.discodeit.enums.RegionCode;
 import com.sprint.mission.discodeit.enums.UserType;
 import lombok.Builder;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -20,6 +21,15 @@ public class UserDTO {
     }
 
     @Builder
-    public record update(Long id, UserDTO.request userReqDTO, BinaryContentDTO.request profileDTO) {
+    public record update(Long id, UserDTO.request userReqDTO, MultipartFile profile) {
+    }
+
+    @Builder
+    public record idResponse(Long userId, UUID uuid) {
+    }
+
+    @Builder
+    public record viewResponse(Long id, UUID uuid, Name username, Name nickname, Email email, boolean online,
+                               UUID profileId) {
     }
 }

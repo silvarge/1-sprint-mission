@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.sprint.mission.discodeit.dto.ReadStatusDTO;
 import lombok.Getter;
 
@@ -16,7 +17,10 @@ public class ReadStatus implements Serializable {
     private UUID id;
     private UUID userId;
     private UUID channelId;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Instant lastReadAt;
+
     private Instant createdAt;
     private Instant updatedAt;
 
