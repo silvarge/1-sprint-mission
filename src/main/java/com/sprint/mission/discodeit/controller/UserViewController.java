@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/api")
@@ -19,19 +18,9 @@ public class UserViewController {
 
     @GetMapping("/userView")
     public String getUserList(Model model) {
-        List<UserDTO.viewResponse> users = userService.findAll().stream()
-                .map(user -> {
-                    return UserDTO.viewResponse.builder()
-                            .id(user.id())
-                            .uuid(user.uuid())
-                            .username(user.username())
-                            .nickname(user.nickname())
-                            .email(user.email())
-                            .online(user.online())
-                            .build();
-                }).collect(Collectors.toList());
+        List<UserDTO.response> users = userService.findAll();
         model.addAttribute("users", users);
-        return "user-list"; // `src/main/resources/templates/user-list.html` 렌더링
+        return "user-list"; // user-list.html 렌더링
     }
 }
 

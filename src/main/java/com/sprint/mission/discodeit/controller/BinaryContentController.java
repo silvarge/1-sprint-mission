@@ -29,7 +29,7 @@ public class BinaryContentController {
     public ResponseEntity<byte[]> getProfileByReferenceId(@RequestParam UUID referenceId) throws IOException {
         BinaryContentDTO.convert content = binaryContentService.findProfileByReferenceId(referenceId);
 
-        byte[] pngBytes = FileConverter.convertToPng(content.file());
+        byte[] pngBytes = FileConverter.convertToFile(content.file(), content.filename());
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(content.mimeType() != null ? MediaType.parseMediaType(content.mimeType()) : MediaType.IMAGE_PNG);
@@ -39,11 +39,17 @@ public class BinaryContentController {
         return new ResponseEntity<>(pngBytes, headers, HttpStatus.OK);
     }
 
-    // 다중 파일은 이미지 형태로 보낼 수가 없어서 zip 파일로 보내야 할 것 같음
-    @RequestMapping(value = "/message", method = RequestMethod.GET, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @RequestMapping(value = "/message", method = RequestMethod.GET, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<byte[]> getContentsByReferenceId(@RequestParam UUID referenceId) throws IOException {
-        List<BinaryContentDTO.convert> content = binaryContentService.findContentsByReferenceId(referenceId);
-        return FileConverter.createZipFile(content);
+        List<BinaryContentDTO.convert> contentList = binaryContentService.findContentsByReferenceId(referenceId);
+        byte[] zipBytes = FileConverter.zipFiles(contentList);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment", "files.zip");
+        headers.setContentLength(zipBytes.length);
+
+        return new ResponseEntity<>(zipBytes, headers, HttpStatus.OK);
     }
 
 }

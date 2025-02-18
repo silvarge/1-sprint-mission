@@ -23,7 +23,6 @@ public class ReadStatusController {
 
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
     public ApiResponse<ReadStatusDTO.idResponse> updateReadStatus(@PathVariable Long id, @RequestParam("lastReadAt") Instant lastReadAt) {
-        System.out.println(lastReadAt);
         return ApiResponse.ok(readStatusService.update(ReadStatusDTO.update.builder()
                 .id(id).lastReadAt(lastReadAt).build()
         ));

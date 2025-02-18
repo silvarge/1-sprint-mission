@@ -102,6 +102,7 @@ public class BasicBinaryContentService implements BinaryContentService {
     @Override
     public List<BinaryContentDTO.convert> findContentsByReferenceId(UUID referenceId) {
         Map<Long, BinaryContent> content = binaryContentRepository.findMessageImageByMessageId(referenceId);
+
         return content.entrySet().stream()
                 .map(binaryContent -> BinaryContentDTO.convert.builder()
                         .id(binaryContent.getKey())

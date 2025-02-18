@@ -27,9 +27,4 @@ public class UserDTO {
     @Builder
     public record idResponse(Long userId, UUID uuid) {
     }
-
-    @Builder
-    public record viewResponse(Long id, UUID uuid, Name username, Name nickname, Email email, boolean online,
-                               UUID profileId) {
-    }
 }

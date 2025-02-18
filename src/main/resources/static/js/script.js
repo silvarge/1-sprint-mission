@@ -31,8 +31,6 @@ async function fetchUserProfile(referenceId) {
         const blob = await response.blob(); // ✅ 바이너리 데이터로 변환
         const objectURL = URL.createObjectURL(blob); // ✅ Blob을 URL로 변환
 
-        // const profile = await response.json();
-        // console.log("profile: ", profile);
         // Convert base64 encoded bytes to data URL
         return objectURL;
     } catch (error) {
@@ -49,8 +47,6 @@ async function renderUserList(users) {
     for (const user of users) {
         const userElement = document.createElement('div');
         userElement.className = 'user-item';
-
-        console.log("User : ", user);
 
         // Get profile image URL
         const profileUrl = user.uuid ?

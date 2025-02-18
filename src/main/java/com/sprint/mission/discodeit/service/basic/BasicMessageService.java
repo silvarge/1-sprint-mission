@@ -44,14 +44,14 @@ public class BasicMessageService implements MessageService {
     }
 
     @Override
-    public MessageDTO.idResponse create(MessageDTO.request messageReqDTO) {
+    public MessageDTO.idResponse create(MessageDTO.request messageReqDTO, List<MultipartFile> attachments) {
         try {
             messageValidator.validateCreate(messageReqDTO);
             Long messageId = messageRepository.save(new Message(messageReqDTO));
             UUID messageUUID = messageRepository.load(messageId).getId();
             // 첨부파일이 존재하면 저장
-            if (messageReqDTO.attachments() != null && !messageReqDTO.attachments().isEmpty()) {
-                saveAttachmentList(messageUUID, messageReqDTO.attachments());
+            if (attachments != null && !attachments.isEmpty()) {
+                saveAttachmentList(messageUUID, attachments);
             }
 
             return MessageDTO.idResponse.builder().id(messageId).uuid(messageUUID).build();

@@ -17,13 +17,18 @@ import java.util.UUID;
 public class MessageController {
     private final MessageService messageService;
 
-    @RequestMapping(method = RequestMethod.POST)
-    public ApiResponse<MessageDTO.idResponse> createMessage(@RequestBody MessageDTO.request messageReqDto) {
-        return ApiResponse.created(messageService.create(messageReqDto));
+    @RequestMapping(method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE})
+    public ApiResponse<MessageDTO.idResponse> createMessage(
+            @RequestPart("message") MessageDTO.request messageReqDto,
+            @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments) {
+        return ApiResponse.created(messageService.create(messageReqDto, attachments));
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE})
-    public ApiResponse<MessageDTO.idResponse> updateMessage(@PathVariable Long id, @RequestPart("content") String content, @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments) {
+    public ApiResponse<MessageDTO.idResponse> updateMessage(@PathVariable Long id,
+                                                            @RequestPart("content") String content,
+                                                            @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments) {
+
         return ApiResponse.created(messageService.update(MessageDTO.update.builder()
                 .id(id)
                 .content(content)

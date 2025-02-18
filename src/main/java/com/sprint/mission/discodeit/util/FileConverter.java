@@ -4,10 +4,6 @@ import com.sprint.mission.discodeit.dto.BinaryContentDTO;
 import com.sprint.mission.discodeit.enums.ContentType;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
@@ -35,36 +31,36 @@ public class FileConverter {
         }
     }
 
-    // TODO: formatName도 나중에 추가로 받아야 함
-    public static byte[] convertToPng(byte[] fileData) throws IOException {
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(fileData);
-        BufferedImage image = ImageIO.read(inputStream);
+    public static byte[] convertToFile(byte[] fileData, String filename) throws IOException {
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        ImageIO.write(image, "png", outputStream);
-        return outputStream.toByteArray();
+        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(fileData);
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            BufferedImage image = ImageIO.read(inputStream);
+            ImageIO.write(image, getFileExtension(filename), outputStream);
+            return outputStream.toByteArray();
+        }
     }
 
-    // TODO: formatName도 나중에 추가로 받아야 함
-    public static ResponseEntity<byte[]> createZipFile(List<BinaryContentDTO.convert> binaryDTOList) throws IOException {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream);
+    public static byte[] zipFiles(List<BinaryContentDTO.convert> contentList) throws IOException {
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+             ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
+            for (BinaryContentDTO.convert content : contentList) {
+                ZipEntry zipEntry = new ZipEntry(content.filename());
+                zipOutputStream.putNextEntry(zipEntry);
+                zipOutputStream.write(content.file());
+                zipOutputStream.closeEntry();
+            }
+            zipOutputStream.finish();   // 명시적으로 닫아줘야함!
 
-        for (BinaryContentDTO.convert dto : binaryDTOList) {
-            byte[] pngBytes = convertToPng(dto.file());
-
-            ZipEntry zipEntry = new ZipEntry(dto.filename() + ".png");
-            zipOutputStream.putNextEntry(zipEntry);
-            zipOutputStream.write(pngBytes);
-            zipOutputStream.closeEntry();
+            return byteArrayOutputStream.toByteArray();
         }
+    }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.setContentDispositionFormData("attachment", "images.zip");
-
-        zipOutputStream.close();
-
-        return new ResponseEntity<>(byteArrayOutputStream.toByteArray(), headers, HttpStatus.OK);
+    // 파일 확장자 추출 메서드
+    private static String getFileExtension(String filename) {
+        if (filename == null || !filename.contains(".")) {
+            return ""; // 확장자가 없을 경우 빈 문자열 반환
+        }
+        return filename.substring(filename.lastIndexOf(".") + 1);
     }
 }
