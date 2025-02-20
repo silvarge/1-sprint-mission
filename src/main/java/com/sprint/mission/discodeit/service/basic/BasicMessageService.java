@@ -132,7 +132,7 @@ public class BasicMessageService implements MessageService {
     public MessageDTO.idResponse delete(Long id) {
         UUID uuid = messageRepository.load(id).getId();
         // 관련 도메인(첨부파일)도 함께 삭제
-        if (binaryContentRepository.isBinaryContentExist(uuid)) {
+        if (binaryContentRepository.hasBinaryContent(uuid)) {
             Map<Long, BinaryContent> binaryContents = binaryContentRepository.findMessageImageByMessageId(uuid);
             binaryContents.keySet().forEach(binaryContentRepository::delete);
         }
@@ -143,7 +143,7 @@ public class BasicMessageService implements MessageService {
     @Override
     public MessageDTO.idResponse delete(UUID uuid) {
         // 관련 도메인(첨부파일)도 함께 삭제
-        if (binaryContentRepository.isBinaryContentExist(uuid)) {
+        if (binaryContentRepository.hasBinaryContent(uuid)) {
             Map<Long, BinaryContent> binaryContents = binaryContentRepository.findMessageImageByMessageId(uuid);
             binaryContents.keySet().forEach(binaryContentRepository::delete);
         }

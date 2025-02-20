@@ -136,7 +136,7 @@ public class BasicUserService implements UserService {
             isUpdated = true;
             if (updateDTO.profile() != null) {
                 // 프로필 데이터 존재 여부
-                if (binaryContentRepository.isBinaryContentExist(updatedUser.getId())) {
+                if (binaryContentRepository.hasBinaryContent(updatedUser.getId())) {
                     // 존재 시 삭제
                     Map.Entry<Long, BinaryContent> binaryContent = binaryContentRepository.findProfileImageByMessageId(updatedUser.getId());
                     binaryContentRepository.delete(binaryContent.getKey());

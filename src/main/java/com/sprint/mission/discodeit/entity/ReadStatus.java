@@ -34,13 +34,13 @@ public class ReadStatus implements Serializable {
     }
 
     public void updateLastReadAt() {    // 읽을 시 시간 갱신을 위함
-        lastReadAt = Instant.now();
-        updatedAt = Instant.now();
+        this.lastReadAt = Instant.now();
+        this.updatedAt = Instant.now();
     }
 
     public void updateLastReadAt(Instant time) {    // 읽을 시 시간 갱신을 위함
-        lastReadAt = time;
-        updatedAt = Instant.now();
+        this.lastReadAt = time;
+        this.updatedAt = Instant.now();
     }
 
     @Override

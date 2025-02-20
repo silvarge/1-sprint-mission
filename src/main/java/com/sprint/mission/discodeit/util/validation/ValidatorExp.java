@@ -12,12 +12,12 @@ public enum ValidatorExp {
     PHONE("^\\d{2,3}-\\d{3,4}-\\d{4}$"),
     USERNAME("^(?!.*[.]{2})[a-zA-Z0-9](?:[a-zA-Z0-9_.]{0,30}[a-zA-Z0-9])?$");
 
-    private final String exp;
+    private final String regex;
     private final Pattern pattern;
 
-    ValidatorExp(String exp) {
-        this.exp = exp;
-        this.pattern = Pattern.compile(exp);
+    ValidatorExp(String regex) {
+        this.regex = regex;
+        this.pattern = Pattern.compile(regex);
     }
 
     public boolean matches(String value) {

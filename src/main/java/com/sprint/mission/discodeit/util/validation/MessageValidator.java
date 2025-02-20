@@ -22,7 +22,7 @@ public class MessageValidator implements Validator<Message, MessageDTO.request> 
     @Override
     public Message validateUpdate(Message current, MessageDTO.request update) {
         boolean isUpdated = false;
-        if (update.content() != null && !current.getContent().equals(update.content())) {
+        if (update.content() != null && !update.content().equals(current.getContent())) {
             current.updateContent(update.content());
             isUpdated = true;
         }
