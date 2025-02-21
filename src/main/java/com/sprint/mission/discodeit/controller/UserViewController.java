@@ -16,7 +16,7 @@ import java.util.List;
 public class UserViewController {
     private final UserService userService;
 
-    @GetMapping("/userView")
+    @GetMapping("/user-view")
     public String getUserList(Model model) {
         List<UserDTO.response> users = userService.findAll();
         model.addAttribute("users", users);

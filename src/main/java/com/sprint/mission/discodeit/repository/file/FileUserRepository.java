@@ -130,7 +130,7 @@ public class FileUserRepository implements UserRepository {
         return loadAll().values().stream()
                 .anyMatch(entry ->
                         entry.getUserName().getName().equals(userName) &&
-                                entry.getPassword().getPasswd().equals(password));
+                                entry.getPassword().getPassword().equals(password));
     }
 
     @Override
