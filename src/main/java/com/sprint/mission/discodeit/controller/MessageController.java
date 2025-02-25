@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.common.CustomApiResponse;
+import com.sprint.mission.discodeit.docs.MessageControllerDocs;
 import com.sprint.mission.discodeit.dto.MessageDTO;
 import com.sprint.mission.discodeit.service.MessageService;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +15,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/messages")
 @RequiredArgsConstructor
-public class MessageController {
+public class MessageController implements MessageControllerDocs {
     private final MessageService messageService;
 
     @RequestMapping(method = RequestMethod.POST, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE})

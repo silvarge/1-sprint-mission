@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.common.CustomApiResponse;
+import com.sprint.mission.discodeit.docs.ReadStatusControllerDocs;
 import com.sprint.mission.discodeit.dto.ReadStatusDTO;
 import com.sprint.mission.discodeit.service.ReadStatusService;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +14,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/read-status")
 @RequiredArgsConstructor
-public class ReadStatusController {
+public class ReadStatusController implements ReadStatusControllerDocs {
     private final ReadStatusService readStatusService;
 
     @RequestMapping(method = RequestMethod.POST)

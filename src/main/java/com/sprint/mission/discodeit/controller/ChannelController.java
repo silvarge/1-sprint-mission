@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.common.CustomApiResponse;
+import com.sprint.mission.discodeit.docs.ChannelControllerDocs;
 import com.sprint.mission.discodeit.dto.ChannelDTO;
 import com.sprint.mission.discodeit.service.ChannelService;
 import lombok.RequiredArgsConstructor;
@@ -12,10 +13,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/channels")
 @RequiredArgsConstructor
-public class ChannelController {
+public class ChannelController implements ChannelControllerDocs {
     private final ChannelService channelService;
 
-    // TODO: public/private 그냥 값에 있는 channelType으로 받아서 if로 거칠까? 고민
     @RequestMapping(value = "/public", method = RequestMethod.POST)
     public CustomApiResponse<ChannelDTO.idResponse> createPublicChannel(@RequestBody ChannelDTO.request channelReqDto) {
         return CustomApiResponse.created(channelService.createPublicChannel(channelReqDto));
