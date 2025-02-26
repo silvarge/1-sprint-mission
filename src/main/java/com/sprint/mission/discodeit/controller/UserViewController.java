@@ -16,6 +16,12 @@ import java.util.List;
 public class UserViewController {
     private final UserService userService;
 
+    // 메인 페이지 렌더링
+    @GetMapping("/test")
+    public String index() {
+        return "index"; // templates/index.html 렌더링
+    }
+
     @GetMapping("/user-view")
     public String getUserList(Model model) {
         List<UserDTO.response> users = userService.findAll();

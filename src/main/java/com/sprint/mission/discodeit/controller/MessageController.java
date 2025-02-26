@@ -22,6 +22,7 @@ public class MessageController implements MessageControllerDocs {
     public CustomApiResponse<MessageDTO.idResponse> createMessage(
             @RequestPart("message") MessageDTO.request messageReqDto,
             @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments) {
+        System.out.println("CreateMessage" + messageReqDto + ", " + attachments);
         return CustomApiResponse.created(messageService.create(messageReqDto, attachments));
     }
 

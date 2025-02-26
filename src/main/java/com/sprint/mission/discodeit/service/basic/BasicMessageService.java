@@ -70,6 +70,7 @@ public class BasicMessageService implements MessageService {
                 .author(msg.getAuthorId())
                 .channel(msg.getChannelId())
                 .content(msg.getContent())
+                .createdAt(msg.getCreatedAt())
                 .build();
     }
 
@@ -83,6 +84,7 @@ public class BasicMessageService implements MessageService {
                 .author(msg.getValue().getAuthorId())
                 .channel(msg.getValue().getChannelId())
                 .content(msg.getValue().getContent())
+                .createdAt(msg.getValue().getCreatedAt())
                 .build();
     }
 
@@ -96,6 +98,7 @@ public class BasicMessageService implements MessageService {
                         .channel(entry.getValue().getChannelId())
                         .author(entry.getValue().getAuthorId())
                         .content(entry.getValue().getContent())
+                        .createdAt(entry.getValue().getCreatedAt())
                         .build()
                 )
                 .collect(Collectors.toList());

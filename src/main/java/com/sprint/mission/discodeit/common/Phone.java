@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.common;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.sprint.mission.discodeit.enums.RegionCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,6 +13,7 @@ import java.io.Serializable;
 @Setter
 @AllArgsConstructor
 public class Phone implements Serializable {
+    @JsonValue
     private String phone;
     private RegionCode regionCode;
 

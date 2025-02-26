@@ -17,8 +17,7 @@ public class ChannelDTO {
 
     @Builder
     public record response(Long id, UUID uuid, UUID ownerId, Name serverName, String description,
-                           List<UUID> members,
-                           Instant recentMessageTime) {
+                           List<UUID> members, ChannelType channelType, Instant recentMessageTime) {
     }
 
     @Builder

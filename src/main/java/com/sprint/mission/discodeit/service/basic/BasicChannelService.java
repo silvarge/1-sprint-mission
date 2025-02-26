@@ -98,6 +98,7 @@ public class BasicChannelService implements ChannelService {
                 .ownerId(channel.getOwnerId())
                 .serverName(channel.getServerName())
                 .description(channel.getDescription())
+                .channelType(channel.getChannelType())
                 .members(channel.getMembers().isEmpty() ? Collections.emptyList() : channel.getMembers())  // UserId 목록 가져옴
                 .recentMessageTime(channel.getChannelType() == ChannelType.PUBLIC ? null : readStatusRepository.findUpToDateReadTimeByChannelId(channel.getId()))
                 .build();
@@ -114,6 +115,7 @@ public class BasicChannelService implements ChannelService {
                         .ownerId(entry.getValue().getOwnerId())
                         .serverName(entry.getValue().getServerName())
                         .description(entry.getValue().getDescription())
+                        .channelType(entry.getValue().getChannelType())
                         .members(entry.getValue().getMembers())  // UserId 목록 가져옴
                         .recentMessageTime(entry.getValue().getChannelType() == ChannelType.PUBLIC ? null : readStatusRepository.findUpToDateReadTimeByChannelId(entry.getValue().getId()))
                         .build()
@@ -131,6 +133,7 @@ public class BasicChannelService implements ChannelService {
                         .ownerId(entry.getValue().getOwnerId())
                         .serverName(entry.getValue().getServerName())
                         .description(entry.getValue().getDescription())
+                        .channelType(entry.getValue().getChannelType())
                         .members(entry.getValue().getMembers())
                         .recentMessageTime(entry.getValue().getChannelType() == ChannelType.PUBLIC ? null : readStatusRepository.findUpToDateReadTimeByChannelId(entry.getValue().getId()))
                         .build()

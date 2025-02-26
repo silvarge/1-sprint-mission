@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.dto;
 import lombok.Builder;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,7 +14,7 @@ public class MessageDTO {
     }
 
     @Builder
-    public record response(Long id, UUID uuid, UUID author, UUID channel, String content) {
+    public record response(Long id, UUID uuid, UUID author, UUID channel, String content, Instant createdAt) {
     }
 
     @Builder

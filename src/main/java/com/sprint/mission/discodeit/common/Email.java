@@ -1,12 +1,15 @@
 package com.sprint.mission.discodeit.common;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 
 import java.io.Serializable;
 
 @Getter
 public class Email implements Serializable {
+    @JsonValue
     private String email;
+    
     private boolean verified;   // 이메일 인증
 
     public Email(String email) {
