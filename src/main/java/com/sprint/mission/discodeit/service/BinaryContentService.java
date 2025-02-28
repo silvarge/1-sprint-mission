@@ -1,7 +1,9 @@
 package com.sprint.mission.discodeit.service;
 
 import com.sprint.mission.discodeit.dto.BinaryContentDTO;
+import org.springframework.http.ResponseEntity;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,4 +23,8 @@ public interface BinaryContentService {
     BinaryContentDTO.convert findProfileByReferenceId(UUID referenceId);
 
     List<BinaryContentDTO.convert> findContentsByReferenceId(UUID referenceId);
+
+    ResponseEntity<byte[]> getProfileImageAsResponse(UUID userId) throws IOException;
+
+    ResponseEntity<byte[]> getMessageImageAsResponse(UUID userId) throws IOException;
 }

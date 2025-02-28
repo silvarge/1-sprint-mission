@@ -31,14 +31,7 @@ public class BasicAuthService implements AuthService {
             userStatus.getValue().updateAccessedAt();
             userStatusRepository.update(userStatus.getKey(), userStatus.getValue());
 
-            return UserDTO.response.builder()
-                    .id(user.getKey())
-                    .uuid(user.getValue().getId())
-                    .username(user.getValue().getUserName())
-                    .email(user.getValue().getEmail())
-                    .nickname(user.getValue().getNickname())
-                    .online(userStatus.getValue().isOnline())
-                    .build();
+            return UserDTO.response.from(user, userStatus.getValue().isOnline());
         }
         throw new CustomException(ErrorCode.LOGIN_FAILED);
     }

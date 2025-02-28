@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.docs;
 
 import com.sprint.mission.discodeit.common.CustomApiResponse;
+import com.sprint.mission.discodeit.dto.CommonDTO;
 import com.sprint.mission.discodeit.dto.MessageDTO;
 import com.sprint.mission.discodeit.exception.ExceptionDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,7 +36,7 @@ public interface MessageControllerDocs {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ExceptionDto.class)))
     })
-    CustomApiResponse<MessageDTO.idResponse> createMessage(
+    CustomApiResponse<CommonDTO.idResponse> createMessage(
             @Parameter(description = "메시지 정보", required = true) @RequestPart("message") @Schema(format = "application/json") MessageDTO.request messageReqDto,
             @Parameter(description = "첨부파일 리스트", required = false) @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments);
 
@@ -48,7 +49,7 @@ public interface MessageControllerDocs {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ExceptionDto.class)))
     })
-    CustomApiResponse<MessageDTO.idResponse> updateMessage(
+    CustomApiResponse<CommonDTO.idResponse> updateMessage(
             @Parameter(description = "메시지 ID", required = true) @PathVariable Long messageId,
             @Parameter(description = "수정할 메시지 내용", required = true) @RequestPart("content") String content,
             @Parameter(description = "첨부파일 리스트", required = false) @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments);
@@ -62,7 +63,7 @@ public interface MessageControllerDocs {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ExceptionDto.class)))
     })
-    CustomApiResponse<MessageDTO.idResponse> deleteMessage(
+    CustomApiResponse<CommonDTO.idResponse> deleteMessage(
             @Parameter(description = "메시지 ID", required = true) @PathVariable Long messageId);
 
     @Operation(summary = "채널별 메시지 조회", description = "주어진 채널 ID에 해당하는 메시지 목록을 반환합니다.")

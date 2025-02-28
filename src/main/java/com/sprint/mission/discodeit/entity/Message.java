@@ -1,6 +1,5 @@
 package com.sprint.mission.discodeit.entity;
 
-import com.sprint.mission.discodeit.dto.MessageDTO;
 import lombok.Getter;
 
 import java.io.Serializable;
@@ -25,12 +24,12 @@ public class Message implements Serializable {
     private Instant updatedAt;
 
     // 생성자
-    public Message(MessageDTO.request messageReqDTO) {
+    public Message(UUID authorId, UUID channelId, String content) {
         this.id = UUID.randomUUID();
         this.createdAt = Instant.now();
-        this.authorId = messageReqDTO.author();
-        this.channelId = messageReqDTO.channel();
-        this.content = messageReqDTO.content();
+        this.authorId = authorId;
+        this.channelId = channelId;
+        this.content = content;
         this.status = true;
         refreshUpdatedAt();
     }

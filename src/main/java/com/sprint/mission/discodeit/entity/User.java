@@ -4,9 +4,7 @@ import com.sprint.mission.discodeit.common.Email;
 import com.sprint.mission.discodeit.common.Name;
 import com.sprint.mission.discodeit.common.Password;
 import com.sprint.mission.discodeit.common.Phone;
-import com.sprint.mission.discodeit.dto.UserDTO;
-import com.sprint.mission.discodeit.enums.RegionCode;
-import com.sprint.mission.discodeit.enums.UserType;
+import io.micrometer.common.util.StringUtils;
 import lombok.Getter;
 
 import java.io.Serial;
@@ -37,18 +35,38 @@ public class User implements Serializable {
     // 닉네임 등 서버 내 설정은 Profile로 따로 빼야 함
 
     // 생성자
-    public User(UserDTO.request userReqDTO) {
+    public User(
+            String username, String nickname, String email, String password,
+            String phone, Phone.RegionCode regionCode, UserType userType, String introduce
+    ) {
         this.id = UUID.randomUUID();
-        this.userName = new Name(userReqDTO.userName());
-        this.nickname = new Name(userReqDTO.nickname());
-        this.email = new Email(userReqDTO.email());
-        this.password = new Password(userReqDTO.password());
-        this.phone = new Phone(userReqDTO.phone(), userReqDTO.regionCode());
-        this.userType = userReqDTO.userType();    // BOT은 어떻게 생성되는지 모른다.. 일단 COMMON으로 정해둠
+        this.userName = new Name(username);
+        this.nickname = new Name(nickname);
+        this.email = new Email(email);
+        this.password = new Password(password);
+        this.phone = new Phone(phone, regionCode);
+        this.userType = userType;    // BOT은 어떻게 생성되는지 모른다.. 일단 COMMON으로 정해둠
         this.status = true;
         this.createdAt = Instant.now();
         refreshUpdatedAt();
-        this.introduce = userReqDTO.introduce();
+        this.introduce = introduce;
+    }
+
+    public enum UserType {
+        COMMON, // 일반 유저 (Default)
+        BOT,    // 봇
+        STAFF;   // 관리자
+
+        public static UserType fromString(String value) {
+            if (StringUtils.isBlank(value)) {
+                throw new IllegalArgumentException("UserType은 null이 될 수 없습니다.");
+            }
+            try {
+                return UserType.valueOf(value.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("존재하지 않는 UserType: " + value);
+            }
+        }
     }
 
     // Update (뭐 Setter이긴 한데 Update라는 의미를 강조하고 싶음)
@@ -70,7 +88,7 @@ public class User implements Serializable {
 
     public void updatePhone(String phone, String regionCode) {
         this.phone.setPhone(phone);
-        this.phone.setRegionCode(RegionCode.fromString(regionCode));
+        this.phone.setRegionCode(Phone.RegionCode.fromString(regionCode));
         refreshUpdatedAt();
     }
 

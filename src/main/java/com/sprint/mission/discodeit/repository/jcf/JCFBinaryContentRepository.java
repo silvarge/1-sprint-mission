@@ -1,7 +1,6 @@
 package com.sprint.mission.discodeit.repository.jcf;
 
 import com.sprint.mission.discodeit.entity.BinaryContent;
-import com.sprint.mission.discodeit.enums.ContentType;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
@@ -68,7 +67,7 @@ public class JCFBinaryContentRepository implements BinaryContentRepository {
     public Map.Entry<Long, BinaryContent> findProfileImageByMessageId(UUID uuid) {
         return loadAll().entrySet().stream()
                 .filter(entry -> entry.getValue().getReferenceId().equals(uuid)
-                        && entry.getValue().getContentType().equals(ContentType.PROFILE))
+                        && entry.getValue().getContentType().equals(BinaryContent.ContentType.PROFILE))
                 .findFirst()
                 // TODO: ErrorCode 추가해야 함
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
@@ -78,7 +77,7 @@ public class JCFBinaryContentRepository implements BinaryContentRepository {
     public Map<Long, BinaryContent> findMessageImageByMessageId(UUID uuid) {
         return loadAll().entrySet().stream()
                 .filter(entry -> entry.getValue().getReferenceId().equals(uuid)
-                        && entry.getValue().getContentType().equals(ContentType.PICTURE))
+                        && entry.getValue().getContentType().equals(BinaryContent.ContentType.PICTURE))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 

@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.util;
 
 import com.sprint.mission.discodeit.dto.BinaryContentDTO;
-import com.sprint.mission.discodeit.enums.ContentType;
+import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,7 +17,11 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class FileConverter {
-    public static BinaryContentDTO.request convertToBinaryContent(MultipartFile file, UUID referenceId, ContentType contentType) {
+    // 파일 확장자 추출 관련 상수
+    private static final String EXTENSION_SEPERATOR = ".";
+    private static final int EXTENSION_OFFSET = 1;
+
+    public static BinaryContentDTO.request convertToBinaryContent(MultipartFile file, UUID referenceId, BinaryContent.ContentType contentType) {
         try {
             return BinaryContentDTO.request.builder()
                     .file(file.getBytes())  // MultipartFile → byte[]
@@ -41,16 +45,17 @@ public class FileConverter {
         }
     }
 
-    public static byte[] zipFiles(List<BinaryContentDTO.convert> contentList) throws IOException {
+    public static byte[] zipFiles(List<BinaryContent> contentList) throws IOException {
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
              ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
-            for (BinaryContentDTO.convert content : contentList) {
-                ZipEntry zipEntry = new ZipEntry(content.filename());
+            for (BinaryContent content : contentList) {
+                ZipEntry zipEntry = new ZipEntry(content.getFilename());
                 zipOutputStream.putNextEntry(zipEntry);
-                zipOutputStream.write(content.file());
+                zipOutputStream.write(content.getData());
                 zipOutputStream.closeEntry();
             }
             zipOutputStream.finish();   // 명시적으로 닫아줘야함!
+            // (close로 하면 압축 파일이 제대로 끝 안낸 줄 알고 깨짐)
 
             return byteArrayOutputStream.toByteArray();
         }
@@ -58,9 +63,9 @@ public class FileConverter {
 
     // 파일 확장자 추출 메서드
     private static String getFileExtension(String filename) {
-        if (filename == null || !filename.contains(".")) {
+        if (filename == null || !filename.contains(EXTENSION_SEPERATOR)) {
             return ""; // 확장자가 없을 경우 빈 문자열 반환
         }
-        return filename.substring(filename.lastIndexOf(".") + 1);
+        return filename.substring(filename.lastIndexOf(EXTENSION_SEPERATOR) + EXTENSION_OFFSET);
     }
 }

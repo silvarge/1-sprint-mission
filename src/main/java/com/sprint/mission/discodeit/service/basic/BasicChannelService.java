@@ -1,23 +1,22 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.ChannelDTO;
-import com.sprint.mission.discodeit.dto.ReadStatusDTO;
+import com.sprint.mission.discodeit.dto.CommonDTO;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ReadStatus;
-import com.sprint.mission.discodeit.enums.ChannelType;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
+import com.sprint.mission.discodeit.util.EntryUtils;
 import com.sprint.mission.discodeit.util.validation.ChannelValidator;
 import com.sprint.mission.discodeit.util.validation.Validator;
-import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -31,55 +30,37 @@ public class BasicChannelService implements ChannelService {
     private final MessageRepository messageRepository;
 
     @Override
-    public ChannelDTO.idResponse createPublicChannel(ChannelDTO.request channelReqDTO) {
+    public CommonDTO.idResponse createPublicChannel(ChannelDTO.request channelReqDTO) {
         // 생성
         try {
-            ChannelDTO.request channelDto = ChannelDTO.request.builder()
-                    .owner(channelReqDTO.owner())
-                    .serverName(channelReqDTO.serverName())
-                    .description(StringUtils.isEmpty(channelReqDTO.description()) ? "" : channelReqDTO.description())
-                    .channelType(channelReqDTO.channelType())
-                    .recent(channelReqDTO.recent())
-                    .build();
-
-            channelValidator.validateCreate(channelDto);
-            Channel channel = new Channel(channelDto);
+            channelValidator.validateCreate(channelReqDTO);
+            Channel channel = new Channel(
+                    channelReqDTO.owner(), channelReqDTO.serverName(), channelReqDTO.channelType(), channelReqDTO.description()
+            );
             Long channelId = channelRepository.save(channel);
 
-            return ChannelDTO.idResponse.builder().id(channelId).uuid(channel.getId()).build();
+            return CommonDTO.idResponse.from(channelId, channel.getId());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public ChannelDTO.idResponse createPrivateChannel(ChannelDTO.request channelReqDTO) {
+    public CommonDTO.idResponse createPrivateChannel(ChannelDTO.request channelReqDTO) {
         try {
-            ChannelDTO.request channelDto = ChannelDTO.request.builder()
-                    .owner(channelReqDTO.owner())
-                    .serverName(channelReqDTO.serverName().isBlank() ? "" : channelReqDTO.serverName())
-                    .description(StringUtils.isEmpty(channelReqDTO.description()) ? "" : channelReqDTO.description())
-                    .channelType(channelReqDTO.channelType())
-                    .members(channelReqDTO.members())
-                    .recent(channelReqDTO.recent())
-                    .build();
-
-            channelValidator.validateCreate(channelDto);
-            Long channelId = channelRepository.save(new Channel(channelDto));
+            channelValidator.validateCreate(channelReqDTO);
+            Long channelId = channelRepository.save(
+                    new Channel(channelReqDTO.owner(), channelReqDTO.serverName(), channelReqDTO.channelType(), channelReqDTO.description())
+            );
             Channel channel = channelRepository.load(channelId);
 
             if (channelReqDTO.members() != null && !channelReqDTO.members().isEmpty()) {
                 for (UUID userId : channelReqDTO.members()) {
                     channel.addMember(userId);  // 멤버 추가
-                    readStatusRepository.save(new ReadStatus(
-                            ReadStatusDTO.request.builder()
-                                    .channelId(channel.getId())
-                                    .userId(userId)
-                                    .lastReadAt(channelDto.recent())
-                                    .build()));
+                    readStatusRepository.save(new ReadStatus(userId, channel.getId(), channelReqDTO.recent()));
                 }
             }
-            return ChannelDTO.idResponse.builder().id(channelId).uuid(channel.getId()).build();
+            return CommonDTO.idResponse.from(channelId, channel.getId());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -88,20 +69,14 @@ public class BasicChannelService implements ChannelService {
     @Override
     public ChannelDTO.response find(Long id) {
         Channel channel = channelRepository.load(id);
+        Instant readTime = null;
         if (channel == null) throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
 
-        System.out.println(readStatusRepository.loadAll());
+        if (channel.getChannelType() == Channel.ChannelType.PRIVATE) {
+            readTime = readStatusRepository.findUpToDateReadTimeByChannelId(channel.getId());
+        }
 
-        return ChannelDTO.response.builder()
-                .id(id)
-                .uuid(channel.getId())
-                .ownerId(channel.getOwnerId())
-                .serverName(channel.getServerName())
-                .description(channel.getDescription())
-                .channelType(channel.getChannelType())
-                .members(channel.getMembers().isEmpty() ? Collections.emptyList() : channel.getMembers())  // UserId 목록 가져옴
-                .recentMessageTime(channel.getChannelType() == ChannelType.PUBLIC ? null : readStatusRepository.findUpToDateReadTimeByChannelId(channel.getId()))
-                .build();
+        return ChannelDTO.response.from(EntryUtils.of(id, channel), readTime);
     }
 
     @Override
@@ -109,17 +84,7 @@ public class BasicChannelService implements ChannelService {
         return channelRepository.loadAll().entrySet().stream()
                 .filter(entry -> entry.getValue().getId().equals(uuid))
                 .findFirst()
-                .map(entry -> ChannelDTO.response.builder()
-                        .id(entry.getKey())
-                        .uuid(entry.getValue().getId())
-                        .ownerId(entry.getValue().getOwnerId())
-                        .serverName(entry.getValue().getServerName())
-                        .description(entry.getValue().getDescription())
-                        .channelType(entry.getValue().getChannelType())
-                        .members(entry.getValue().getMembers())  // UserId 목록 가져옴
-                        .recentMessageTime(entry.getValue().getChannelType() == ChannelType.PUBLIC ? null : readStatusRepository.findUpToDateReadTimeByChannelId(entry.getValue().getId()))
-                        .build()
-                )
+                .map(ChannelDTO.response::from)
                 .orElseThrow(() -> new CustomException(ErrorCode.CHANNEL_NOT_FOUND));
     }
 
@@ -127,30 +92,20 @@ public class BasicChannelService implements ChannelService {
     @Override
     public List<ChannelDTO.response> findAllByUserId(UUID userId) {
         return channelRepository.findChannelsByUserId(userId).entrySet().stream()
-                .map(entry -> ChannelDTO.response.builder()
-                        .id(entry.getKey())
-                        .uuid(entry.getValue().getId())
-                        .ownerId(entry.getValue().getOwnerId())
-                        .serverName(entry.getValue().getServerName())
-                        .description(entry.getValue().getDescription())
-                        .channelType(entry.getValue().getChannelType())
-                        .members(entry.getValue().getMembers())
-                        .recentMessageTime(entry.getValue().getChannelType() == ChannelType.PUBLIC ? null : readStatusRepository.findUpToDateReadTimeByChannelId(entry.getValue().getId()))
-                        .build()
-                )
+                .map(ChannelDTO.response::from)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public ChannelDTO.idResponse update(ChannelDTO.update updateDTO) {
+    public CommonDTO.idResponse update(ChannelDTO.update updateDTO) {
         boolean isUpdated = false;
         try {
             Channel channel = channelRepository.load(updateDTO.id());
-            if (channel.getChannelType() == ChannelType.PRIVATE) {
+            if (channel.getChannelType() == Channel.ChannelType.PRIVATE) {
                 throw new CustomException(ErrorCode.PRIVATE_CANNOT_MODIFY);
             }
             channelRepository.update(updateDTO.id(), channel);
-            return ChannelDTO.idResponse.builder().id(updateDTO.id()).uuid(channel.getId()).build();
+            return CommonDTO.idResponse.from(updateDTO.id(), channel.getId());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -158,24 +113,24 @@ public class BasicChannelService implements ChannelService {
 
     // 채널 삭제
     @Override
-    public ChannelDTO.idResponse delete(Long id) {
+    public CommonDTO.idResponse delete(Long id) {
         ChannelDTO.response deleteChannel = find(id);
 
         messageRepository.deleteAllByChannelId(deleteChannel.uuid());
         readStatusRepository.deleteAllByChannelId(deleteChannel.uuid());
 
         channelRepository.delete(id);
-        return ChannelDTO.idResponse.builder().id(deleteChannel.id()).uuid(deleteChannel.uuid()).build();
+        return CommonDTO.idResponse.from(deleteChannel.id(), deleteChannel.uuid());
     }
 
     @Override
-    public ChannelDTO.idResponse delete(UUID uuid) {
+    public CommonDTO.idResponse delete(UUID uuid) {
         ChannelDTO.response deleteChannel = find(uuid);
 
         messageRepository.deleteAllByChannelId(uuid);
         readStatusRepository.deleteAllByChannelId(uuid);
 
         channelRepository.delete(deleteChannel.id());
-        return ChannelDTO.idResponse.builder().id(deleteChannel.id()).uuid(deleteChannel.uuid()).build();
+        return CommonDTO.idResponse.from(deleteChannel.id(), deleteChannel.uuid());
     }
 }

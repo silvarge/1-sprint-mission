@@ -1,8 +1,8 @@
 package com.sprint.mission.discodeit.docs;
 
 import com.sprint.mission.discodeit.common.CustomApiResponse;
+import com.sprint.mission.discodeit.dto.CommonDTO;
 import com.sprint.mission.discodeit.dto.UserDTO;
-import com.sprint.mission.discodeit.dto.UserStatusDTO;
 import com.sprint.mission.discodeit.exception.ExceptionDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -30,14 +30,14 @@ public interface UserControllerDocs {
     @Operation(summary = "유저 생성", description = "유저를 생성합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "유저 생성 및 저장 성공",
-                    content = @Content(schema = @Schema(implementation = UserDTO.idResponse.class))),
+                    content = @Content(schema = @Schema(implementation = CommonDTO.idResponse.class))),
             @ApiResponse(responseCode = "409", description = "유저 생성 실패(유저 중복)",
                     content = @Content(schema = @Schema(implementation = ExceptionDto.class))),
             @ApiResponse(responseCode = "400", description = "유효하지 않은 값입니다.",
                     content = @Content(schema = @Schema(implementation = ExceptionDto.class))
             )
     })
-    CustomApiResponse<UserDTO.idResponse> createUser(
+    CustomApiResponse<CommonDTO.idResponse> createUser(
             @RequestPart("user") @Schema(format = "application/json") UserDTO.request reqUserDto,
             @RequestPart(value = "file", required = false) MultipartFile profile
     );
@@ -61,11 +61,11 @@ public interface UserControllerDocs {
     @Operation(summary = "유저 수정", description = "특정 유저 정보를 수정합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "유저 수정 성공",
-                    content = @Content(schema = @Schema(implementation = UserDTO.idResponse.class))),
+                    content = @Content(schema = @Schema(implementation = CommonDTO.idResponse.class))),
             @ApiResponse(responseCode = "400", description = "유저 수정 실패",
                     content = @Content(schema = @Schema(implementation = ExceptionDto.class)))
     })
-    public CustomApiResponse<UserDTO.idResponse> updateUser(
+    public CustomApiResponse<CommonDTO.idResponse> updateUser(
             @PathVariable Long userId,
             @RequestPart("update") @Schema(format = "application/json") UserDTO.request reqUserDto,
             @RequestPart(value = "file", required = false) MultipartFile updateProfile
@@ -74,19 +74,19 @@ public interface UserControllerDocs {
     @Operation(summary = "유저 삭제", description = "특정 유저 정보를 삭제합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "유저 삭제 성공",
-                    content = @Content(schema = @Schema(implementation = UserDTO.idResponse.class))),
+                    content = @Content(schema = @Schema(implementation = CommonDTO.idResponse.class))),
             @ApiResponse(responseCode = "404", description = "유저 없음",
                     content = @Content(schema = @Schema(implementation = ExceptionDto.class)))
     })
-    public CustomApiResponse<UserDTO.idResponse> deleteUser(@PathVariable Long userId);
+    public CustomApiResponse<CommonDTO.idResponse> deleteUser(@PathVariable Long userId);
 
     @Operation(summary = "유저 상태 업데이트", description = "유저의 상태(접속 시간 등)를 업데이트합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "유저 상태 업데이트 성공",
-                    content = @Content(schema = @Schema(implementation = UserStatusDTO.idResponse.class))),
+                    content = @Content(schema = @Schema(implementation = CommonDTO.idResponse.class))),
             @ApiResponse(responseCode = "400", description = "유저 상태 업데이트 실패",
                     content = @Content(schema = @Schema(implementation = ExceptionDto.class)))
     })
-    public CustomApiResponse<UserStatusDTO.idResponse> updateUserStatus(@PathVariable Long userId, @RequestParam("accessAt") Instant accessAt);
+    public CustomApiResponse<CommonDTO.idResponse> updateUserStatus(@PathVariable Long userId, @RequestParam("accessAt") Instant accessAt);
 
 }

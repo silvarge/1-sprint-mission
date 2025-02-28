@@ -1,7 +1,6 @@
 package com.sprint.mission.discodeit.repository.file;
 
 import com.sprint.mission.discodeit.entity.Channel;
-import com.sprint.mission.discodeit.enums.ChannelType;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
@@ -121,12 +120,7 @@ public class FileChannelRepository implements ChannelRepository {
     @Override
     public Map<Long, Channel> findChannelsByUserId(UUID userId) {
         return loadAll().entrySet().stream()
-                .filter(channel ->
-                        channel.getValue().getChannelType() == ChannelType.PUBLIC ||   // Public은 전체 조회
-                                channel.getValue().getOwnerId().equals(userId) ||
-                                channel.getValue().getMembers().stream()
-                                        .anyMatch(uuid -> uuid.equals(userId))    // Private의 경우 필터링
-                )
+                .filter(channel -> channel.getValue().canAccessChannel(userId))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 

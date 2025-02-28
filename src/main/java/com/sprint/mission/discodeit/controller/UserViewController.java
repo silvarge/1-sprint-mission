@@ -11,18 +11,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.List;
 
 @Controller
-@RequestMapping("/api")
+@RequestMapping("/users")
 @RequiredArgsConstructor
 public class UserViewController {
     private final UserService userService;
 
     // 메인 페이지 렌더링
-    @GetMapping("/test")
+    @GetMapping("/")
     public String index() {
         return "index"; // templates/index.html 렌더링
     }
 
-    @GetMapping("/user-view")
+    @GetMapping("/list")
     public String getUserList(Model model) {
         List<UserDTO.response> users = userService.findAll();
         model.addAttribute("users", users);

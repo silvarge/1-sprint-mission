@@ -4,9 +4,19 @@ import com.sprint.mission.discodeit.dto.BinaryContentDTO;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
+import com.sprint.mission.discodeit.util.EntryUtils;
+import com.sprint.mission.discodeit.util.FileConverter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -19,45 +29,27 @@ public class BasicBinaryContentService implements BinaryContentService {
 
     @Override
     public Long create(BinaryContentDTO.request binaryContentDto) {
-        return binaryContentRepository.save(new BinaryContent(binaryContentDto));
+        return binaryContentRepository.save(new BinaryContent(
+                binaryContentDto.referenceId(), binaryContentDto.file(), binaryContentDto.contentType(), binaryContentDto.mimeType(), binaryContentDto.filename()
+        ));
     }
 
     @Override
     public BinaryContentDTO.response find(Long id) {
         BinaryContent content = binaryContentRepository.load(id);
-        return BinaryContentDTO.response.builder()
-                .file(content.getData())
-                .id(id)
-                .uuid(content.getId())
-                .referenceId(content.getReferenceId())
-                .contentType(content.getContentType())
-                .build();
+        return BinaryContentDTO.response.from(EntryUtils.of(id, content));
     }
 
     @Override
     public BinaryContentDTO.response find(UUID uuid) {
         Map.Entry<Long, BinaryContent> content = binaryContentRepository.findBinaryContentByUUID(uuid);
-
-        return BinaryContentDTO.response.builder()
-                .file(content.getValue().getData())
-                .id(content.getKey())
-                .uuid(content.getValue().getId())
-                .referenceId(content.getValue().getReferenceId())
-                .contentType(content.getValue().getContentType())
-                .build();
+        return BinaryContentDTO.response.from(content);
     }
 
     @Override
     public List<BinaryContentDTO.response> findAll() {
         return binaryContentRepository.loadAll().entrySet().stream()
-                .map(entry -> BinaryContentDTO.response.builder()
-                        .id(entry.getKey())
-                        .file(entry.getValue().getData())
-                        .uuid(entry.getValue().getId())
-                        .referenceId(entry.getValue().getReferenceId())
-                        .contentType(entry.getValue().getContentType())
-                        .build()
-                )
+                .map(BinaryContentDTO.response::from)
                 .collect(Collectors.toList());
     }
 
@@ -65,53 +57,56 @@ public class BasicBinaryContentService implements BinaryContentService {
     public BinaryContentDTO.response delete(Long id) {
         BinaryContent deleteContent = binaryContentRepository.load(id);
         binaryContentRepository.delete(id);
-        return BinaryContentDTO.response.builder()
-                .file(deleteContent.getData())
-                .id(id)
-                .uuid(deleteContent.getId())
-                .referenceId(deleteContent.getReferenceId())
-                .contentType(deleteContent.getContentType())
-                .build();
+        return BinaryContentDTO.response.from(EntryUtils.of(id, deleteContent));
     }
 
     @Override
     public BinaryContentDTO.response delete(UUID uuid) {
         Map.Entry<Long, BinaryContent> deleteContent = binaryContentRepository.findBinaryContentByUUID(uuid);
         binaryContentRepository.delete(deleteContent.getKey());
-        return BinaryContentDTO.response.builder()
-                .file(deleteContent.getValue().getData())
-                .id(deleteContent.getKey())
-                .uuid(deleteContent.getValue().getId())
-                .referenceId(deleteContent.getValue().getReferenceId())
-                .contentType(deleteContent.getValue().getContentType())
-                .build();
+        return BinaryContentDTO.response.from(deleteContent);
     }
 
     @Override
     public BinaryContentDTO.convert findProfileByReferenceId(UUID referenceId) {
         Map.Entry<Long, BinaryContent> content = binaryContentRepository.findProfileImageByMessageId(referenceId);
-        return BinaryContentDTO.convert.builder()
-                .id(content.getKey())
-                .uuid(content.getValue().getId())
-                .file(content.getValue().getData())
-                .filename(content.getValue().getFilename())
-                .mimeType(content.getValue().getMimeType())
-                .build();
+        return BinaryContentDTO.convert.from(content);
     }
 
     @Override
     public List<BinaryContentDTO.convert> findContentsByReferenceId(UUID referenceId) {
         Map<Long, BinaryContent> content = binaryContentRepository.findMessageImageByMessageId(referenceId);
-
         return content.entrySet().stream()
-                .map(binaryContent -> BinaryContentDTO.convert.builder()
-                        .id(binaryContent.getKey())
-                        .uuid(binaryContent.getValue().getId())
-                        .file(binaryContent.getValue().getData())
-                        .filename(binaryContent.getValue().getFilename())
-                        .mimeType(binaryContent.getValue().getMimeType())
-                        .build()
-                )
+                .map(BinaryContentDTO.convert::from)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public ResponseEntity<byte[]> getProfileImageAsResponse(UUID userId) throws IOException {
+        BinaryContent content = binaryContentRepository.findProfileImageByMessageId(userId).getValue();
+
+        byte[] pngBytes = FileConverter.convertToFile(content.getData(), content.getFilename());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(content.getMimeType() != null ? MediaType.parseMediaType(content.getMimeType()) : MediaType.IMAGE_PNG);
+        headers.setContentLength(pngBytes.length);
+        // TODO: 상수 없애기
+        headers.setContentDispositionFormData("attachment", URLEncoder.encode(content.getFilename(), StandardCharsets.UTF_8));
+
+        return new ResponseEntity<>(pngBytes, headers, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<byte[]> getMessageImageAsResponse(UUID messageId) throws IOException {
+        List<BinaryContent> contentList = new ArrayList<>(binaryContentRepository.findMessageImageByMessageId(messageId).values());
+        byte[] zipBytes = FileConverter.zipFiles(contentList);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        // TODO: 매직넘버 없애기
+        headers.setContentDispositionFormData("attachment", messageId + ".zip");
+        headers.setContentLength(zipBytes.length);
+
+        return new ResponseEntity<>(zipBytes, headers, HttpStatus.OK);
     }
 }

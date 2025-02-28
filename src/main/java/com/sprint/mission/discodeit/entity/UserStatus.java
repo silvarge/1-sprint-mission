@@ -1,6 +1,5 @@
 package com.sprint.mission.discodeit.entity;
 
-import com.sprint.mission.discodeit.dto.UserStatusDTO;
 import lombok.Getter;
 
 import java.io.Serializable;
@@ -21,10 +20,10 @@ public class UserStatus implements Serializable {
     private Instant createdAt;
     private Instant updatedAt;  // 엔티티가 변경되었을 때
 
-    public UserStatus(UserStatusDTO.request userStatusReqDTO) {
+    public UserStatus(UUID userId, Instant accessedAt) {
         this.id = UUID.randomUUID();
-        this.userId = userStatusReqDTO.userId();
-        this.accessedAt = userStatusReqDTO.accessedAt();
+        this.userId = userId;
+        this.accessedAt = accessedAt;
         this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
     }

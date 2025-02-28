@@ -1,7 +1,5 @@
 package com.sprint.mission.discodeit.entity;
 
-import com.sprint.mission.discodeit.dto.BinaryContentDTO;
-import com.sprint.mission.discodeit.enums.ContentType;
 import lombok.Getter;
 
 import java.io.Serializable;
@@ -23,14 +21,19 @@ public class BinaryContent implements Serializable {
     private ContentType contentType;
     private Instant createdAt;
 
-    public BinaryContent(BinaryContentDTO.request contentDto) {
+    public BinaryContent(UUID referenceId, byte[] fileData, ContentType contentType, String mimeType, String filename) {
         this.id = UUID.randomUUID();
-        this.data = contentDto.file();
-        this.referenceId = contentDto.referenceId();
-        this.contentType = contentDto.contentType();
-        this.mimeType = contentDto.mimeType();
-        this.filename = contentDto.filename();
+        this.data = fileData;
+        this.referenceId = referenceId;
+        this.contentType = contentType;
+        this.mimeType = mimeType;
+        this.filename = filename;
         this.createdAt = Instant.now();
+    }
+
+    public enum ContentType {
+        PROFILE,
+        PICTURE
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.docs;
 
 import com.sprint.mission.discodeit.common.CustomApiResponse;
+import com.sprint.mission.discodeit.dto.CommonDTO;
 import com.sprint.mission.discodeit.dto.ReadStatusDTO;
 import com.sprint.mission.discodeit.exception.ExceptionDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,7 +31,7 @@ public interface ReadStatusControllerDocs {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ExceptionDto.class)))
     })
-    CustomApiResponse<ReadStatusDTO.idResponse> createReadStatus(@RequestBody ReadStatusDTO.request readStatusReqDto);
+    CustomApiResponse<CommonDTO.idResponse> createReadStatus(@RequestBody ReadStatusDTO.request readStatusReqDto);
 
     @Operation(summary = "읽음 상태 수정", description = "주어진 읽음 상태 ID의 마지막 읽은 시간을 업데이트합니다.")
     @ApiResponses(value = {
@@ -41,7 +42,7 @@ public interface ReadStatusControllerDocs {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ExceptionDto.class)))
     })
-    CustomApiResponse<ReadStatusDTO.idResponse> updateReadStatus(
+    CustomApiResponse<CommonDTO.idResponse> updateReadStatus(
             @Parameter(description = "읽음 상태 ID", required = true) @PathVariable Long readStatusId,
             @Parameter(description = "마지막 읽은 시간", required = true) @RequestParam("lastReadAt") Instant lastReadAt);
 

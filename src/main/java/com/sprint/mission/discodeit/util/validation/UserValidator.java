@@ -1,9 +1,8 @@
 package com.sprint.mission.discodeit.util.validation;
 
+import com.sprint.mission.discodeit.common.Phone;
 import com.sprint.mission.discodeit.dto.UserDTO;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.enums.RegionCode;
-import com.sprint.mission.discodeit.enums.UserType;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import io.micrometer.common.util.StringUtils;
@@ -54,14 +53,14 @@ public class UserValidator implements Validator<User, UserDTO.request> {
             isUpdated = true;
         }
 
-        if (update.userType() != null && (update.userType() != UserType.fromString(current.getUserType().toString().toUpperCase()))) {
-            current.updateUserType(UserType.fromString(update.userType().toString().toUpperCase()));
+        if (update.userType() != null && (update.userType() != User.UserType.fromString(current.getUserType().toString().toUpperCase()))) {
+            current.updateUserType(User.UserType.fromString(update.userType().toString().toUpperCase()));
             isUpdated = true;
         }
 
         // phone
         if ((update.regionCode() != null && update.phone() != null)
-                && (!update.phone().equals(current.getPhone().getPhone()) || update.regionCode() != RegionCode.fromString(current.getPhone().getRegionCode().toString().toUpperCase()))
+                && (!update.phone().equals(current.getPhone().getPhone()) || update.regionCode() != Phone.RegionCode.fromString(current.getPhone().getRegionCode().toString().toUpperCase()))
                 && ValidatorExp.PHONE.matches(update.phone())) {
             current.updatePhone(update.phone(), update.regionCode().toString().toUpperCase());
             isUpdated = true;

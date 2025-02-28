@@ -28,7 +28,7 @@ public interface BinaryContentControllerDocs {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ExceptionDto.class)))
     })
-    ResponseEntity<byte[]> getProfileByReferenceId(@RequestParam UUID referenceId) throws IOException;
+    ResponseEntity<byte[]> getProfileByUserId(@RequestParam UUID userId) throws IOException;
 
     @Operation(summary = "메시지 파일 압축 및 다운로드", description = "주어진 referenceId에 해당하는 메시지 첨부 파일들을 압축하여 zip 파일로 반환")
     @ApiResponses(value = {
@@ -39,5 +39,5 @@ public interface BinaryContentControllerDocs {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ExceptionDto.class)))
     })
-    ResponseEntity<byte[]> getContentsByReferenceId(@RequestParam UUID referenceId) throws IOException;
+    ResponseEntity<byte[]> getContentsByMessageId(@RequestParam UUID messageId) throws IOException;
 }

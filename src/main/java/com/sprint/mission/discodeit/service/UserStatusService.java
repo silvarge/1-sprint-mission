@@ -1,7 +1,9 @@
 package com.sprint.mission.discodeit.service;
 
+import com.sprint.mission.discodeit.dto.CommonDTO;
 import com.sprint.mission.discodeit.dto.UserStatusDTO;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,9 +18,9 @@ public interface UserStatusService {
 
     List<UserStatusDTO.response> findAll();
 
-    UserStatusDTO.idResponse update(UserStatusDTO.update updateDTO);
+    CommonDTO.idResponse update(Long statusId, UUID userId, Instant accessAt);
 
-    UserStatusDTO.idResponse updateByUserId(UUID userId, UserStatusDTO.update updateDTO);
+    CommonDTO.idResponse updateByUserId(UUID userId, UserStatusDTO.update updateDTO);
 
     Long delete(Long id);
 
