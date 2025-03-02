@@ -27,6 +27,10 @@ import java.util.stream.Collectors;
 public class BasicBinaryContentService implements BinaryContentService {
     private final BinaryContentRepository binaryContentRepository;
 
+    // 파일 변환 관련 상수
+    public static final String CONTENT_DISPOSITION_TYPE = "attachment";
+    public static final String ZIP_FILE_EXTENSION = ".zip";
+
     @Override
     public Long create(BinaryContentDTO.request binaryContentDto) {
         return binaryContentRepository.save(new BinaryContent(
@@ -90,8 +94,7 @@ public class BasicBinaryContentService implements BinaryContentService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(content.getMimeType() != null ? MediaType.parseMediaType(content.getMimeType()) : MediaType.IMAGE_PNG);
         headers.setContentLength(pngBytes.length);
-        // TODO: 상수 없애기
-        headers.setContentDispositionFormData("attachment", URLEncoder.encode(content.getFilename(), StandardCharsets.UTF_8));
+        headers.setContentDispositionFormData(CONTENT_DISPOSITION_TYPE, URLEncoder.encode(content.getFilename(), StandardCharsets.UTF_8));
 
         return new ResponseEntity<>(pngBytes, headers, HttpStatus.OK);
     }
@@ -103,8 +106,7 @@ public class BasicBinaryContentService implements BinaryContentService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        // TODO: 매직넘버 없애기
-        headers.setContentDispositionFormData("attachment", messageId + ".zip");
+        headers.setContentDispositionFormData(CONTENT_DISPOSITION_TYPE, messageId + ZIP_FILE_EXTENSION);
         headers.setContentLength(zipBytes.length);
 
         return new ResponseEntity<>(zipBytes, headers, HttpStatus.OK);
