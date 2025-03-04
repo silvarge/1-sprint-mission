@@ -5,7 +5,7 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 
-public class ChannelValidator implements Validator<Channel, ChannelDTO.request> {
+public class ChannelValidator implements Validator<Channel, ChannelDTO.request, ChannelDTO.request> {
     @Override
     public void validateCreate(ChannelDTO.request entity) {
         if (entity.owner() == null) {

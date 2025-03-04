@@ -2,7 +2,7 @@ package com.sprint.mission.discodeit.docs;
 
 import com.sprint.mission.discodeit.common.CustomApiResponse;
 import com.sprint.mission.discodeit.dto.AuthDTO;
-import com.sprint.mission.discodeit.dto.UserDTO;
+import com.sprint.mission.discodeit.dto.user.UserResponseDto;
 import com.sprint.mission.discodeit.exception.ExceptionDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -32,5 +32,5 @@ public interface AuthControllerDocs {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ExceptionDto.class)))
     })
-    CustomApiResponse<UserDTO.response> login(@RequestBody AuthDTO.loginReq loginDto);
+    CustomApiResponse<UserResponseDto> login(@RequestBody AuthDTO.loginReq loginDto);
 }

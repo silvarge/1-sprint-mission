@@ -11,6 +11,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 /* # User
  * - 사용자 객체
@@ -21,7 +22,12 @@ import java.util.UUID;
 public class User implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
-    private UUID id;    // 고유 번호
+
+    // 추후 JPA (DB) 도입 시 Entity 어노테이션 및 ID 어노테이션을 통해 사라질 친구
+    private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
+
+    private Long id;
+    private UUID publicId;    // 고유 번호
     private Name userName;  // ID와 같은 역할
     private Name nickname;  // 별명 (사용자)
     private Email email;    // 이메일
@@ -39,7 +45,8 @@ public class User implements Serializable {
             String username, String nickname, String email, String password,
             String phone, Phone.RegionCode regionCode, UserType userType, String introduce
     ) {
-        this.id = UUID.randomUUID();
+        this.id = ID_GENERATOR.getAndIncrement();
+        this.publicId = UUID.randomUUID();
         this.userName = new Name(username);
         this.nickname = new Name(nickname);
         this.email = new Email(email);

@@ -10,13 +10,11 @@ import org.springframework.stereotype.Repository;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Repository
 @ConditionalOnProperty(name = "discodeit.repository.type", havingValue = "jcf", matchIfMissing = true)
 public class JCFUserRepository implements UserRepository {
     private final Map<Long, User> data;
-    private final AtomicLong idGenerator = new AtomicLong(1);   // ID 초기값 1
 
     public JCFUserRepository() {
         this.data = new HashMap<>();
@@ -24,9 +22,8 @@ public class JCFUserRepository implements UserRepository {
 
     @Override
     public Long save(User user) {
-        Long id = idGenerator.getAndIncrement();
-        data.put(id, user);
-        return id;
+        data.put(user.getId(), user);
+        return user.getId();
     }
 
     public void saveUser(Long id, User user) {
@@ -41,7 +38,7 @@ public class JCFUserRepository implements UserRepository {
     @Override
     public Map.Entry<Long, User> load(UUID uuid) {
         return loadAll().entrySet().stream()
-                .filter(entry -> entry.getValue().getId().equals(uuid))
+                .filter(entry -> entry.getValue().getPublicId().equals(uuid))
                 .findFirst()
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }

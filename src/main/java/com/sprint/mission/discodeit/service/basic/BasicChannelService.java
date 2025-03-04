@@ -11,8 +11,6 @@ import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import com.sprint.mission.discodeit.util.EntryUtils;
-import com.sprint.mission.discodeit.util.validation.ChannelValidator;
-import com.sprint.mission.discodeit.util.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +22,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class BasicChannelService implements ChannelService {
-    private final Validator<Channel, ChannelDTO.request> channelValidator = new ChannelValidator();
+    //    private final Validator<Channel, ChannelDTO.request, ChannelDTO.request> channelValidator = new ChannelValidator();
     private final ChannelRepository channelRepository;
     private final ReadStatusRepository readStatusRepository;
     private final MessageRepository messageRepository;
@@ -33,7 +31,7 @@ public class BasicChannelService implements ChannelService {
     public CommonDTO.idResponse createPublicChannel(ChannelDTO.request channelReqDTO) {
         // 생성
         try {
-            channelValidator.validateCreate(channelReqDTO);
+//            channelValidator.validateCreate(channelReqDTO);
             Channel channel = new Channel(
                     channelReqDTO.owner(), channelReqDTO.serverName(), channelReqDTO.channelType(), channelReqDTO.description()
             );
@@ -48,7 +46,7 @@ public class BasicChannelService implements ChannelService {
     @Override
     public CommonDTO.idResponse createPrivateChannel(ChannelDTO.request channelReqDTO) {
         try {
-            channelValidator.validateCreate(channelReqDTO);
+//            channelValidator.validateCreate(channelReqDTO);
             Long channelId = channelRepository.save(
                     new Channel(channelReqDTO.owner(), channelReqDTO.serverName(), channelReqDTO.channelType(), channelReqDTO.description())
             );

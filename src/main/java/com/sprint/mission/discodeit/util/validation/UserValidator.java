@@ -1,16 +1,19 @@
 package com.sprint.mission.discodeit.util.validation;
 
 import com.sprint.mission.discodeit.common.Phone;
-import com.sprint.mission.discodeit.dto.UserDTO;
+import com.sprint.mission.discodeit.dto.user.UserSignupRequestDto;
+import com.sprint.mission.discodeit.dto.user.UserUpdateDto;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import io.micrometer.common.util.StringUtils;
+import org.springframework.stereotype.Component;
 
-public class UserValidator implements Validator<User, UserDTO.request> {
+@Component("userValidator")
+public class UserValidator implements Validator<User, UserSignupRequestDto, UserUpdateDto> {
     @Override
-    public void validateCreate(UserDTO.request entity) {
-        if (!ValidatorExp.USERNAME.matches(entity.userName())) {
+    public void validateCreate(UserSignupRequestDto entity) {
+        if (!ValidatorExp.USERNAME.matches(entity.username())) {
             throw new CustomException(ErrorCode.INVALID_USERNAME);
         }
 
@@ -36,10 +39,10 @@ public class UserValidator implements Validator<User, UserDTO.request> {
     }
 
     @Override
-    public User validateUpdate(User current, UserDTO.request update) {
+    public User validateUpdate(User current, UserUpdateDto update) {
         boolean isUpdated = false;
-        if (update.userName() != null && !update.userName().equals(current.getUserName().getName()) && ValidatorExp.USERNAME.matches(update.userName())) {
-            current.updateUserName(update.userName());
+        if (update.username() != null && !update.username().equals(current.getUserName().getName()) && ValidatorExp.USERNAME.matches(update.username())) {
+            current.updateUserName(update.username());
             isUpdated = true;
         }
 

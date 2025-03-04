@@ -5,7 +5,7 @@ import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 
-public class MessageValidator implements Validator<Message, MessageDTO.request> {
+public class MessageValidator implements Validator<Message, MessageDTO.request, MessageDTO.request> {
     @Override
     public void validateCreate(MessageDTO.request entity) {
         if (entity.author() == null) {

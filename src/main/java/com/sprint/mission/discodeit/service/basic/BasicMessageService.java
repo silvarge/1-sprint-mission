@@ -10,8 +10,6 @@ import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.util.EntryUtils;
-import com.sprint.mission.discodeit.util.validation.MessageValidator;
-import com.sprint.mission.discodeit.util.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,7 +23,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class BasicMessageService implements MessageService {
-    private final Validator<Message, MessageDTO.request> messageValidator = new MessageValidator();
     private final MessageRepository messageRepository;
     private final BinaryContentRepository binaryContentRepository;
 
@@ -40,7 +37,7 @@ public class BasicMessageService implements MessageService {
     @Override
     public CommonDTO.idResponse create(MessageDTO.request messageReqDTO, List<MultipartFile> attachments) {
         try {
-            messageValidator.validateCreate(messageReqDTO);
+//            messageValidator.validateCreate(messageReqDTO);
             Long messageId = messageRepository.save(new Message(messageReqDTO.author(), messageReqDTO.channel(), messageReqDTO.content()));
             UUID messageUUID = messageRepository.load(messageId).getId();
             // 첨부파일이 존재하면 저장
