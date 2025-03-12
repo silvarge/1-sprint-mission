@@ -6,6 +6,8 @@ import com.sprint.mission.discodeit.dto.channel.PublicChannelRequestDto;
 import com.sprint.mission.discodeit.dto.user.UserResponseDto;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.exception.CustomException;
+import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,12 +40,12 @@ public class ChannelMapper {
     }
 
     public Channel toPublicEntity(PublicChannelRequestDto publicDto) {
-        User owner = userRepository.findById(publicDto.ownerId());
+        User owner = userRepository.findById(publicDto.ownerId()).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
         return new Channel(publicDto.serverName(), Channel.ChannelType.PUBLIC, publicDto.description(), owner);
     }
 
     public Channel toPrivateEntity(PrivateChannelRequestDto privateDto) {
-        User owner = userRepository.findById(privateDto.ownerId());
+        User owner = userRepository.findById(privateDto.ownerId()).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
         return new Channel("", Channel.ChannelType.PRIVATE, "", owner);
     }
 

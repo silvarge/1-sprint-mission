@@ -9,10 +9,8 @@ import java.util.Collection;
 import java.util.UUID;
 
 @Repository
-public interface ChannelRepository extends JpaRepository<Channel, Long> {
+public interface ChannelRepository extends JpaRepository<Channel, UUID> {
     Collection<Object> findAllByOwner(User owner);
 
     Collection<Object> getChannelsByOwner(User owner);
-
-    Channel findById(UUID id);
 }

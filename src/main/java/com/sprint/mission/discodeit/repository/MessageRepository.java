@@ -12,11 +12,9 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Repository
-public interface MessageRepository extends JpaRepository<Message, Long> {
+public interface MessageRepository extends JpaRepository<Message, UUID> {
     @Query("select max(m.createdAt) from Message m where m.channel.id = :channelId")
     Instant findLastMessageAtByChannelId(@Param("channelId") UUID channelId);
-
-    Message findById(UUID id);
 
     Slice<Message> findByChannelIdOrderByCreatedAtDesc(UUID channelId, Pageable pageable);
 }

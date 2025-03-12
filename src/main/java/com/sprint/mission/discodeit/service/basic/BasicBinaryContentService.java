@@ -3,6 +3,8 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentResponseDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.exception.CustomException;
+import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
@@ -31,12 +33,12 @@ public class BasicBinaryContentService implements BinaryContentService {
         BinaryContent savedFile = binaryContentRepository.saveAndFlush(binaryContentMapper.toEntity(file));
         binaryContentStorage.put(savedFile.getId(), file);
 
-        return binaryContentMapper.toResponseDto(binaryContentRepository.findById(savedFile.getId()));
+        return binaryContentMapper.toResponseDto(binaryContentRepository.findById(savedFile.getId()).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA)));
     }
 
     @Override
     public BinaryContentResponseDto find(UUID fileId) {
-        return binaryContentMapper.toResponseDto(binaryContentRepository.findById(fileId));
+        return binaryContentMapper.toResponseDto(binaryContentRepository.findById(fileId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA)));
     }
 
     @Override
@@ -49,14 +51,14 @@ public class BasicBinaryContentService implements BinaryContentService {
     @Transactional
     @Override
     public BinaryContentResponseDto delete(UUID fileId) {
-        BinaryContent deletedFile = binaryContentRepository.findById(fileId);
+        BinaryContent deletedFile = binaryContentRepository.findById(fileId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
         binaryContentRepository.delete(deletedFile);
         return binaryContentMapper.toResponseDto(deletedFile);
     }
 
     @Override
     public ResponseEntity<?> download(UUID fileId) {
-        BinaryContent file = binaryContentRepository.findById(fileId);
+        BinaryContent file = binaryContentRepository.findById(fileId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
         return binaryContentStorage.download(binaryContentMapper.toResponseDto(file));
     }
 }

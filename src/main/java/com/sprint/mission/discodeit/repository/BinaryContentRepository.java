@@ -7,6 +7,5 @@ import org.springframework.stereotype.Repository;
 import java.util.UUID;
 
 @Repository
-public interface BinaryContentRepository extends JpaRepository<BinaryContent, Long> {
-    BinaryContent findById(UUID id);
+public interface BinaryContentRepository extends JpaRepository<BinaryContent, UUID> {
 }

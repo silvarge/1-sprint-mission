@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -41,24 +42,25 @@ public class BasicChannelService implements ChannelService {
         Channel channel = channelMapper.toPrivateEntity(channelReqDTO);
         List<User> users = channelReqDTO.participantIds().stream()
                 .map(userRepository::findById)
+                .flatMap(Optional::stream)
                 .filter(user -> !channel.getMembers().contains(user))
                 .peek(user -> user.getJoinChannels().add(channel))
                 .toList();
 
         channel.getMembers().addAll(users);
-        Channel savedChannel = channelRepository.saveAndFlush(channel);
-
-        return channelMapper.toResponseDto(channelRepository.findById(savedChannel.getId()));
+        Channel savedChannel = channelRepository.save(channel);
+        Channel loadChannel = channelRepository.findById(savedChannel.getId()).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
+        return channelMapper.toResponseDto(loadChannel);
     }
 
     @Override
     public ChannelResponseDto find(UUID uuid) {
-        return channelMapper.toResponseDto(channelRepository.findById(uuid));
+        return channelMapper.toResponseDto(channelRepository.findById(uuid).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA)));
     }
 
     @Override
     public List<ChannelResponseDto> findAllByUserId(UUID userId) {
-        User owner = userRepository.findById(userId);
+        User owner = userRepository.findById(userId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
         return channelRepository.findAll().stream()
                 .filter(channel -> channel.getOwner().equals(owner))
                 .map(channelMapper::toResponseDto)
@@ -68,7 +70,7 @@ public class BasicChannelService implements ChannelService {
     @Transactional
     @Override
     public ChannelResponseDto update(UUID channelId, ChannelUpdateDto updateDTO) {
-        Channel channel = channelRepository.findById(channelId);
+        Channel channel = channelRepository.findById(channelId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
         if (channel.getChannelType() == Channel.ChannelType.PRIVATE) {
             throw new CustomException(ErrorCode.PRIVATE_CANNOT_MODIFY);
         }
@@ -82,7 +84,7 @@ public class BasicChannelService implements ChannelService {
     @Transactional
     @Override
     public ChannelResponseDto delete(UUID channelId) {
-        Channel deleteChannel = channelRepository.findById(channelId);
+        Channel deleteChannel = channelRepository.findById(channelId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
         channelRepository.delete(deleteChannel);
         return channelMapper.toResponseDto(deleteChannel);
     }

@@ -5,6 +5,8 @@ import com.sprint.mission.discodeit.dto.message.MessageResponseDto;
 import com.sprint.mission.discodeit.dto.page.PageResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.exception.CustomException;
+import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.mapper.MessageMapper;
 import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
@@ -37,7 +39,7 @@ public class BasicMessageService implements MessageService {
     private void saveAttachmentList(Message message, List<MultipartFile> attachments) throws IOException {
         for (MultipartFile attachment : attachments) {
             UUID id = binaryContentService.create(attachment).id();
-            BinaryContent binaryContent = binaryContentRepository.findById(id);
+            BinaryContent binaryContent = binaryContentRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
 
             message.getAttachments().add(binaryContent);
             binaryContent.getMessages().add(message);
@@ -57,7 +59,8 @@ public class BasicMessageService implements MessageService {
 
     @Override
     public MessageResponseDto find(UUID messageId) {
-        return messageMapper.toResponseDto(messageRepository.findById(messageId));
+        Message message = messageRepository.findById(messageId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
+        return messageMapper.toResponseDto(message);
     }
 
     @Override
@@ -79,7 +82,7 @@ public class BasicMessageService implements MessageService {
     @Transactional
     @Override
     public MessageResponseDto update(UUID messageId, String content, List<MultipartFile> attachments) throws IOException {
-        Message message = messageRepository.findById(messageId);
+        Message message = messageRepository.findById(messageId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
         message.updateContent(content);
 
         if (!attachments.isEmpty()) {
@@ -96,7 +99,7 @@ public class BasicMessageService implements MessageService {
     @Transactional
     @Override
     public MessageResponseDto delete(UUID messageId) {
-        Message deletedMessage = messageRepository.findById(messageId);
+        Message deletedMessage = messageRepository.findById(messageId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
         MessageResponseDto response = messageMapper.toResponseDto(deletedMessage);
         // 메시지에 연결된 첨부 파일 삭제
         deletedMessage.getAttachments().clear();

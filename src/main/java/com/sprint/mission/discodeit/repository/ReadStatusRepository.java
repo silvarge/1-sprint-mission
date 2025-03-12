@@ -7,6 +7,5 @@ import org.springframework.stereotype.Repository;
 import java.util.UUID;
 
 @Repository
-public interface ReadStatusRepository extends JpaRepository<ReadStatus, Long> {
-    ReadStatus findById(UUID id);
+public interface ReadStatusRepository extends JpaRepository<ReadStatus, UUID> {
 }

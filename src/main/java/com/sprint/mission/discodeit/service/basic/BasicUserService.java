@@ -4,6 +4,7 @@ import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentResponseDto;
 import com.sprint.mission.discodeit.dto.user.UserResponseDto;
 import com.sprint.mission.discodeit.dto.user.UserSignupRequestDto;
 import com.sprint.mission.discodeit.dto.user.UserUpdateDto;
+import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.CustomException;
@@ -61,19 +62,21 @@ public class BasicUserService implements UserService {
         // 프로필 이미지 존재 시 생성
         if (profile != null && !profile.isEmpty()) {
             BinaryContentResponseDto profileDto = binaryContentService.create(profile);
-            user.updateProfile(binaryContentRepository.findById(profileDto.id()));
+            BinaryContent loadProfile = binaryContentRepository.findById(profileDto.id()).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
+            user.updateProfile(loadProfile);
         }
 
-        User savedUser = userRepository.saveAndFlush(user);
+        User savedUser = userRepository.save(user);
 
         hibernateStatisticsService.printStatistics();
 
-        return userMapper.toResponseDto(userRepository.findById(savedUser.getId()));
+        User loadUser = userRepository.findById(savedUser.getId()).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
+        return userMapper.toResponseDto(loadUser);
     }
 
     @Override
-    public UserResponseDto find(UUID id) {
-        User user = userRepository.findById(id);
+    public UserResponseDto find(UUID userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
         if (user == null) throw new CustomException(ErrorCode.USER_NOT_FOUND);
 
         hibernateStatisticsService.printStatistics();
@@ -96,7 +99,8 @@ public class BasicUserService implements UserService {
     @Override
     public UserResponseDto update(UUID userId, UserUpdateDto userUpdateDto, MultipartFile updateProfile) {
         try {
-            User updatedUser = userValidator.validateUpdate(userRepository.findById(userId), userUpdateDto);
+            User current = userRepository.findById(userId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
+            User updatedUser = userValidator.validateUpdate(current, userUpdateDto);
             if (updatedUser == null) {
                 throw new CustomException(ErrorCode.USER_UPDATE_DATA_NOT_FOUND);
             }
@@ -106,8 +110,10 @@ public class BasicUserService implements UserService {
                 if (updatedUser.getProfile() != null) {
                     binaryContentRepository.delete(updatedUser.getProfile());
                 }
+
                 BinaryContentResponseDto updateFile = binaryContentService.create(updateProfile);
-                updatedUser.updateProfile(binaryContentRepository.findById(updateFile.id()));
+                BinaryContent update = binaryContentRepository.findById(updateFile.id()).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
+                updatedUser.updateProfile(update);
             }
 
             userRepository.save(updatedUser); // DB에 반영
@@ -122,8 +128,8 @@ public class BasicUserService implements UserService {
 
     @Transactional
     @Override
-    public UserResponseDto delete(UUID id) {
-        User deleteUser = userRepository.findById(id);
+    public UserResponseDto delete(UUID userId) {
+        User deleteUser = userRepository.findById(userId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
         userRepository.delete(deleteUser);
 
         hibernateStatisticsService.printStatistics(); // Hibernate Statistics 로그 출력

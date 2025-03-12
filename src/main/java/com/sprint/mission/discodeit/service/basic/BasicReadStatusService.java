@@ -33,7 +33,7 @@ public class BasicReadStatusService implements ReadStatusService {
 
     @Override
     public ReadStatusResponseDto find(UUID readStatusId) {
-        ReadStatus readStatus = readStatusRepository.findById(readStatusId);
+        ReadStatus readStatus = readStatusRepository.findById(readStatusId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
         return readStatusMapper.toResponseDto(readStatus);
     }
 
@@ -48,7 +48,7 @@ public class BasicReadStatusService implements ReadStatusService {
     @Transactional
     @Override
     public ReadStatusResponseDto update(UUID readStatusId, Instant lastReadAt) {
-        ReadStatus readStatus = readStatusRepository.findById(readStatusId);
+        ReadStatus readStatus = readStatusRepository.findById(readStatusId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
         if (readStatus == null) {
             throw new CustomException(ErrorCode.READ_STATUS_NOT_FOUND);
         }
@@ -62,7 +62,7 @@ public class BasicReadStatusService implements ReadStatusService {
     @Transactional
     @Override
     public ReadStatusResponseDto delete(UUID readStatusId) {
-        ReadStatus readStatus = readStatusRepository.findById(readStatusId);
+        ReadStatus readStatus = readStatusRepository.findById(readStatusId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
         readStatusRepository.delete(readStatus);
         return readStatusMapper.toResponseDto(readStatus);
     }

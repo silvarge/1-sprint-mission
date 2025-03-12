@@ -8,8 +8,6 @@ import org.springframework.stereotype.Repository;
 import java.util.UUID;
 
 @Repository
-public interface UserStatusRepository extends JpaRepository<UserStatus, Long> {
+public interface UserStatusRepository extends JpaRepository<UserStatus, UUID> {
     UserStatus findByUser(User user);
-
-    UserStatus findById(UUID id);
 }

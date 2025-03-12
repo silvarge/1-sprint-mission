@@ -29,11 +29,6 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
 
     private final Path root;
 
-    private final String HEADER_VALUE = "attachment; filename*=UTF-8''";
-    private final String SEPERATE_VALUE = ".";
-    private final String REPLACE_REGEX = "\\+";
-    private final String REPLACE_VALUE = "%20";
-
     public LocalBinaryContentStorage(@Value("${discodeit.storage.local.root-path}") String rootPath) {
         this.root = Paths.get(System.getProperty("user.dir")).resolve(rootPath); // 프로젝트 루트 기준으로 저장
     }
@@ -56,6 +51,7 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
     @Override
     public UUID put(UUID fileId, MultipartFile file) {
         try {
+            String SEPERATE_VALUE = ".";
             int dotIndex = file.getOriginalFilename().lastIndexOf(SEPERATE_VALUE);
             String extension = file.getOriginalFilename().substring(dotIndex);
 
@@ -87,7 +83,10 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
     public ResponseEntity<ByteArrayResource> download(BinaryContentResponseDto binaryContentResponseDto) {
         UUID fileId = binaryContentResponseDto.id();
         String originalFileName = binaryContentResponseDto.fileName();
-        String contentType = binaryContentResponseDto.contentType();
+
+        String REPLACE_VALUE = "%20";
+        String REPLACE_REGEX = "\\+";
+        String HEADER_VALUE = "attachment; filename*=UTF-8''";
 
         // 확장자가 포함된 파일명 설정
         int dotIndex = originalFileName.lastIndexOf(".");
@@ -106,6 +105,7 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
 
             byte[] fileData = Files.readAllBytes(filePath);
             ByteArrayResource resource = new ByteArrayResource(fileData);
+
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .header(HttpHeaders.CONTENT_DISPOSITION, HEADER_VALUE + encodedFileName)
