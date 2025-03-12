@@ -4,11 +4,37 @@ spring:
   servlet:
     multipart:
       enabled: true
+  # DB - postgreSQL
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  # JPA
+  jpa:
+    hibernate:
+      ddl-auto: none
+    database: postgresql
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        highlight_sql: true
+        generate_statistics: true
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+
+  transaction:
+    default-timeout: 30
 
 discodeit:
-  repository:
-    type: jcf # jcf | file
-    file-directory: temp
+  storage:
+    type: local
+    local:
+      root-path: temp
 
 server:
   tomcat:
@@ -18,6 +44,11 @@ server:
       charset: UTF-8
       enabled: true
       force: true
+
+# logging
+logging:
+  level:
+    org.hibernate.type: trace
 
 # swagger
 springdoc:

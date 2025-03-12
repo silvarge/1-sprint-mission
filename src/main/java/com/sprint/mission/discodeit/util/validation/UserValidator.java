@@ -41,17 +41,17 @@ public class UserValidator implements Validator<User, UserSignupRequestDto, User
     @Override
     public User validateUpdate(User current, UserUpdateDto update) {
         boolean isUpdated = false;
-        if (update.username() != null && !update.username().equals(current.getUserName().getName()) && ValidatorExp.USERNAME.matches(update.username())) {
-            current.updateUserName(update.username());
+        if (update.username() != null && !update.username().equals(current.getUsername()) && ValidatorExp.USERNAME.matches(update.username())) {
+            current.updateUsername(update.username());
             isUpdated = true;
         }
 
-        if (update.nickname() != null && !update.nickname().equals(current.getNickname().getName()) && ValidatorExp.NICKNAME.matches(update.nickname())) {
+        if (update.nickname() != null && !update.nickname().equals(current.getNickname()) && ValidatorExp.NICKNAME.matches(update.nickname())) {
             current.updateNickname(update.nickname());
             isUpdated = true;
         }
 
-        if (update.email() != null && !update.email().equals(current.getEmail().getEmail()) && ValidatorExp.EMAIL.matches(update.email())) {
+        if (update.email() != null && !update.email().equals(current.getEmail()) && ValidatorExp.EMAIL.matches(update.email())) {
             current.updateEmail(update.email());
             isUpdated = true;
         }
@@ -65,7 +65,7 @@ public class UserValidator implements Validator<User, UserSignupRequestDto, User
         if ((update.regionCode() != null && update.phone() != null)
                 && (!update.phone().equals(current.getPhone().getPhone()) || update.regionCode() != Phone.RegionCode.fromString(current.getPhone().getRegionCode().toString().toUpperCase()))
                 && ValidatorExp.PHONE.matches(update.phone())) {
-            current.updatePhone(update.phone(), update.regionCode().toString().toUpperCase());
+            current.updatePhone(new Phone(update.phone(), update.regionCode()));
             isUpdated = true;
         }
 

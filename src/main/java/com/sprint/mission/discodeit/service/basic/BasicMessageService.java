@@ -1,22 +1,26 @@
 package com.sprint.mission.discodeit.service.basic;
 
-import com.sprint.mission.discodeit.dto.CommonDTO;
-import com.sprint.mission.discodeit.dto.MessageDTO;
+import com.sprint.mission.discodeit.dto.message.MessageRequestDto;
+import com.sprint.mission.discodeit.dto.message.MessageResponseDto;
+import com.sprint.mission.discodeit.dto.page.PageResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Message;
-import com.sprint.mission.discodeit.exception.CustomException;
-import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.mapper.MessageMapper;
+import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
+import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.MessageService;
-import com.sprint.mission.discodeit.util.EntryUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -25,103 +29,80 @@ import java.util.stream.Collectors;
 public class BasicMessageService implements MessageService {
     private final MessageRepository messageRepository;
     private final BinaryContentRepository binaryContentRepository;
+    private final BinaryContentService binaryContentService;
 
-    private void saveAttachmentList(UUID messageId, List<MultipartFile> attachments) throws IOException {
+    private final MessageMapper messageMapper;
+    private final PageResponseMapper<MessageResponseDto> pageResponseMapper;
+
+    private void saveAttachmentList(Message message, List<MultipartFile> attachments) throws IOException {
         for (MultipartFile attachment : attachments) {
-            binaryContentRepository.save(new BinaryContent(
-                    messageId, attachment.getBytes(), BinaryContent.ContentType.PICTURE, attachment.getContentType(), attachment.getOriginalFilename()
-            ));
+            UUID id = binaryContentService.create(attachment).id();
+            BinaryContent binaryContent = binaryContentRepository.findById(id);
+
+            message.getAttachments().add(binaryContent);
+            binaryContent.getMessages().add(message);
         }
     }
 
+    @Transactional
     @Override
-    public CommonDTO.idResponse create(MessageDTO.request messageReqDTO, List<MultipartFile> attachments) {
-        try {
-//            messageValidator.validateCreate(messageReqDTO);
-            Long messageId = messageRepository.save(new Message(messageReqDTO.author(), messageReqDTO.channel(), messageReqDTO.content()));
-            UUID messageUUID = messageRepository.load(messageId).getId();
-            // 첨부파일이 존재하면 저장
-            if (attachments != null && !attachments.isEmpty()) {
-                saveAttachmentList(messageUUID, attachments);
-            }
-
-            return CommonDTO.idResponse.from(messageId, messageUUID);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+    public MessageResponseDto create(MessageRequestDto messageReqDTO, List<MultipartFile> attachments) throws IOException {
+        Message message = messageMapper.toEntity(messageReqDTO);
+        if (attachments != null && !attachments.isEmpty()) {
+            saveAttachmentList(message, attachments);
         }
+        messageRepository.save(message);
+        return messageMapper.toResponseDto(message);
     }
 
     @Override
-    public MessageDTO.response find(Long id) {
-        Message msg = messageRepository.load(id);
-        if (msg == null) throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
-        return MessageDTO.response.from(EntryUtils.of(id, msg));
+    public MessageResponseDto find(UUID messageId) {
+        return messageMapper.toResponseDto(messageRepository.findById(messageId));
     }
 
     @Override
-    public MessageDTO.response find(UUID uuid) {
-        Map.Entry<Long, Message> msg = messageRepository.load(uuid);
-        if (msg == null) throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
-        return MessageDTO.response.from(msg);
-    }
-
-    @Override
-    public List<MessageDTO.response> findAllByChannelId(UUID channelUUID) {
-        Map<Long, Message> messageList = messageRepository.findMessagesByChannelId(channelUUID);
-        return messageList.entrySet().stream()
-                .map(MessageDTO.response::from)
+    public List<MessageResponseDto> findAllByChannelId(UUID channelId) {
+        return messageRepository.findAll().stream()
+                .filter(message -> message.getChannel().getId().equals(channelId))
+                .map(messageMapper::toResponseDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public CommonDTO.idResponse update(Long messageId, String content, List<MultipartFile> attachments) {
-        boolean isUpdated = false;
-        MessageDTO.update updateDTO = MessageDTO.update.of(messageId, content, attachments);
-        try {
-            Message msg = messageRepository.load(updateDTO.id());   // 기존 메시지 조회
-            if (msg == null) {
-                throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
-            }
-
-            // 메시지 내용 업데이트
-            if (updateDTO.content() != null && !updateDTO.content().isEmpty()) {
-                msg.updateContent(updateDTO.content());
-            }
-
-            // 첨부파일이 존재하면 저장
-            if (updateDTO.attachments() != null && !updateDTO.attachments().isEmpty()) {
-                saveAttachmentList(msg.getId(), updateDTO.attachments());
-                binaryContentRepository.deleteAllFileByReferenceId(msg.getId());
-            }
-
-            messageRepository.update(updateDTO.id(), msg);
-            return CommonDTO.idResponse.from(updateDTO.id(), msg.getId());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public PageResponse<MessageResponseDto> findMessagesByChannelId(UUID channelId, int page) {
+        int MESSAGE_PAGE_SIZE = 50;
+        Pageable pageable = PageRequest.of(page, MESSAGE_PAGE_SIZE);
+        Slice<Message> messages = messageRepository.findByChannelIdOrderByCreatedAtDesc(channelId, pageable);
+        return pageResponseMapper.fromSlice(messages.map(messageMapper::toResponseDto));
     }
 
+    @Transactional
     @Override
-    public CommonDTO.idResponse delete(Long id) {
-        UUID uuid = messageRepository.load(id).getId();
-        // 관련 도메인(첨부파일)도 함께 삭제
-        if (binaryContentRepository.hasBinaryContent(uuid)) {
-            Map<Long, BinaryContent> binaryContents = binaryContentRepository.findMessageImageByMessageId(uuid);
-            binaryContents.keySet().forEach(binaryContentRepository::delete);
+    public MessageResponseDto update(UUID messageId, String content, List<MultipartFile> attachments) throws IOException {
+        Message message = messageRepository.findById(messageId);
+        message.updateContent(content);
+
+        if (!attachments.isEmpty()) {
+            if (!message.getAttachments().isEmpty()) {
+                message.clearAttachments();
+                messageRepository.save(message);
+            }
+            saveAttachmentList(message, attachments);
         }
-        messageRepository.delete(id);
-        return CommonDTO.idResponse.from(id, uuid);
+
+        return messageMapper.toResponseDto(message);
     }
 
+    @Transactional
     @Override
-    public CommonDTO.idResponse delete(UUID uuid) {
-        // 관련 도메인(첨부파일)도 함께 삭제
-        if (binaryContentRepository.hasBinaryContent(uuid)) {
-            Map<Long, BinaryContent> binaryContents = binaryContentRepository.findMessageImageByMessageId(uuid);
-            binaryContents.keySet().forEach(binaryContentRepository::delete);
-        }
-        Long deletedId = messageRepository.load(uuid).getKey();
-        messageRepository.delete(deletedId);
-        return CommonDTO.idResponse.from(deletedId, uuid);
+    public MessageResponseDto delete(UUID messageId) {
+        Message deletedMessage = messageRepository.findById(messageId);
+        MessageResponseDto response = messageMapper.toResponseDto(deletedMessage);
+        // 메시지에 연결된 첨부 파일 삭제
+        deletedMessage.getAttachments().clear();
+        messageRepository.save(deletedMessage); // 관계 먼저 제거
+
+        messageRepository.delete(deletedMessage);
+        return response;
     }
 }

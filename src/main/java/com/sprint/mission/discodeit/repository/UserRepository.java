@@ -1,32 +1,20 @@
 package com.sprint.mission.discodeit.repository;
 
 import com.sprint.mission.discodeit.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-import java.util.Map;
 import java.util.UUID;
 
-public interface UserRepository {
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    User findById(UUID id);
 
-    Long save(User user);
+    boolean existsUserByEmail(String email);
 
-    User load(Long id);
+    boolean existsUserByUsername(String username);
 
-    Map.Entry<Long, User> load(UUID uuid);
+    User findByUsername(String username);
 
-    Map<Long, User> loadAll();
-
-    void delete(Long id);
-
-    void update(Long id, User user);
-
-    // 검색 조건 달린 거 (index Id 제외)
-    Map.Entry<Long, User> findUserByUserName(String userName);
-
-    // 사용자 존재 여부 확인
-    boolean isExistByUserName(String userName);
-
-    boolean isExistByEmail(String email);
-
-    boolean confirmLogin(String userName, String password);
-
+    boolean existsUserByUsernameAndPassword(String username, String password);
 }
