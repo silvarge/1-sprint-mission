@@ -5,12 +5,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class PageResponseMapper<T> {
-    public PageResponse<T> fromSlice(Slice<T> slice) {
+    public PageResponse<T> fromSlice(Slice<T> slice, UUID nextCursor) {
         return new PageResponse<>(
                 slice.getContent(),
-                slice.getNumber(),
+                nextCursor,
                 slice.getSize(),
                 slice.hasNext(),
                 null

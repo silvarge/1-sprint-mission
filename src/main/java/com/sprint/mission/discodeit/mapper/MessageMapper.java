@@ -32,7 +32,10 @@ public class MessageMapper {
                 .createdAt(message.getCreatedAt())
                 .updatedAt(message.getUpdatedAt())
                 .attachments(message.getAttachments().isEmpty() ? null :
-                        message.getAttachments().stream().map(binaryContentMapper::toResponseDto).collect(Collectors.toList()))
+                        message.getAttachments().stream()
+                                .map(messageAttachment -> binaryContentMapper.toResponseDto(messageAttachment.getAttachment()))
+                                .collect(Collectors.toList())
+                )
                 .build();
     }
 

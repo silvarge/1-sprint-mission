@@ -16,5 +16,9 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
     @Query("select max(m.createdAt) from Message m where m.channel.id = :channelId")
     Instant findLastMessageAtByChannelId(@Param("channelId") UUID channelId);
 
-    Slice<Message> findByChannelIdOrderByCreatedAtDesc(UUID channelId, Pageable pageable);
+    @Query("select m from Message m where m.channel.id = :channelId order by m.createdAt desc")
+    Slice<Message> findMessagesFirstPage(@Param("channelId") UUID channelId, Pageable pageable);
+
+    @Query("select m from Message m where m.channel.id = :channelId and m.id < :cursor order by m.createdAt desc")
+    Slice<Message> findMessagesNextPage(@Param("channelId") UUID channelId, @Param("cursor") UUID cursor, Pageable pageable);
 }

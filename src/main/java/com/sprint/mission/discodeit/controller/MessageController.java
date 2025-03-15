@@ -43,9 +43,8 @@ public class MessageController implements MessageControllerDocs {
     @GetMapping
     public CustomApiResponse<PageResponse<MessageResponseDto>> getMessagesByChannel(
             @RequestParam UUID channelId,
-            @RequestParam(defaultValue = "0") int page
+            @RequestParam(required = false) UUID cursor
     ) {
-        return CustomApiResponse.ok(messageService.findMessagesByChannelId(channelId, page));
-//        return CustomApiResponse.created(messageService.findAllByChannelId(channelId, page));
+        return CustomApiResponse.ok(messageService.findMessagesByChannelId(channelId, cursor));
     }
 }

@@ -36,17 +36,8 @@ public class Message extends BaseUpdatableEntity {
     @OnDelete(action = OnDeleteAction.SET_NULL)
     private User author;
 
-    // 사용자가 채널에 추가/갱신 시 자동 반영 (삭제 시 수동으로 삭제하는 것이 안전)
-    @ManyToMany(fetch = FetchType.LAZY,
-            cascade = {CascadeType.MERGE, CascadeType.PERSIST})
-    @JoinTable(
-            name = "message_attachments",
-            joinColumns = @JoinColumn(name = "message_id"),
-            inverseJoinColumns = @JoinColumn(name = "attachment_id")
-    )
-    private List<BinaryContent> attachments = new ArrayList<>();
-    // 메시지 삭제 시 message_attachments 테이블에서 데이터 삭제 로직 추가해야 함 - 명시적 삭제
-    // message.getAttachments().clear();  // message_attachments 테이블에서 삭제
+    @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MessageAttachment> attachments = new ArrayList<>();
 
     // 생성자
     public Message(String content, Channel channel, User author) {

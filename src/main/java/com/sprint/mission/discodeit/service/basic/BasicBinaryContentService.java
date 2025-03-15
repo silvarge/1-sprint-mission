@@ -30,9 +30,8 @@ public class BasicBinaryContentService implements BinaryContentService {
     @Transactional
     @Override
     public BinaryContentResponseDto create(MultipartFile file) throws IOException {
-        BinaryContent savedFile = binaryContentRepository.saveAndFlush(binaryContentMapper.toEntity(file));
+        BinaryContent savedFile = binaryContentRepository.save(binaryContentMapper.toEntity(file));
         binaryContentStorage.put(savedFile.getId(), file);
-
         return binaryContentMapper.toResponseDto(binaryContentRepository.findById(savedFile.getId()).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA)));
     }
 

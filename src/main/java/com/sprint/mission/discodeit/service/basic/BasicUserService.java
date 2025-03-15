@@ -13,7 +13,6 @@ import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
-import com.sprint.mission.discodeit.service.HibernateStatisticsService;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.util.validation.Validator;
 import lombok.RequiredArgsConstructor;
@@ -41,8 +40,6 @@ public class BasicUserService implements UserService {
     private final BinaryContentRepository binaryContentRepository;
     private final BinaryContentService binaryContentService;
 
-    private final HibernateStatisticsService hibernateStatisticsService;
-
     @Transactional
     @Override
     public UserResponseDto create(UserSignupRequestDto userReqDto, MultipartFile profile) throws IOException {
@@ -65,34 +62,23 @@ public class BasicUserService implements UserService {
             BinaryContent loadProfile = binaryContentRepository.findById(profileDto.id()).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
             user.updateProfile(loadProfile);
         }
-
-        User savedUser = userRepository.save(user);
-
-        hibernateStatisticsService.printStatistics();
-
-        User loadUser = userRepository.findById(savedUser.getId()).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
+        UUID savedUser = userRepository.save(user).getId();
+        User loadUser = userRepository.findById(savedUser).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
         return userMapper.toResponseDto(loadUser);
     }
 
     @Override
     public UserResponseDto find(UUID userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
+        User user = userRepository.findByIdWithDetails(userId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
         if (user == null) throw new CustomException(ErrorCode.USER_NOT_FOUND);
-
-        hibernateStatisticsService.printStatistics();
         return userMapper.toResponseDto(user);
     }
 
     @Override
     public List<UserResponseDto> findAll() {
-        List<UserResponseDto> users = userRepository.findAll().stream()
+        return userRepository.findAllWithDetails().stream()
                 .map(userMapper::toResponseDto)
                 .collect(Collectors.toList());
-
-        hibernateStatisticsService.printStatistics(); // Hibernate Statistics 로그 출력
-
-        return users;
-//        return userRepository.findAll().stream().map(userMapper::toResponseDto).collect(Collectors.toList());
     }
 
     @Transactional
@@ -118,8 +104,6 @@ public class BasicUserService implements UserService {
 
             userRepository.save(updatedUser); // DB에 반영
 
-            hibernateStatisticsService.printStatistics(); // Hibernate Statistics 로그 출력
-
             return userMapper.toResponseDto(updatedUser);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -131,8 +115,6 @@ public class BasicUserService implements UserService {
     public UserResponseDto delete(UUID userId) {
         User deleteUser = userRepository.findById(userId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
         userRepository.delete(deleteUser);
-
-        hibernateStatisticsService.printStatistics(); // Hibernate Statistics 로그 출력
 
         return userMapper.toResponseDto(deleteUser);
     }

@@ -79,5 +79,5 @@ public interface MessageControllerDocs {
     })
     CustomApiResponse<PageResponse<MessageResponseDto>> getMessagesByChannel(
             @Parameter(description = "채널 ID", required = true) @RequestParam UUID channelId,
-            @Parameter(description = "페이지 번호", required = false) @RequestParam(defaultValue = "0") int page);
+            @Parameter(description = "페이지 커서", required = false) @RequestParam UUID cursor);
 }

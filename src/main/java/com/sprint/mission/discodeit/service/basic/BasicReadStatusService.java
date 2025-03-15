@@ -52,10 +52,8 @@ public class BasicReadStatusService implements ReadStatusService {
         if (readStatus == null) {
             throw new CustomException(ErrorCode.READ_STATUS_NOT_FOUND);
         }
-
         // 마지막에 읽은 것만 업데이트 하면 됨
         readStatus.updateLastReadAt(lastReadAt);
-
         return readStatusMapper.toResponseDto(readStatus);
     }
 

@@ -24,7 +24,7 @@ public interface MessageService {
     List<MessageResponseDto> findAllByChannelId(UUID channelId);   // 채널의 모든 메시지
 
     // 페이징 포함
-    PageResponse<MessageResponseDto> findMessagesByChannelId(UUID channelId, int page);
+    PageResponse<MessageResponseDto> findMessagesByChannelId(UUID channelId, UUID cursor);
 
     // 메시지 수정
     MessageResponseDto update(UUID messageId, String content, List<MultipartFile> attachments) throws IOException;

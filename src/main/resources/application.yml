@@ -22,10 +22,9 @@ spring:
         use_sql_comments: true
         highlight_sql: true
         generate_statistics: true
-        type:
-          descriptor:
-            sql:
-              BasicBinder: TRACE
+        cache:
+          use_second_level_cache: false
+      open-in-view: false
 
   transaction:
     default-timeout: 30
@@ -48,7 +47,10 @@ server:
 # logging
 logging:
   level:
-    org.hibernate.type: trace
+    org:
+      hibernate:
+        sql: debug
+        type.descriptor.sql.BasicBinder: trace
 
 # swagger
 springdoc:

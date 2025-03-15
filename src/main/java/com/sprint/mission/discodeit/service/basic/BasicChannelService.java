@@ -5,10 +5,12 @@ import com.sprint.mission.discodeit.dto.channel.ChannelUpdateDto;
 import com.sprint.mission.discodeit.dto.channel.PrivateChannelRequestDto;
 import com.sprint.mission.discodeit.dto.channel.PublicChannelRequestDto;
 import com.sprint.mission.discodeit.entity.Channel;
+import com.sprint.mission.discodeit.entity.ChannelMember;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.mapper.ChannelMapper;
+import com.sprint.mission.discodeit.repository.ChannelMemberRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
@@ -27,6 +29,7 @@ public class BasicChannelService implements ChannelService {
     private final ChannelMapper channelMapper;
 
     private final ChannelRepository channelRepository;
+    private final ChannelMemberRepository channelMemberRepository;
     private final UserRepository userRepository;
 
     @Transactional
@@ -40,17 +43,20 @@ public class BasicChannelService implements ChannelService {
     @Override
     public ChannelResponseDto createPrivateChannel(PrivateChannelRequestDto channelReqDTO) {
         Channel channel = channelMapper.toPrivateEntity(channelReqDTO);
+        Channel savedChannel = channelRepository.save(channel);
+
         List<User> users = channelReqDTO.participantIds().stream()
                 .map(userRepository::findById)
                 .flatMap(Optional::stream)
-                .filter(user -> !channel.getMembers().contains(user))
-                .peek(user -> user.getJoinChannels().add(channel))
                 .toList();
 
-        channel.getMembers().addAll(users);
-        Channel savedChannel = channelRepository.save(channel);
-        Channel loadChannel = channelRepository.findById(savedChannel.getId()).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
-        return channelMapper.toResponseDto(loadChannel);
+        // 3. ChannelMember 엔티티 생성 및 저장
+        List<ChannelMember> channelMembers = users.stream()
+                .map(user -> new ChannelMember(user, savedChannel))
+                .toList();
+
+        channelMemberRepository.saveAll(channelMembers);  // ✅ 명시적으로 저장 (더 안전함)
+        return channelMapper.toResponseDto(savedChannel);
     }
 
     @Override
@@ -60,9 +66,7 @@ public class BasicChannelService implements ChannelService {
 
     @Override
     public List<ChannelResponseDto> findAllByUserId(UUID userId) {
-        User owner = userRepository.findById(userId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
-        return channelRepository.findAll().stream()
-                .filter(channel -> channel.getOwner().equals(owner))
+        return channelRepository.findAllByUserId(userId).stream()
                 .map(channelMapper::toResponseDto)
                 .collect(Collectors.toList());
     }

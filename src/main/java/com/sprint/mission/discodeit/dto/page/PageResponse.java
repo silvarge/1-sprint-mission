@@ -9,7 +9,8 @@ import java.util.List;
 @AllArgsConstructor
 public class PageResponse<T> {
     public List<T> content;
-    public int number;
+    //    public int number;
+    public Object nextCursor;
     public int size;
     public boolean hasNext;
     public Long totalElements;

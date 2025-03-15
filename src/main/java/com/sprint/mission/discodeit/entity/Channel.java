@@ -34,13 +34,9 @@ public class Channel extends BaseUpdatableEntity {
     @OnDelete(action = OnDeleteAction.SET_NULL)
     private User owner;
 
-    // 사용자가 채널에 추가/갱신 시 자동 반영 (삭제 시 수동으로 삭제하는 것이 안전)
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
-    @JoinTable(name = "channel_members",
-            joinColumns = @JoinColumn(name = "channel_id"),
-            inverseJoinColumns = @JoinColumn(name = "member_id")
-    )
-    private List<User> members = new ArrayList<>();
+    @OneToMany(mappedBy = "channel", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChannelMember> members = new ArrayList<>();
+
 
     // 생성자
     public Channel(String serverName, ChannelType channelType, String description, User owner) {

@@ -26,7 +26,9 @@ public class ChannelMapper {
 
     public ChannelResponseDto toResponseDto(Channel channel) {
 
-        List<UserResponseDto> participants = channel.getMembers().stream().map(userMapper::toResponseDto).collect(Collectors.toList());
+        List<UserResponseDto> participants = channel.getMembers().stream()
+                .map(channelMember -> userMapper.toResponseDto(channelMember.getUser()))
+                .collect(Collectors.toList());
         Instant lastMessageAt = messageRepository.findLastMessageAtByChannelId(channel.getId());
 
         return ChannelResponseDto.builder()

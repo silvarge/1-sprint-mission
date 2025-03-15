@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.dto.message.MessageResponseDto;
 import com.sprint.mission.discodeit.dto.page.PageResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.entity.MessageAttachment;
 import com.sprint.mission.discodeit.exception.CustomException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.mapper.MessageMapper;
@@ -36,14 +37,20 @@ public class BasicMessageService implements MessageService {
     private final MessageMapper messageMapper;
     private final PageResponseMapper<MessageResponseDto> pageResponseMapper;
 
-    private void saveAttachmentList(Message message, List<MultipartFile> attachments) throws IOException {
+    private void addAttachmentToMessage(Message message, List<MultipartFile> attachments) throws IOException {
         for (MultipartFile attachment : attachments) {
+            // 1. BinaryContent 저장
             UUID id = binaryContentService.create(attachment).id();
-            BinaryContent binaryContent = binaryContentRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
+            BinaryContent binaryContent = binaryContentRepository.findById(id)
+                    .orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
 
-            message.getAttachments().add(binaryContent);
-            binaryContent.getMessages().add(message);
+            // 2. MessageAttachment 생성
+            MessageAttachment messageAttachment = new MessageAttachment(message, binaryContent);
+
+            // 3. Message 엔티티에 추가
+            message.getAttachments().add(messageAttachment);
         }
+
     }
 
     @Transactional
@@ -51,7 +58,7 @@ public class BasicMessageService implements MessageService {
     public MessageResponseDto create(MessageRequestDto messageReqDTO, List<MultipartFile> attachments) throws IOException {
         Message message = messageMapper.toEntity(messageReqDTO);
         if (attachments != null && !attachments.isEmpty()) {
-            saveAttachmentList(message, attachments);
+            addAttachmentToMessage(message, attachments);
         }
         messageRepository.save(message);
         return messageMapper.toResponseDto(message);
@@ -72,11 +79,20 @@ public class BasicMessageService implements MessageService {
     }
 
     @Override
-    public PageResponse<MessageResponseDto> findMessagesByChannelId(UUID channelId, int page) {
+    public PageResponse<MessageResponseDto> findMessagesByChannelId(UUID channelId, UUID cursor) {
         int MESSAGE_PAGE_SIZE = 50;
-        Pageable pageable = PageRequest.of(page, MESSAGE_PAGE_SIZE);
-        Slice<Message> messages = messageRepository.findByChannelIdOrderByCreatedAtDesc(channelId, pageable);
-        return pageResponseMapper.fromSlice(messages.map(messageMapper::toResponseDto));
+        Pageable pageable = PageRequest.of(0, MESSAGE_PAGE_SIZE);
+        Slice<Message> messages;
+
+        if (cursor == null) {
+            messages = messageRepository.findMessagesFirstPage(channelId, pageable);
+        } else {
+            messages = messageRepository.findMessagesNextPage(channelId, cursor, pageable);
+        }
+
+        UUID nextCursor = messages.hasNext() ? messages.getContent().get(messages.getNumberOfElements() - 1).getId() : null;
+
+        return pageResponseMapper.fromSlice(messages.map(messageMapper::toResponseDto), nextCursor);
     }
 
     @Transactional
@@ -90,7 +106,7 @@ public class BasicMessageService implements MessageService {
                 message.clearAttachments();
                 messageRepository.save(message);
             }
-            saveAttachmentList(message, attachments);
+            addAttachmentToMessage(message, attachments);
         }
 
         return messageMapper.toResponseDto(message);
@@ -100,12 +116,7 @@ public class BasicMessageService implements MessageService {
     @Override
     public MessageResponseDto delete(UUID messageId) {
         Message deletedMessage = messageRepository.findById(messageId).orElseThrow(() -> new CustomException(ErrorCode.FAILED_TO_LOAD_DATA));
-        MessageResponseDto response = messageMapper.toResponseDto(deletedMessage);
-        // 메시지에 연결된 첨부 파일 삭제
-        deletedMessage.getAttachments().clear();
-        messageRepository.save(deletedMessage); // 관계 먼저 제거
-
         messageRepository.delete(deletedMessage);
-        return response;
+        return messageMapper.toResponseDto(deletedMessage);
     }
 }

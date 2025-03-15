@@ -13,7 +13,6 @@ public class BinaryContentMapper {
                 .fileName(binaryContent.getFilename())
                 .size(binaryContent.getFileSize())
                 .contentType(binaryContent.getContentType())
-                .bytes(null)
                 .build();
     }
 

@@ -43,19 +43,17 @@ public class User extends BaseUpdatableEntity {
     @Column(name = "introduce")
     private String introduce;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    // TODO: 이거 OneToOne으로 바꾼거  (ManyToOne에서) BinaryContent도 수정해야 할 것 같음
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "profile_id", foreignKey = @ForeignKey(name = "fk_profile"), nullable = true)
     @OnDelete(action = OnDeleteAction.SET_NULL)
     private BinaryContent profile;
 
     @OneToOne(mappedBy = "user", cascade = {CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
-    private UserStatus userStatus;
+    private UserStatus userStatus;  // OneToOne은 fetchType이 Eager였다
 
-    // 사용자가 채널에 추가/갱신 시 자동 반영 (삭제 시 수동으로 삭제하는 것이 안전)
-    @ManyToMany(mappedBy = "members",
-            fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}
-    )
-    private List<Channel> joinChannels = new ArrayList<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChannelMember> joinedChannels = new ArrayList<>();
 
     // 생성자
     public User(
