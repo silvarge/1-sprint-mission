@@ -1,7 +1,6 @@
 package com.sprint.mission.discodeit.entity;
 
-import com.sprint.mission.discodeit.exception.CustomException;
-import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.exception.channel.ChannelTypeNotFoundException;
 import io.micrometer.common.util.StringUtils;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -52,12 +51,12 @@ public class Channel extends BaseUpdatableEntity {
 
         public static ChannelType fromString(String value) {
             if (StringUtils.isBlank(value)) {
-                throw new CustomException(ErrorCode.CHANNEL_TYPE_NOT_FOUND);
+                throw new ChannelTypeNotFoundException(value);
             }
             try {
                 return ChannelType.valueOf(value.toUpperCase());
             } catch (IllegalArgumentException e) {
-                throw new CustomException(ErrorCode.CHANNEL_TYPE_NOT_FOUND);
+                throw new ChannelTypeNotFoundException(value);
             }
         }
     }
@@ -74,13 +73,6 @@ public class Channel extends BaseUpdatableEntity {
     public void updateChannelType(ChannelType channelType) {
         this.channelType = channelType;
     }
-
-    // TODO: 채널에 접근할 수 있는지 여부 서비스로 빼거나 하는게 좋겠음
-//    public boolean canAccessChannel(UUID userId) {
-//        return channelType == ChannelType.PUBLIC ||
-//                ownerId.equals(userId) ||
-//                members.contains(userId);
-//    }
 
     @Override
     public String toString() {

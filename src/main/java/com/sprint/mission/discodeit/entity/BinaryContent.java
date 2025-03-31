@@ -30,7 +30,6 @@ public class BinaryContent extends BaseEntity {
     @OneToMany(mappedBy = "attachment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MessageAttachment> messageAttachments = new ArrayList<>();
 
-
     public BinaryContent(String filename, String contentType, Long fileSize) {
         this.filename = filename;
         this.contentType = contentType;
