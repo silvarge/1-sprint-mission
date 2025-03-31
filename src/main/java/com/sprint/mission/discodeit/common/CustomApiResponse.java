@@ -2,7 +2,6 @@ package com.sprint.mission.discodeit.common;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.sprint.mission.discodeit.exception.DiscodeitException;
 import com.sprint.mission.discodeit.exception.ExceptionDto;
 import jakarta.annotation.Nullable;
 import org.springframework.http.HttpStatus;
@@ -21,10 +20,6 @@ public record CustomApiResponse<T>(
 
     public static <T> CustomApiResponse<T> created(@Nullable final T data) {
         return new CustomApiResponse<>(HttpStatus.CREATED, true, data, null);
-    }
-
-    public static <T> CustomApiResponse<T> fail(final DiscodeitException e) {
-        return new CustomApiResponse<>(e.getErrorCode().getStatus(), false, null, ExceptionDto.of(e));
     }
 
     public static <T> CustomApiResponse<T> fail(final ExceptionDto e) {
