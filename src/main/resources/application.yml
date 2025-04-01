@@ -11,13 +11,8 @@ spring:
   boot:
     admin:
       client:
-        #        url: http://localhost:9090
-        #        instance:
-        #          service-url: http://localhost:8080
-        #          management-url: http://localhost:8080/actuator
-        #          health-url: http://localhost:8080/actuator/health
-        #          name: spring-boot-application
-        enabled: false
+        instance:
+          name: Discodeit
 
 discodeit:
   storage:
