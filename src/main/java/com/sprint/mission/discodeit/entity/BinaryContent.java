@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.List;
  * - 사용자의 프로필 이미지/ 메시지 첨부 파일 저장을 위해 사용
  */
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "binary_contents")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
