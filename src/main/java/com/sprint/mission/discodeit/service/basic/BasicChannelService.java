@@ -68,6 +68,7 @@ public class BasicChannelService implements ChannelService {
     }
 
     private void createChannelParticipants(Channel channel, List<UUID> participantIds) {
+        log.info("createChannelParticipants - {}", participantIds);
         List<User> users = participantIds.stream()
                 .map(userRepository::findById)
                 .flatMap(Optional::stream)
@@ -79,6 +80,7 @@ public class BasicChannelService implements ChannelService {
                 .toList();
 
         channelMemberRepository.saveAll(channelMembers);  // 명시적으로 저장 (더 안전함)
+        channel.addAllMembers(channelMembers);
         log.info("private 채널 멤버가 저장되었습니다. - channelId: {}, 멤버 수: {}", channel.getId(), channelMembers.size());
     }
 

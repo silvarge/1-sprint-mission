@@ -38,7 +38,6 @@ public class Channel extends BaseUpdatableEntity {
     @OneToMany(mappedBy = "channel", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChannelMember> members = new ArrayList<>();
 
-
     // 생성자
     public Channel(String serverName, ChannelType channelType, String description, User owner) {
         this.serverName = serverName;
@@ -74,6 +73,14 @@ public class Channel extends BaseUpdatableEntity {
 
     public void updateChannelType(ChannelType channelType) {
         this.channelType = channelType;
+    }
+
+    public void addMembers(ChannelMember channelMember) {
+        this.getMembers().add(channelMember);
+    }
+
+    public void addAllMembers(List<ChannelMember> channelMembers) {
+        this.getMembers().addAll(channelMembers);
     }
 
     @Override
