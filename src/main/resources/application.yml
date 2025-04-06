@@ -1,8 +1,10 @@
 spring:
   application:
     name: discodeit
+
   profiles:
-    active: dev
+    active: test
+
   servlet:
     multipart:
       enabled: true

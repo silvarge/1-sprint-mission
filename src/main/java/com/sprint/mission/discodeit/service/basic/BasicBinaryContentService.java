@@ -4,6 +4,7 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentResponseDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
+import com.sprint.mission.discodeit.exception.binarycontent.EmptyFileUploadException;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
@@ -32,6 +33,9 @@ public class BasicBinaryContentService implements BinaryContentService {
     @Override
     public BinaryContentResponseDto create(MultipartFile file) throws IOException {
         log.debug("파일 업로드(생성) 요청 - 원본 파일명: {}", file.getOriginalFilename());
+        if (file.isEmpty()) {
+            throw new EmptyFileUploadException(file.getOriginalFilename());
+        }
         BinaryContent savedFile = binaryContentRepository.save(binaryContentMapper.toEntity(file));
         binaryContentStorage.put(savedFile.getId(), file);
 

@@ -54,7 +54,7 @@ public class BasicUserService implements UserService {
         log.debug("사용자 생성 요청 - 요청 데이터: {}", userReqDto);
         // 유효성 검사
         userValidator.validateCreate(userReqDto);
-        
+
         // 중복 검사
         if (userRepository.existsUserByEmail(userReqDto.email()) || userRepository.existsUserByUsername(userReqDto.username())) {
             log.warn("사용자가 이미 존재합니다. - email: {}, username: {}", userReqDto.email(), userReqDto.username());
@@ -67,7 +67,7 @@ public class BasicUserService implements UserService {
         user.updateUserStatus(userStatus);
 
         // 프로필 이미지 존재 시 생성
-        if (profile != null && !profile.isEmpty()) {
+        if (profile != null) {
             BinaryContentResponseDto profileDto = binaryContentService.create(profile);
             BinaryContent loadProfile = binaryContentRepository.findById(profileDto.id()).orElseThrow(() -> new BinaryContentNotFoundException(profileDto.id()));
             user.updateProfile(loadProfile);
@@ -112,7 +112,6 @@ public class BasicUserService implements UserService {
             User current = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
             User updatedUser = userValidator.validateUpdate(current, userUpdateDto);
             if (updatedUser == null) {
-                log.warn("수정할 사용자 데이터가 없습니다. - 수정 대상 id: {}, 수정 요청 데이터: {}", userId, userUpdateDto);
                 throw new UserUpdateDataNotFoundException(userId);
             }
 
@@ -133,6 +132,9 @@ public class BasicUserService implements UserService {
             log.info("사용자 정보가 수정되었습니다. - id: {}", updatedUser.getId());
 
             return userMapper.toResponseDto(updatedUser);
+        } catch (UserUpdateDataNotFoundException ue) {
+            log.warn("수정할 사용자 데이터가 없습니다. - 수정 대상 id: {}, 수정 요청 데이터: {}", userId, userUpdateDto);
+            throw ue;
         } catch (Exception e) {
             log.error("사용자 수정 중 예외 발생 - id: {}, message: {}", userId, e.getMessage(), e);
             throw new DataUpdateFailedException("User", userId, e);

@@ -44,6 +44,7 @@ public enum ErrorCode {
     FILE_CONVERT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "FILE002", "파일 변환 중 오류가 발생했습니다."),
     BINARY_CONTENT_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "FILE003", "파일 메타데이터 저장에 실패하였습니다."),
     BINARY_CONTENT_LOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "FILE004", "파일 메타데이터 조회에 실패하였습니다."),
+    FILE_IS_EMPTY(HttpStatus.BAD_REQUEST, "FILE005", "빈 파일을 업로드할 수 없습니다."),
 
     // Storage
     FAILED_TO_CREATE_DIRECTORY(HttpStatus.INTERNAL_SERVER_ERROR, "STORAGE001", "디렉토리 생성에 실패하였습니다."),

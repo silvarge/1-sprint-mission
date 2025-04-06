@@ -68,7 +68,6 @@ logging:
   level:
     root: info
     com.sprint.mission.discodeit: debug
-    #    de.codecentric.boot.admin.client.registration: debug
     org:
       hibernate:
         sql: debug

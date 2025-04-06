@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -23,12 +22,7 @@ public class ChannelMapper {
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
 
-    public ChannelResponseDto toResponseDto(Channel channel) {
-
-        List<UserResponseDto> participants = channel.getMembers().stream()
-                .map(channelMember -> userMapper.toResponseDto(channelMember.getUser()))
-                .collect(Collectors.toList());
-        Instant lastMessageAt = messageRepository.findLastMessageAtByChannelId(channel.getId());
+    public ChannelResponseDto toResponseDto(Channel channel, List<UserResponseDto> participants, Instant lastMessageAt) {
 
         return ChannelResponseDto.builder()
                 .id(channel.getId())

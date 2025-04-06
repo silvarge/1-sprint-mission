@@ -52,7 +52,7 @@ public class BasicMessageService implements MessageService {
             // 3. Message 엔티티에 추가
             message.getAttachments().add(messageAttachment);
         }
-
+        log.info("첨부파일이 등록되었습니다. - id: {}", message.getAttachments().stream().map(MessageAttachment::getId).collect(Collectors.toList()));
     }
 
     @Transactional
@@ -63,10 +63,10 @@ public class BasicMessageService implements MessageService {
         if (attachments != null && !attachments.isEmpty()) {
             addAttachmentToMessage(message, attachments);
         }
-        messageRepository.save(message);
+        Message savedMessage = messageRepository.save(message);
 
-        log.info("메시지가 생성되었습니다. - id: {}", message.getId());
-        return messageMapper.toResponseDto(message);
+        log.info("메시지가 생성되었습니다. - id: {}", savedMessage.getId());
+        return messageMapper.toResponseDto(savedMessage);
     }
 
     @Override
