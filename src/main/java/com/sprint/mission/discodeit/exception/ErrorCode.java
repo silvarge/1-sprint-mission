@@ -20,6 +20,7 @@ public enum ErrorCode {
     INVALID_PHONENUM(HttpStatus.BAD_REQUEST, "VALID004", "전화번호가 유효하지 않습니다."),
     INVALID_NICKNAME(HttpStatus.BAD_REQUEST, "VALID005", "별명이 유효하지 않습니다."),
     REGION_CODE_IS_NOT_NULL(HttpStatus.BAD_REQUEST, "VALID006", "Region Code는 Null이 될 수 없습니다."),
+    INVALID_REGION_CODE(HttpStatus.BAD_REQUEST, "VALID007", "Region Code가 유효하지 않습니다."),
 
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER001", "해당 사용자가 존재하지 않습니다."),
     USER_TYPE_NOT_FOUND(HttpStatus.NOT_FOUND, "USER002", "해당 사용자 종류는 존재하지 않습니다."),

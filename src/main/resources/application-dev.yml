@@ -10,9 +10,7 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/${DB_NAME}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+
   # JPA
   jpa:
     hibernate:
@@ -69,6 +67,9 @@ logging:
     root: info
     com.sprint.mission.discodeit: debug
     org:
+      springframework:
+        core:
+          env: debug
       hibernate:
         sql: debug
         type:
@@ -92,7 +93,6 @@ springdoc:
 
 # port
 server:
-  port: 8080
   tomcat:
     uri-encoding: UTF-8
   servlet:

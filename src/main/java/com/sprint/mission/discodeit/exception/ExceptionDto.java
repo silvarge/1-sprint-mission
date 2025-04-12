@@ -46,6 +46,17 @@ public class ExceptionDto {
         );
     }
 
+    public static ExceptionDto of(Exception e, ErrorCode errorCode, Map<String, Object> details) {
+        return new ExceptionDto(
+                Instant.now(),
+                errorCode.getStatus(),
+                errorCode.getCode(),
+                errorCode.getMessage(),
+                details,
+                e.getClass().getSimpleName()
+        );
+    }
+
     @Override
     public String toString() {
         return String.format("{ status=%d, code='%s', message='%s', type='%s', details=%s, timestamp=%s }", httpCode.value(), code, message, exceptionType, details, timestamp);

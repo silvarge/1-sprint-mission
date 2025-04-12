@@ -3,10 +3,6 @@
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    # 배포용 DB
-    url: jdbc:postgresql://${PROD_DB_HOST}:${PROD_DB_PORT}/${PROD_DB_DATABASE}
-    username: ${PROD_DB_USERNAME}
-    password: ${PROD_DB_PASSWORD}
 
   # JPA
   jpa:
@@ -50,7 +46,7 @@ springdoc:
 
 # port
 server:
-  port: 8080
+  port: ${APP_PORT:80}
   tomcat:
     uri-encoding: UTF-8
   servlet:

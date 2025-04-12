@@ -11,15 +11,18 @@ import java.util.UUID;
 @Slf4j
 public class MDCLoggingInterceptor implements HandlerInterceptor {
     private static final String REQUEST_ID = "requestId";
+    private static final String METHOD = "method";
+    private static final String URI = "uri";
+    private static final String HEADER = "Discodeit-Request-ID";
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String requestId = UUID.randomUUID().toString();
         MDC.put(REQUEST_ID, requestId);
-        MDC.put("method", request.getMethod());
-        MDC.put("uri", request.getRequestURI());
+        MDC.put(METHOD, request.getMethod());
+        MDC.put(URI, request.getRequestURI());
 
-        response.setHeader("Discodeit-Request-ID", requestId);
+        response.setHeader(HEADER, requestId);
         return true;
     }
 

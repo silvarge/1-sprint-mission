@@ -19,8 +19,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = {NoHandlerFoundException.class, HttpRequestMethodNotSupportedException.class})
     public CustomApiResponse<?> handleNoPageFoundException(Exception e) {
         log.error("Invalid route or method: : {}", e.getMessage());
-        DiscodeitException discodeitException = new DiscodeitException(ErrorCode.METHOD_NOT_ALLOWED);
-        return CustomApiResponse.fail(ExceptionDto.of(discodeitException));
+        return CustomApiResponse.fail(ExceptionDto.of(e, ErrorCode.METHOD_NOT_ALLOWED, null));
     }
 
     // Validation 예외
@@ -36,8 +35,7 @@ public class GlobalExceptionHandler {
                 .toList();
 
         log.warn("Validation Failed: {}", errors);
-        DiscodeitException discodeitException = new DiscodeitException(ErrorCode.INVALID_REQUEST, Map.of("validationError", errors));
-        return CustomApiResponse.fail(ExceptionDto.of(discodeitException));
+        return CustomApiResponse.fail(ExceptionDto.of(e, ErrorCode.INVALID_REQUEST, Map.of("validationError", errors)));
     }
 
     // 커스텀 예외
@@ -52,7 +50,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = {Exception.class})
     public CustomApiResponse<?> handleException(Exception e) {
         log.error("Unhandled exception caught in GlobalExceptionHandler : {}", e.getMessage());
-        DiscodeitException discodeitException = new DiscodeitException(ErrorCode.INTERNAL_SERVER_ERROR);
-        return CustomApiResponse.fail(ExceptionDto.of(discodeitException));
+        return CustomApiResponse.fail(ExceptionDto.of(e, ErrorCode.METHOD_NOT_ALLOWED, null));
     }
 }

@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.repository;
 
-import com.sprint.mission.discodeit.TestAuditConfig;
 import com.sprint.mission.discodeit.common.Phone;
+import com.sprint.mission.discodeit.config.TestAuditConfig;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import org.junit.jupiter.api.BeforeEach;

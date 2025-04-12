@@ -33,9 +33,11 @@ import java.util.UUID;
 public class LocalBinaryContentStorage implements BinaryContentStorage {
 
     private final Path root;
+    private final String DIRECTORY_PROPERTY = "user.dir";
+    private final String SEPERATE_VALUE = ".";
 
     public LocalBinaryContentStorage(@Value("${discodeit.storage.local.root-path}") String rootPath) {
-        this.root = Paths.get(System.getProperty("user.dir")).resolve(rootPath); // 프로젝트 루트 기준으로 저장
+        this.root = Paths.get(System.getProperty(DIRECTORY_PROPERTY)).resolve(rootPath); // 프로젝트 루트 기준으로 저장
     }
 
     @PostConstruct
@@ -57,7 +59,6 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
     @Override
     public UUID put(UUID fileId, MultipartFile file) {
         try {
-            String SEPERATE_VALUE = ".";
             int dotIndex = file.getOriginalFilename().lastIndexOf(SEPERATE_VALUE);
             String extension = file.getOriginalFilename().substring(dotIndex);
 
@@ -101,7 +102,7 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
         String HEADER_VALUE = "attachment; filename*=UTF-8''";
 
         // 확장자가 포함된 파일명 설정
-        int dotIndex = originalFileName.lastIndexOf(".");
+        int dotIndex = originalFileName.lastIndexOf(SEPERATE_VALUE);
         String extension = (dotIndex != -1) ? originalFileName.substring(dotIndex) : "";
         Path filePath = resolvePath(fileId.toString() + extension);
 
