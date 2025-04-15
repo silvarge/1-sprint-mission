@@ -70,11 +70,18 @@ jobs:
             --service $ECS_SERVICE \
             --desired-count 0
 
+      - name: Get current ECS task definition # task-definition.json 파일 받기
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition $ECS_TASK_DEFINITION \
+            --query 'taskDefinition' \
+            > task-definition.json
+
       - name: Render new ECS task definition with updated image # 업데이트 된 이미지 반영
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          task-definition: task-definition.json
           container-name: ${{ env.ECS_CONTAINER_NAME }}
           image: ${{ env.ECR_REPOSITORY_URI }}:latest
 
