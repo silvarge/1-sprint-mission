@@ -23,7 +23,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle - DB 태그를 단 부분은 제외
-        run: ./gradlew build test -PexcludeTags=db
+        run: ./gradlew test -DexcludeTags=db
 
       - name: Upload test results
         if: always()
@@ -32,7 +32,5 @@ jobs:
           name: test-results
           path: build/test-results/test
 
-      - name: Upload coverage to Codecov
+      - name: Upload coverage to Codecov (자동 감지)
         uses: codecov/codecov-action@v5
-        with:
-          file: ./build/reports/jacoco/test/jacocoTestReport.xml
