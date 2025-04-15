@@ -70,6 +70,17 @@ jobs:
             --service $ECS_SERVICE \
             --desired-count 0
 
+      - name: Wait for tasks to stop  # 기존 태스크가 완전히 종료될 때까지 기다리기
+        run: |
+          while aws ecs list-tasks \
+            --cluster $ECS_CLUSTER \
+            --service-name $ECS_SERVICE \
+            --desired-status RUNNING \
+            --query 'taskArns' --output text | grep -q .; do
+            echo "Waiting for old tasks to stop..."
+            sleep 10
+          done
+
       - name: Get current ECS task definition # task-definition.json 파일 받기
         run: |
           aws ecs describe-task-definition \
