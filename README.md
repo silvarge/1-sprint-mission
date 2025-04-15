@@ -2,4 +2,4 @@
 
 ## 스프린트 미션 대상 서비스: 디스코드
 
-## part-1 한상은
+[![codecov](https://codecov.io/github/silvarge/1-sprint-mission/graph/badge.svg?token=00FSRXRYS0)](https://codecov.io/github/silvarge/1-sprint-mission)
