@@ -6,6 +6,11 @@ plugins {
 }
 
 test {
+    useJUnitPlatform {
+        if (System.getProperty("excludeTags")) {
+            excludeTags System.getProperty("excludeTags")
+        }
+    }
     finalizedBy jacocoTestReport
 }
 
