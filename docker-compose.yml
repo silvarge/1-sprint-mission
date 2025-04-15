@@ -18,7 +18,7 @@ services:
       args:
         PROJECT_NAME: ${PROJECT_NAME}
         PROJECT_VERSION: ${PROJECT_VERSION}
-    image: ${PROJECT_NAME}:local
+    image: ${PROJECT_NAME}:local-slim
     ports:
       - "8081:${APP_PORT}"
     depends_on:
