@@ -9,6 +9,7 @@ import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,6 +23,7 @@ import java.util.UUID;
 import static com.sprint.mission.discodeit.entity.Channel.ChannelType.PRIVATE;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Tag("db")
 @ActiveProfiles("test")
 @SpringBootTest
 class BasicChannelServiceTest {
