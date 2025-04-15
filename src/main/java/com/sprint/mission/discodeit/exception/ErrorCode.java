@@ -49,9 +49,11 @@ public enum ErrorCode {
 
     // Storage
     FAILED_TO_CREATE_DIRECTORY(HttpStatus.INTERNAL_SERVER_ERROR, "STORAGE001", "디렉토리 생성에 실패하였습니다."),
-    FAILED_TO_SAVE_LOCAL_STORAGE(HttpStatus.INTERNAL_SERVER_ERROR, "STORAGE002", "로컬 저장소 파일 저장을 실패하였습니다."),
-    FAILED_TO_LOAD_LOCAL_STORAGE(HttpStatus.INTERNAL_SERVER_ERROR, "STORAGE003", "로컬 저장소 파일 로드를 실패하였습니다."),
-    FILE_NOT_FOUND_IN_LOCAL_STORAGE(HttpStatus.NOT_FOUND, "STORAGE004", "해당 파일이 로컬 저장소에 존재하지 않습니다."),
+    FAILED_TO_SAVE_STORAGE(HttpStatus.INTERNAL_SERVER_ERROR, "STORAGE002", "저장소에 파일 저장을 실패하였습니다."),
+    FAILED_TO_LOAD_STORAGE(HttpStatus.INTERNAL_SERVER_ERROR, "STORAGE003", "저장소에 파일 로드를 실패하였습니다."),
+    FILE_NOT_FOUND_IN_STORAGE(HttpStatus.NOT_FOUND, "STORAGE004", "해당 파일이 저장소에 존재하지 않습니다."),
+    FAILED_TO_CONVERT_FILE(HttpStatus.INTERNAL_SERVER_ERROR, "STORAGE005", "파일 변환에 실패하였습니다."),
+    FAILED_TO_CREATE_PRESIGNED_URL(HttpStatus.INTERNAL_SERVER_ERROR, "STORAGE006", "S3 PRESIGNED URL 생성에 실패하였습니다."),
 
     // User status
     USER_STATUS_NOT_FOUND(HttpStatus.NOT_FOUND, "USTAT001", "해당 USER STATUS가 존재하지 않습니다."),

@@ -7,6 +7,6 @@ import java.util.UUID;
 
 public class LoadFailedLocalDirectoryException extends StorageException {
     public LoadFailedLocalDirectoryException(UUID fileId) {
-        super(ErrorCode.FAILED_TO_LOAD_LOCAL_STORAGE, Map.of("fileId", fileId));
+        super(ErrorCode.FAILED_TO_LOAD_STORAGE, Map.of("fileId", fileId, "storage", "local"));
     }
 }

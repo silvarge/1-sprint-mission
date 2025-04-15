@@ -7,6 +7,6 @@ import java.util.Map;
 
 public class FileNotFoundInLocalDirectoryException extends StorageException {
     public FileNotFoundInLocalDirectoryException(Path filePath) {
-        super(ErrorCode.FILE_NOT_FOUND_IN_LOCAL_STORAGE, Map.of("path", filePath));
+        super(ErrorCode.FILE_NOT_FOUND_IN_STORAGE, Map.of("path", filePath, "storage", "local"));
     }
 }

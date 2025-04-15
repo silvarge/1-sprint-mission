@@ -1,6 +1,10 @@
 package com.sprint.mission.discodeit.storage;
 
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentResponseDto;
+import com.sprint.mission.discodeit.exception.storage.FailedToCreateUrl;
+import com.sprint.mission.discodeit.exception.storage.FailedToFileConvert;
+import com.sprint.mission.discodeit.exception.storage.FileNotFoundS3DirectoryException;
+import com.sprint.mission.discodeit.exception.storage.SaveFailedS3Exception;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +42,7 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
     private final int presignedUrlExpiration;
 
     private final String DIR_ROOT = "test/";
+    private final String FILENAME_LINK_CHAR = "_";
 
     private S3Client s3Client;
 
@@ -72,8 +77,7 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
             fileObj.delete();
             return fileId;
         } catch (IOException ioe) {
-            // todo: exception 생성 필요
-            throw new RuntimeException();
+            throw new SaveFailedS3Exception(fileId);
         }
     }
 
@@ -88,7 +92,7 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
         String key = response.contents().stream()
                 .map(S3Object::key)
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("해당 UUID로 시작하는 파일이 존재하지 않습니다"));
+                .orElseThrow(() -> new FileNotFoundS3DirectoryException(fileId));
 
         return s3Client.getObject(GetObjectRequest.builder()
                 .bucket(bucket)
@@ -110,8 +114,8 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
                     .build();
         } catch (Exception e) {
             // todo: exception
-            log.error("Presigned URL 생성 실패", e);
-            throw new RuntimeException("Presigned URL 생성 실패", e);
+            log.warn("Presigned URL 생성 실패: {}", e);
+            throw new FailedToCreateUrl(binaryContentResponseDto.fileName());
         }
     }
 
@@ -151,11 +155,11 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
             return convertFile;
         } catch (IOException e) {
             // todo: exception 생성 필요
-            throw new IOException("파일 변환에 실패하였습니다.");
+            throw new FailedToFileConvert(file.getOriginalFilename());
         }
     }
 
     private String createKey(UUID fileId, String originalFilename) {
-        return DIR_ROOT + fileId.toString() + "_" + originalFilename;
+        return DIR_ROOT + fileId.toString() + FILENAME_LINK_CHAR + originalFilename;
     }
 }
