@@ -36,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
@@ -154,10 +155,7 @@ class BasicChannelServiceUnitTest {
     void findAllByUserIdSuccess() {
         // given
         UUID userId = UUID.randomUUID();
-
-        User user = mock(User.class);
-        given(user.getId()).willReturn(userId);
-
+        
         List<Channel> channelList = List.of(
                 mock(Channel.class),
                 mock(Channel.class),
@@ -183,7 +181,7 @@ class BasicChannelServiceUnitTest {
             given(messageRepository.findLastMessageAtByChannelId(channelId)).willReturn(messageTime);
 
             ChannelResponseDto dto = mock(ChannelResponseDto.class);
-            given(channelMapper.toResponseDto(eq(channel), anyList(), eq(messageTime))).willReturn(dto);
+            lenient().when(channelMapper.toResponseDto(eq(channel), anyList(), eq(messageTime))).thenReturn(dto);
             channelResponseDtos.add(dto);
         }
 
