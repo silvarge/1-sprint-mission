@@ -23,7 +23,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle - DB 태그를 단 부분은 제외
-        run: ./gradlew build test -PexcludeTags=db
+        run: ./gradlew test -DexcludeTags=db
 
       - name: Upload test results
         if: always()
