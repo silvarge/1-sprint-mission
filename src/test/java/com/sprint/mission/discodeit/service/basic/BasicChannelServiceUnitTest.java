@@ -154,6 +154,7 @@ class BasicChannelServiceUnitTest {
     void findAllByUserIdSuccess() {
         // given
         UUID userId = UUID.randomUUID();
+
         User user = mock(User.class);
         given(user.getId()).willReturn(userId);
 
@@ -168,6 +169,7 @@ class BasicChannelServiceUnitTest {
         for (int i = 0; i < channelList.size(); i++) {
             Channel channel = channelList.get(i);
             UUID channelId = UUID.randomUUID();
+            given(channel.getId()).willReturn(channelId);
 
             User userMock = mock(User.class);
             ChannelMember member = mock(ChannelMember.class);
