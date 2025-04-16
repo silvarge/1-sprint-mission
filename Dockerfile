@@ -14,7 +14,7 @@ RUN yum update -y && yum install -y bash curl unzip \
 
 COPY . .
 
-RUN ./gradlew clean bootJar --no-daemon
+RUN chmod +x ./gradlew && ./gradlew clean bootJar --no-daemon
 
 # Runtime Stage
 FROM amazoncorretto:17-alpine
