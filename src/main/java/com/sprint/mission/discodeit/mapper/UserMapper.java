@@ -22,12 +22,12 @@ public class UserMapper {
                 .build();
     }
 
-    public User toEntity(UserSignupRequestDto userSignupRequestDto) {
+    public User toEntity(UserSignupRequestDto userSignupRequestDto, String hashedPassword) {
         return new User(
                 userSignupRequestDto.username(),
                 userSignupRequestDto.nickname(),
                 userSignupRequestDto.email(),
-                userSignupRequestDto.password(),
+                hashedPassword,
                 new Phone(userSignupRequestDto.phone(), userSignupRequestDto.regionCode()),
                 userSignupRequestDto.userType(),
                 userSignupRequestDto.introduce(),

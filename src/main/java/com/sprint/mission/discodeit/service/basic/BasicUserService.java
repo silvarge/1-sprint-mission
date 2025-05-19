@@ -21,6 +21,7 @@ import com.sprint.mission.discodeit.util.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,6 +41,7 @@ public class BasicUserService implements UserService {
     private final Validator<User, UserSignupRequestDto, UserUpdateDto> userValidator;
 
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     private final UserRepository userRepository;
     private final BinaryContentRepository binaryContentRepository;
@@ -55,6 +57,8 @@ public class BasicUserService implements UserService {
         // 유효성 검사
         userValidator.validateCreate(userReqDto);
 
+        String hashedPassword = passwordEncoder.encode(userReqDto.password());
+
         // 중복 검사
         if (userRepository.existsUserByEmail(userReqDto.email()) || userRepository.existsUserByUsername(userReqDto.username())) {
             log.warn("사용자가 이미 존재합니다. - email: {}, username: {}", userReqDto.email(), userReqDto.username());
@@ -62,7 +66,7 @@ public class BasicUserService implements UserService {
         }
 
         // user 생성
-        User user = userMapper.toEntity(userReqDto);
+        User user = userMapper.toEntity(userReqDto, hashedPassword);
         UserStatus userStatus = new UserStatus(Instant.now(), user);
         user.updateUserStatus(userStatus);
 

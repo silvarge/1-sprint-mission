@@ -26,6 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -49,6 +50,8 @@ public class BasicUserServiceUnitTest {
     private BinaryContentService binaryContentService;
     @Mock
     private BinaryContentRepository binaryContentRepository;
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @Test
     @DisplayName("프로필 사진을 포함하지 않은 사용자를 성공적으로 생성한다. - Mockito 사용")
@@ -64,11 +67,14 @@ public class BasicUserServiceUnitTest {
         User savedUser = mock(User.class);
         when(savedUser.getId()).thenReturn(userId);
 
+        String hashedPassword = passwordEncoder.encode(dto.password());
+
         UserResponseDto responseDto = new UserResponseDto(savedUser.getId(), savedUser.getNickname(), savedUser.getEmail(), null, true);
 
         when(userRepository.existsUserByEmail(dto.email())).thenReturn(false);
         when(userRepository.existsUserByUsername(dto.username())).thenReturn(false);
-        when(userMapper.toEntity(dto)).thenReturn(userEntity);
+        when(passwordEncoder.encode(dto.password())).thenReturn(hashedPassword);
+        when(userMapper.toEntity(dto, hashedPassword)).thenReturn(userEntity);
         when(userRepository.save(userEntity)).thenReturn(userEntity);
         when(userEntity.getId()).thenReturn(userId);
         when(userRepository.findById(userId)).thenReturn(Optional.of(savedUser));
@@ -100,6 +106,7 @@ public class BasicUserServiceUnitTest {
         UUID userId = UUID.randomUUID();
         User savedUser = mock(User.class);
         given(savedUser.getId()).willReturn(userId);
+        String hashedPassword = passwordEncoder.encode(dto.password());
 
         UUID profileId = UUID.randomUUID();
         BinaryContent profileEntity = mock(BinaryContent.class);
@@ -114,7 +121,7 @@ public class BasicUserServiceUnitTest {
 
         given(userRepository.existsUserByEmail(dto.email())).willReturn(false);
         given(userRepository.existsUserByUsername(dto.username())).willReturn(false);
-        given(userMapper.toEntity(dto)).willReturn(userEntity);
+        given(userMapper.toEntity(dto, hashedPassword)).willReturn(userEntity);
 
         given(binaryContentService.create(profile)).willReturn(profileDto);
         given(binaryContentRepository.findById(profileId)).willReturn(Optional.of(profileEntity));
@@ -147,11 +154,12 @@ public class BasicUserServiceUnitTest {
 
         MockMultipartFile profile = new MockMultipartFile("profile", "profile_test.png", "image/png", new byte[]{});
 
+        String hashedPassword = passwordEncoder.encode(dto.password());
         User userEntity = mock(User.class);
 
         given(userRepository.existsUserByEmail(dto.email())).willReturn(false);
         given(userRepository.existsUserByUsername(dto.username())).willReturn(false);
-        given(userMapper.toEntity(dto)).willReturn(userEntity);
+        given(userMapper.toEntity(dto, hashedPassword)).willReturn(userEntity);
 
         given(binaryContentService.create(profile)).willThrow(EmptyFileUploadException.class);
 

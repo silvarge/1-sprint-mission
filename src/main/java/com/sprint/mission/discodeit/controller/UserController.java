@@ -31,7 +31,7 @@ public class UserController implements UserControllerDocs {
 
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE})
     public CustomApiResponse<UserResponseDto> createUser(
-            @Valid @RequestPart("user") UserSignupRequestDto reqUserDto,
+            @Valid @RequestPart("userCreateRequest") UserSignupRequestDto reqUserDto,
             @RequestPart(value = "profile", required = false) MultipartFile profile
     ) throws IOException {
         return CustomApiResponse.created(userService.create(reqUserDto, profile));

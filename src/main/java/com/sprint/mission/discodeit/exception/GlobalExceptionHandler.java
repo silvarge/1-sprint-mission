@@ -19,6 +19,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = {NoHandlerFoundException.class, HttpRequestMethodNotSupportedException.class})
     public CustomApiResponse<?> handleNoPageFoundException(Exception e) {
         log.error("Invalid route or method: : {}", e.getMessage());
+        e.printStackTrace();
         return CustomApiResponse.fail(ExceptionDto.of(e, ErrorCode.METHOD_NOT_ALLOWED, null));
     }
 
