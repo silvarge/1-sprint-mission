@@ -128,4 +128,31 @@ public class AuthTest {
         .andExpect(jsonPath("$.data.nickname").value("testuser"));
   }
 
+  @Test
+  @DisplayName("로그아웃 성공 시 세션 무효화 및 Security Context 초기화")
+  void logout_success() throws Exception {
+    // 로그인
+    MvcResult result = mockMvc.perform(post("/api/auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"username\":\"test\", \"password\":\"!@asdf1234\"}")
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andReturn();
+
+    MockHttpSession session = (MockHttpSession) result.getRequest().getSession(false);
+    assertThat(session).isNotNull();
+
+    // 로그아웃 요청
+    mockMvc.perform(post("/api/auth/logout")
+            .with(csrf())
+            .session(session))
+        .andExpect(status().isOk());
+
+    // 무효화 확인
+    mockMvc.perform(get("/api/auth/me")
+            .session(session))
+        .andExpect(status().isUnauthorized());
+
+  }
+
 }

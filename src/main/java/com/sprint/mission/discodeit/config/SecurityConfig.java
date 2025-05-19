@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.discodeit.security.JsonLogoutFilter;
 import com.sprint.mission.discodeit.security.JsonUsernamePasswordAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -33,12 +34,13 @@ public class SecurityConfig {
 
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http,
-      JsonUsernamePasswordAuthenticationFilter customLoginFilter)
+      JsonUsernamePasswordAuthenticationFilter customLoginFilter,
+      JsonLogoutFilter customLogoutFilter)
       throws Exception {
     http
         .csrf(csrf -> csrf
             // 회원가입 API는 CSRF 검사 안함
-            .ignoringRequestMatchers("/api/users", "/api/auth/login")
+            .ignoringRequestMatchers("/api/users", "/api/auth/login", "/api/auth/logout")
             // 쿠키에 CSRF 토큰 저장 - JS에서 쿠키를 읽을 수 있게 함 (withHttpOnlyFalse)
             .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
         )
@@ -48,13 +50,15 @@ public class SecurityConfig {
         )
         .authorizeHttpRequests(auth -> auth
             // CSRF 토큰 발급 API는 예외 (인증 수행 X)
-            .requestMatchers("/api/auth/csrf-token", "/api/users", "/api/auth/login").permitAll()
+            .requestMatchers("/api/auth/csrf-token", "/api/users", "/api/auth/login",
+                "/api/auth/logout").permitAll()
             // /api/** 요청만 인증 요구
             .requestMatchers("/api/**").authenticated()
             // 그 외 요청은 인증 수행 X
             .anyRequest().permitAll())
         // UsernamePasswordAuthenticationFilter 위치에 커스텀 로그인 필터 등록
         .addFilterAt(customLoginFilter, UsernamePasswordAuthenticationFilter.class)
+        .addFilterBefore(customLogoutFilter, UsernamePasswordAuthenticationFilter.class)
         .logout(AbstractHttpConfigurer::disable)
         .formLogin(AbstractHttpConfigurer::disable)
         .httpBasic(Customizer.withDefaults());
@@ -98,6 +102,12 @@ public class SecurityConfig {
   public JsonUsernamePasswordAuthenticationFilter usernamePasswordAuthenticationFilter(
       AuthenticationManager authenticationManager) {
     return new JsonUsernamePasswordAuthenticationFilter(authenticationManager, objectMapper);
+  }
+
+  // 로그아웃 필터 등록
+  @Bean
+  public JsonLogoutFilter jsonLogoutFilter() {
+    return new JsonLogoutFilter();
   }
 
 }
