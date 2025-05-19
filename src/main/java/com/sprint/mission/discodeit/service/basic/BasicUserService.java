@@ -16,9 +16,11 @@ import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.security.CustomUserDetails;
+import com.sprint.mission.discodeit.security.role.RoleUpdateRequest;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.util.validation.Validator;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
@@ -29,7 +31,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -183,6 +187,32 @@ public class BasicUserService implements UserService {
     }
 
     User user = userDetails.getUser();
+
+    return userMapper.toResponseDto(user);
+  }
+
+  @Override
+  public UserResponseDto updateUserRole(RoleUpdateRequest roleUpdateRequest,
+      HttpServletRequest httpServletRequest) {
+    log.info("사용자 역할 업데이트 요청");
+
+    User user = userRepository.findById(roleUpdateRequest.userId())
+        .orElseThrow(() -> new UserNotFoundException(roleUpdateRequest.userId()));
+
+    if (!user.getRole().equals(roleUpdateRequest.newRole())) {
+      user.updateRole(roleUpdateRequest.newRole());
+      userRepository.save(user);
+
+      // 현재 로그인 중인 사용자일 경우 세션 무효화
+      SecurityContext context = (SecurityContext) httpServletRequest.getSession()
+          .getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+
+      if (context != null && context.getAuthentication().getName()
+          .equalsIgnoreCase(user.getUsername())) {
+        log.info("현재 로그인 된 사용자의 권한이 변경되어 세션을 무효화합니다.");
+        httpServletRequest.getSession().invalidate();
+      }
+    }
 
     return userMapper.toResponseDto(user);
   }

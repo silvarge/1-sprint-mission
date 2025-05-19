@@ -3,6 +3,8 @@ package com.sprint.mission.discodeit.service;
 import com.sprint.mission.discodeit.dto.user.UserResponseDto;
 import com.sprint.mission.discodeit.dto.user.UserSignupRequestDto;
 import com.sprint.mission.discodeit.dto.user.UserUpdateDto;
+import com.sprint.mission.discodeit.security.role.RoleUpdateRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
@@ -27,4 +29,7 @@ public interface UserService {
   UserResponseDto delete(UUID id);
 
   UserResponseDto getUserFromAuth(Authentication authentication);
+
+  UserResponseDto updateUserRole(RoleUpdateRequest roleUpdateRequest,
+      HttpServletRequest httpServletRequest);
 }

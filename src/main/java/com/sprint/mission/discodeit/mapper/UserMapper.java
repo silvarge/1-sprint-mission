@@ -19,6 +19,7 @@ public class UserMapper {
         .username(user.getUsername())
         .nickname(user.getNickname())
         .email(user.getEmail())
+        .role(user.getRole())
         .profile(
             user.getProfile() == null ? null : binaryContentMapper.toResponseDto(user.getProfile()))
         .online(user.getUserStatus().isOnline())
@@ -32,7 +33,7 @@ public class UserMapper {
         userSignupRequestDto.email(),
         hashedPassword,
         new Phone(userSignupRequestDto.phone(), userSignupRequestDto.regionCode()),
-        userSignupRequestDto.userType(),
+        userSignupRequestDto.role(),
         userSignupRequestDto.introduce(),
         null
     );
