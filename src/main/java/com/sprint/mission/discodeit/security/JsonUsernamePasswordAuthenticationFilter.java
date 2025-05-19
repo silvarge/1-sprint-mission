@@ -1,8 +1,9 @@
-package com.sprint.mission.discodeit.config;
+package com.sprint.mission.discodeit.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import lombok.Getter;
 import org.springframework.http.MediaType;
@@ -10,7 +11,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
 // json 형식의 로그인 요청 본문 파싱
 public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
@@ -25,6 +29,13 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
 
     // 응답 핸들러 설정 (성공/실패)
     setAuthenticationSuccessHandler((request, response, authentication) -> {
+      HttpSession session = request.getSession(true);
+
+      SecurityContext context = SecurityContextHolder.createEmptyContext();
+      context.setAuthentication(authentication);
+      session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+          context);
+
       response.setStatus(HttpServletResponse.SC_OK);
       response.setContentType(MediaType.APPLICATION_JSON_VALUE);
       response.getWriter().write("{\"message\": \"login success\"}");
@@ -66,6 +77,6 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
 
     private String username;
     private String password;
-    
+
   }
 }
