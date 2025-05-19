@@ -23,7 +23,7 @@ spring:
   # sql initialize를 사용하지 않을 것
   sql:
     init:
-      mode: never
+      mode: embedded
 
 discodeit:
   storage:
