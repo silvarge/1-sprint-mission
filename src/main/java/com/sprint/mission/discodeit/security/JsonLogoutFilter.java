@@ -6,7 +6,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -26,10 +28,26 @@ public class JsonLogoutFilter extends OncePerRequestFilter {
       // Security Context 초기화
       SecurityContextHolder.clearContext();
 
+      //
+      ResponseCookie jsessionCookie = ResponseCookie.from("JSESSIONID", "")
+          .maxAge(0)               // 즉시 만료
+          .path("/")               // 반드시 경로 지정
+          .httpOnly(true)
+          .secure(false)    // todo: https가 아닌 경우 쿠키 설정 무시 -> https로 안되니까 일단 이렇게 해 둠
+          .build();
+      response.addHeader(HttpHeaders.SET_COOKIE, jsessionCookie.toString());
+
+      ResponseCookie csrfCookie = ResponseCookie.from("CSRF-TOKEN", "")
+          .path("/")
+          .maxAge(0)
+          .httpOnly(false)  // JS에서 읽기 가능하게
+          .secure(false)    // 로컬 환경이라면 false
+          .build();
+      response.addHeader(HttpHeaders.SET_COOKIE, csrfCookie.toString());
+
       // 로그아웃 응답
       response.setStatus(HttpServletResponse.SC_OK);
       response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-      response.getWriter().write("{\"message\" : \"logout success\"}");
       return;
     }
 

@@ -72,6 +72,10 @@ logging:
         core:
           env: debug
         security: trace
+      #          web:
+      #            csrf: debug
+      #            FilterChainProxy: debug
+      #            session: debug
       hibernate:
         sql: debug
         type:
@@ -102,3 +106,5 @@ server:
       charset: utf-8
       enabled: true
       force: true
+    session:
+      timeout: 30m

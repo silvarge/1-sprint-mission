@@ -1,6 +1,5 @@
 package com.sprint.mission.discodeit.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.security.JsonLogoutFilter;
 import com.sprint.mission.discodeit.security.JsonUsernamePasswordAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +26,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -36,73 +35,65 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-  // JSON 요청 파싱용
-  private final ObjectMapper objectMapper;
+  private final UserDetailsService userDetailsService;
 
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http,
-      JsonUsernamePasswordAuthenticationFilter customLoginFilter,
-      JsonLogoutFilter customLogoutFilter)
+      AuthenticationManager authenticationManager)
       throws Exception {
 
     CookieCsrfTokenRepository repo = CookieCsrfTokenRepository.withHttpOnlyFalse();
-    repo.setCookiePath("/"); // 루트 경로로 설정
-    repo.setHeaderName("X-CSRF-TOKEN");
-    repo.setCookieName("XSRF-TOKEN");
+    repo.setCookiePath("/");
+    repo.setHeaderName("X-CSRF-TOKEN");  // 프론트에서 이 이름으로 헤더 보냄
+    repo.setCookieName("CSRF-TOKEN");
+    repo.setCookieCustomizer(builder -> builder.sameSite("None").secure(true));
+
+    XorCsrfTokenRequestAttributeHandler handler = new XorCsrfTokenRequestAttributeHandler();
+    handler.setCsrfRequestAttributeName("_csrf");
 
     http
+        // CSRF 설정: 쿠키 연동 시 CookiesCsrfTokenRepository 사용
         .csrf(csrf -> csrf
-            // 회원가입 API는 CSRF 검사 안함
-            .ignoringRequestMatchers("/api/users", "/api/auth/login", "/api/auth/logout")
-            // 쿠키에 CSRF 토큰 저장 - JS에서 쿠키를 읽을 수 있게 함 (withHttpOnlyFalse)
+            .ignoringRequestMatchers("/api/users")
             .csrfTokenRepository(repo)
+            .csrfTokenRequestHandler(new XorCsrfTokenRequestAttributeHandler()::handle)
         )
-        .securityContext(context -> context.securityContextRepository(securityContextRepository()))
+        // 인증 정보를 서버 세션에 저장
+        .securityContext(context -> context
+            .securityContextRepository(new HttpSessionSecurityContextRepository()))
+        // 세션 정책: 인증 성공 시 세션 생성
         .sessionManagement(session -> session
             .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
         )
+        // URL 별 인증 규칙 설정
         .authorizeHttpRequests(auth -> auth
-            // CSRF 토큰 발급 API는 예외 (인증 수행 X)
+            // CSRF 토큰 발급 API는 인증하지 않음 /
             .requestMatchers("/api/auth/csrf-token", "/api/users", "/api/auth/login",
                 "/api/auth/logout").permitAll()
             .requestMatchers("/api/auth/role").hasRole("ADMIN")
             .requestMatchers("/api/channels/public").hasRole("CHANNEL_MANAGER")
             .requestMatchers(HttpMethod.PUT, "/api/channels/**").hasRole("CHANNEL_MANAGER")
             .requestMatchers(HttpMethod.DELETE, "/api/channels/**").hasRole("CHANNEL_MANAGER")
-            // 기타 모든 API - 최소 ROLE_USER
             .requestMatchers("/api/**").hasRole("USER")
-            // 그 외 요청은 인증 수행 X
-            .anyRequest().permitAll())
-        // UsernamePasswordAuthenticationFilter 위치에 커스텀 로그인 필터 등록
-        .addFilterAt(customLoginFilter, UsernamePasswordAuthenticationFilter.class)
-        .addFilterBefore(customLogoutFilter, UsernamePasswordAuthenticationFilter.class)
-        .logout(AbstractHttpConfigurer::disable)
+
+            .anyRequest().authenticated()
+        )
+        // 인증 공급자 등록 (UserDetailsService + PasswordEncoder 기반)
+        .authenticationProvider(authenticationProvider())
+        // 커스텀 로그인 필터 등록
+        .addFilterBefore(usernamePasswordAuthenticationFilter(authenticationManager),
+            UsernamePasswordAuthenticationFilter.class)
+        // 기본 세팅 해제
         .formLogin(AbstractHttpConfigurer::disable)
+        .logout(AbstractHttpConfigurer::disable)
         .httpBasic(Customizer.withDefaults());
     return http.build();
-  }
-
-  // 세션 명시적으로 등록
-  @Bean
-  public SecurityContextRepository securityContextRepository() {
-    return new HttpSessionSecurityContextRepository();
   }
 
   // 비밀번호 암호화
   @Bean
   public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
-  }
-
-  // 사용자 인증 수행
-  @Bean
-  public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService,
-      PasswordEncoder passwordEncoder, GrantedAuthoritiesMapper authoritiesMapper) {
-    DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-    provider.setUserDetailsService(userDetailsService);
-    provider.setPasswordEncoder(passwordEncoder);
-    provider.setAuthoritiesMapper(authoritiesMapper);
-    return provider;
+    return new BCryptPasswordEncoder(); // 비밀번호 암호화 시 Bcrypt 해시 사용
   }
 
   // 인증 로직 관리
@@ -115,11 +106,21 @@ public class SecurityConfig {
         .build();
   }
 
+  // 사용자 인증 수행
+  @Bean
+  public DaoAuthenticationProvider authenticationProvider() {
+    DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+    provider.setUserDetailsService(userDetailsService); // 사용자 정보 로딩
+    provider.setPasswordEncoder(passwordEncoder());     // 비밀번호 인코딩 전략 (비밀번호 암호화)
+//    provider.setAuthoritiesMapper(authoritiesMapper);
+    return provider;
+  }
+
   // 로그인 필터 등록
   @Bean
   public JsonUsernamePasswordAuthenticationFilter usernamePasswordAuthenticationFilter(
       AuthenticationManager authenticationManager) {
-    return new JsonUsernamePasswordAuthenticationFilter(authenticationManager, objectMapper);
+    return new JsonUsernamePasswordAuthenticationFilter(authenticationManager);
   }
 
   // 로그아웃 필터 등록
