@@ -6,7 +6,9 @@ import com.sprint.mission.discodeit.security.JsonUsernamePasswordAuthenticationF
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyAuthoritiesMapper;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -18,6 +20,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -41,12 +44,18 @@ public class SecurityConfig {
       JsonUsernamePasswordAuthenticationFilter customLoginFilter,
       JsonLogoutFilter customLogoutFilter)
       throws Exception {
+
+    CookieCsrfTokenRepository repo = CookieCsrfTokenRepository.withHttpOnlyFalse();
+    repo.setCookiePath("/"); // 루트 경로로 설정
+    repo.setHeaderName("X-CSRF-TOKEN");
+    repo.setCookieName("XSRF-TOKEN");
+
     http
         .csrf(csrf -> csrf
             // 회원가입 API는 CSRF 검사 안함
             .ignoringRequestMatchers("/api/users", "/api/auth/login", "/api/auth/logout")
             // 쿠키에 CSRF 토큰 저장 - JS에서 쿠키를 읽을 수 있게 함 (withHttpOnlyFalse)
-            .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+            .csrfTokenRepository(repo)
         )
         .securityContext(context -> context.securityContextRepository(securityContextRepository()))
         .sessionManagement(session -> session
@@ -56,8 +65,12 @@ public class SecurityConfig {
             // CSRF 토큰 발급 API는 예외 (인증 수행 X)
             .requestMatchers("/api/auth/csrf-token", "/api/users", "/api/auth/login",
                 "/api/auth/logout").permitAll()
-            // /api/** 요청만 인증 요구
-            .requestMatchers("/api/**").authenticated()
+            .requestMatchers("/api/auth/role").hasRole("ADMIN")
+            .requestMatchers("/api/channels/public").hasRole("CHANNEL_MANAGER")
+            .requestMatchers(HttpMethod.PUT, "/api/channels/**").hasRole("CHANNEL_MANAGER")
+            .requestMatchers(HttpMethod.DELETE, "/api/channels/**").hasRole("CHANNEL_MANAGER")
+            // 기타 모든 API - 최소 ROLE_USER
+            .requestMatchers("/api/**").hasRole("USER")
             // 그 외 요청은 인증 수행 X
             .anyRequest().permitAll())
         // UsernamePasswordAuthenticationFilter 위치에 커스텀 로그인 필터 등록
@@ -84,10 +97,11 @@ public class SecurityConfig {
   // 사용자 인증 수행
   @Bean
   public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService,
-      PasswordEncoder passwordEncoder) {
+      PasswordEncoder passwordEncoder, GrantedAuthoritiesMapper authoritiesMapper) {
     DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
     provider.setUserDetailsService(userDetailsService);
     provider.setPasswordEncoder(passwordEncoder);
+    provider.setAuthoritiesMapper(authoritiesMapper);
     return provider;
   }
 
@@ -116,11 +130,17 @@ public class SecurityConfig {
 
   // 권한에 계층 부여
   @Bean
-  static RoleHierarchy roleHierarchy() {
+  public RoleHierarchy roleHierarchy() {
     return RoleHierarchyImpl.withDefaultRolePrefix()
         .role("ADMIN").implies("CHANNEL_MANAGER")
         .role("CHANNEL_MANAGER").implies("USER")
         .build();
   }
+
+  @Bean
+  public GrantedAuthoritiesMapper authoritiesMapper(RoleHierarchy roleHierarchy) {
+    return new RoleHierarchyAuthoritiesMapper(roleHierarchy);
+  }
+
 
 }
