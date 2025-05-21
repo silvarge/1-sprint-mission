@@ -16,6 +16,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -25,6 +26,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JsonUsernamePasswordAuthenticationFilter extends OncePerRequestFilter {
 
   private final AuthenticationManager authenticationManager;
+  private final RememberMeServices rememberMeServices;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
   @Override
@@ -57,12 +59,15 @@ public class JsonUsernamePasswordAuthenticationFilter extends OncePerRequestFilt
       // 세션 기반 보안 컨텍스트 저장소에 context 저장
       new HttpSessionSecurityContextRepository().saveContext(context, request, response);
 
+      // Remember Me 처리 (파라미터가 있는 경우)
+      rememberMeServices.loginSuccess(request, response, authenticate);
       response.setStatus(HttpServletResponse.SC_OK);
       response.setContentType(MediaType.APPLICATION_JSON_VALUE);
       response.getWriter().write("{\"message\":\"login success\"}");
 
     } catch (AuthenticationException ae) {
       // 인증 실패 시 401 Unauthorized
+      rememberMeServices.loginFail(request, response); // Remember Me 실패 처리
       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
       response.setContentType(MediaType.APPLICATION_JSON_VALUE);
       response.getWriter().write("{\"message\":\"Invalid credentials\"}");
@@ -70,68 +75,4 @@ public class JsonUsernamePasswordAuthenticationFilter extends OncePerRequestFilt
     }
 
   }
-
-//  private final ObjectMapper objectMapper;
-//
-//  public JsonUsernamePasswordAuthenticationFilter(AuthenticationManager authenticationManager,
-//      ObjectMapper objectMapper) {
-//    super.setAuthenticationManager(authenticationManager);
-//    this.objectMapper = objectMapper;
-//    setFilterProcessesUrl("/api/auth/login"); // 요청 처리할 URL 경로 설정
-//
-//    // 응답 핸들러 설정 (성공/실패)
-//    setAuthenticationSuccessHandler((request, response, authentication) -> {
-//      HttpSession session = request.getSession(true);
-//
-//      SecurityContext context = SecurityContextHolder.createEmptyContext();
-//      context.setAuthentication(authentication);
-//      session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-//          context);
-//
-//      CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
-//      log.debug("CSRF Token in SuccessHandler: {}", csrfToken);
-//
-//      response.setStatus(HttpServletResponse.SC_OK);
-//      response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-//      response.getWriter().write("{\"message\": \"login success\"}");
-//    });
-//
-//    setAuthenticationFailureHandler((request, response, exception) -> {
-//      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//      response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-//      response.getWriter().write("{\"message\": \"login failed\"}");
-//    });
-//
-//  }
-//
-//  // 인증 로직 수행
-//  @Override
-//  public Authentication attemptAuthentication(HttpServletRequest request,
-//      HttpServletResponse response) throws AuthenticationException {
-//    try {
-//      // 역직렬화 (JSON 본문)
-//      LoginRequest loginRequest = objectMapper.readValue(request.getInputStream(),
-//          LoginRequest.class);
-//      // 인증 토큰 생성
-//      UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(
-//          loginRequest.getUsername(), loginRequest.getPassword());
-//
-//      // 인증 토큰에 요청 관련 정보 추가
-//      setDetails(request, authRequest);
-//
-//      // 실제 인증 처리
-//      return this.getAuthenticationManager().authenticate(authRequest);
-//    } catch (IOException ioe) {
-//      // JSON 파싱 실패 시 예외 처리
-//      throw new RuntimeException("Failed to parse JSON login request", ioe);
-//    }
-//  }
-//
-//  @Getter
-//  public static class LoginRequest {
-//
-//    private String username;
-//    private String password;
-//
-//  }
 }

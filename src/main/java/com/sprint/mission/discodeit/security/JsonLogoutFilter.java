@@ -6,19 +6,33 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+@RequiredArgsConstructor
 public class JsonLogoutFilter extends OncePerRequestFilter {
+
+  private final PersistentTokenRepository tokenRepository;
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
       FilterChain filterChain) throws ServletException, IOException {
     if ("/api/auth/logout".equals(request.getRequestURI()) && "POST".equalsIgnoreCase(
         request.getMethod())) {
+
+      // 토큰 삭제
+      Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+      if (auth != null && auth.isAuthenticated()) {
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+        tokenRepository.removeUserTokens(userDetails.getUsername());
+      }
+
       // 세션 무효화
       HttpSession session = request.getSession(false);
       if (session != null) {

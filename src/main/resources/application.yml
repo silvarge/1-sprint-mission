@@ -32,6 +32,8 @@ discodeit:
     username: ${ADMIN_USERNAME}
     password: ${ADMIN_PASSWORD}
     email: ${ADMIN_EMAIL}
+  cookie:
+    persistent-key: ${PERSISTENT_COOKIE_KEY}
 
 logging:
   level:

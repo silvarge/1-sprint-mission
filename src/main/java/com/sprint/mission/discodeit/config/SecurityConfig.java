@@ -2,7 +2,9 @@ package com.sprint.mission.discodeit.config;
 
 import com.sprint.mission.discodeit.security.JsonLogoutFilter;
 import com.sprint.mission.discodeit.security.JsonUsernamePasswordAuthenticationFilter;
+import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -24,7 +26,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
@@ -37,9 +43,23 @@ public class SecurityConfig {
 
   private final UserDetailsService userDetailsService;
 
+  @Value("${discodeit.cookie.persistent-key}")
+  private String cookiePersistentKey;
+
+  @Bean
+  public PersistentTokenRepository tokenRepository(DataSource dataSource) {
+    JdbcTokenRepositoryImpl repository = new JdbcTokenRepositoryImpl();
+    repository.setDataSource(dataSource);
+
+    repository.setCreateTableOnStartup(false);
+
+    return repository;
+  }
+
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http,
-      AuthenticationManager authenticationManager)
+      AuthenticationManager authenticationManager, PersistentTokenRepository tokenRepository,
+      RememberMeServices rememberMeServices)
       throws Exception {
 
     CookieCsrfTokenRepository repo = CookieCsrfTokenRepository.withHttpOnlyFalse();
@@ -70,7 +90,7 @@ public class SecurityConfig {
             // CSRF 토큰 발급 API는 인증하지 않음 /
             .requestMatchers("/api/auth/csrf-token", "/api/users", "/api/auth/login",
                 "/api/auth/logout").permitAll()
-            .requestMatchers("/api/auth/role").hasRole("ADMIN")
+            .requestMatchers("/api/admin/**").hasRole("ADMIN")
             .requestMatchers("/api/channels/public").hasRole("CHANNEL_MANAGER")
             .requestMatchers(HttpMethod.PUT, "/api/channels/**").hasRole("CHANNEL_MANAGER")
             .requestMatchers(HttpMethod.DELETE, "/api/channels/**").hasRole("CHANNEL_MANAGER")
@@ -81,12 +101,20 @@ public class SecurityConfig {
         // 인증 공급자 등록 (UserDetailsService + PasswordEncoder 기반)
         .authenticationProvider(authenticationProvider())
         // 커스텀 로그인 필터 등록
-        .addFilterBefore(usernamePasswordAuthenticationFilter(authenticationManager),
+        .addFilterBefore(
+            usernamePasswordAuthenticationFilter(authenticationManager, rememberMeServices),
             UsernamePasswordAuthenticationFilter.class)
         // 기본 세팅 해제
         .formLogin(AbstractHttpConfigurer::disable)
         .logout(AbstractHttpConfigurer::disable)
-        .httpBasic(Customizer.withDefaults());
+        .httpBasic(Customizer.withDefaults())
+        .rememberMe(r -> r
+            .rememberMeCookieName("PERSIST")
+            .rememberMeParameter("remember")
+            .tokenRepository(tokenRepository)
+            .tokenValiditySeconds(60 * 60 * 24 * 21)
+            .key(cookiePersistentKey)
+        );
     return http.build();
   }
 
@@ -112,21 +140,21 @@ public class SecurityConfig {
     DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
     provider.setUserDetailsService(userDetailsService); // 사용자 정보 로딩
     provider.setPasswordEncoder(passwordEncoder());     // 비밀번호 인코딩 전략 (비밀번호 암호화)
-//    provider.setAuthoritiesMapper(authoritiesMapper);
     return provider;
   }
 
   // 로그인 필터 등록
   @Bean
   public JsonUsernamePasswordAuthenticationFilter usernamePasswordAuthenticationFilter(
-      AuthenticationManager authenticationManager) {
-    return new JsonUsernamePasswordAuthenticationFilter(authenticationManager);
+      AuthenticationManager authenticationManager, RememberMeServices rememberMeServices) {
+    return new JsonUsernamePasswordAuthenticationFilter(authenticationManager,
+        rememberMeServices);
   }
 
   // 로그아웃 필터 등록
   @Bean
-  public JsonLogoutFilter jsonLogoutFilter() {
-    return new JsonLogoutFilter();
+  public JsonLogoutFilter jsonLogoutFilter(PersistentTokenRepository tokenRepository) {
+    return new JsonLogoutFilter(tokenRepository);
   }
 
   // 권한에 계층 부여
@@ -141,6 +169,16 @@ public class SecurityConfig {
   @Bean
   public GrantedAuthoritiesMapper authoritiesMapper(RoleHierarchy roleHierarchy) {
     return new RoleHierarchyAuthoritiesMapper(roleHierarchy);
+  }
+
+  // RememberME
+  @Bean
+  public RememberMeServices rememberMeServices(PersistentTokenRepository tokenRepository) {
+    return new PersistentTokenBasedRememberMeServices(
+        cookiePersistentKey,
+        userDetailsService,
+        tokenRepository
+    );
   }
 
 
