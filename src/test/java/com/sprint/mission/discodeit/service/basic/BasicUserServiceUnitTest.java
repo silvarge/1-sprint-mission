@@ -25,6 +25,7 @@ import com.sprint.mission.discodeit.exception.user.UserValidationException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.security.role.Role;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.util.validation.UserValidator;
 import java.io.IOException;
@@ -66,7 +67,7 @@ public class BasicUserServiceUnitTest {
     UserSignupRequestDto dto = new UserSignupRequestDto(
         "cloudsoda", "구름소다", "cloudsoda@mail.com",
         "!@A445sndk", "010-1111-2222", Phone.RegionCode.KR,
-        User.UserType.COMMON, "");
+        Role.USER, "");
 
     User userEntity = mock(User.class);
     UUID userId = UUID.randomUUID();
@@ -76,7 +77,7 @@ public class BasicUserServiceUnitTest {
     String hashedPassword = passwordEncoder.encode(dto.password());
 
     UserResponseDto responseDto = new UserResponseDto(savedUser.getId(), savedUser.getUsername(),
-        savedUser.getNickname(), savedUser.getEmail(), null, true);
+        savedUser.getNickname(), savedUser.getEmail(), Role.USER, null, true);
 
     when(userRepository.existsUserByEmail(dto.email())).thenReturn(false);
     when(userRepository.existsUserByUsername(dto.username())).thenReturn(false);
@@ -105,7 +106,7 @@ public class BasicUserServiceUnitTest {
     UserSignupRequestDto dto = new UserSignupRequestDto(
         "cloudsoda", "구름소다", "cloudsoda@mail.com",
         "!@A445sndk", "010-1111-2222", Phone.RegionCode.KR,
-        User.UserType.COMMON, "");
+        Role.USER, "");
 
     MockMultipartFile profile = new MockMultipartFile("profile", "profile_test.png", "image/png",
         new byte[]{1, 2, 3});
@@ -124,7 +125,7 @@ public class BasicUserServiceUnitTest {
         profileId, "test.jpg", (long) profile.getSize(), "image/jpeg", profile.getBytes()
     );
     UserResponseDto responseDto = new UserResponseDto(
-        userId, "구름소다", "구름소다", "cloudsoda@mail.com", profileDto, true
+        userId, "구름소다", "구름소다", "cloudsoda@mail.com", Role.USER, profileDto, true
     );
 
     given(userRepository.existsUserByEmail(dto.email())).willReturn(false);
@@ -159,7 +160,7 @@ public class BasicUserServiceUnitTest {
     UserSignupRequestDto dto = new UserSignupRequestDto(
         "cloudsoda", "구름소다", "cloudsoda@mail.com",
         "!@A445sndk", "010-1111-2222", Phone.RegionCode.KR,
-        User.UserType.COMMON, "");
+        Role.USER, "");
 
     MockMultipartFile profile = new MockMultipartFile("profile", "profile_test.png", "image/png",
         new byte[]{});
@@ -187,7 +188,7 @@ public class BasicUserServiceUnitTest {
     UserSignupRequestDto dto = new UserSignupRequestDto(
         "cloudsoda", "구름소다", "mail.com",
         "!@A445sndk", "010-1111-2222", Phone.RegionCode.KR,
-        User.UserType.COMMON, "");
+        Role.USER, "");
 
     // 유효성 검사 예외
     doThrow(new UserValidationException(ErrorCode.INVALID_EMAIL, dto.email()))
@@ -231,7 +232,7 @@ public class BasicUserServiceUnitTest {
         profile.getBytes()
     );
     UserResponseDto responseDto = new UserResponseDto(
-        userId, "구름", "구름", "cloudsoda@mail.com", profileDto, true
+        userId, "구름", "구름", "cloudsoda@mail.com", Role.USER, profileDto, true
     );
 
     given(userRepository.findById(userId)).willReturn(Optional.of(currentUser));
@@ -303,7 +304,7 @@ public class BasicUserServiceUnitTest {
     given(deleteUser.getId()).willReturn(userId);
 
     UserResponseDto responseDto = new UserResponseDto(
-        userId, "구름소다", "구름소다", "cloudsoda@mail.com", null, true
+        userId, "구름소다", "구름소다", "cloudsoda@mail.com", Role.USER, null, true
     );
 
     given(userRepository.findById(userId)).willReturn(Optional.of(deleteUser));

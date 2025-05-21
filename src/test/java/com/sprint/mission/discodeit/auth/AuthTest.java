@@ -14,6 +14,7 @@ import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
+import com.sprint.mission.discodeit.security.role.Role;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -53,7 +54,7 @@ public class AuthTest {
     userRepository.deleteAll();
 
     User user = new User("test", "testuser", "test@email.com", passwordEncoder.encode("!@asdf1234"),
-        new Phone("010-1111-2222", Phone.RegionCode.KR), User.UserType.COMMON, "", null);
+        new Phone("010-1111-2222", Phone.RegionCode.KR), Role.USER, "", null);
     userRepository.save(user);
 
     UserStatus status = new UserStatus(Instant.now(), user);
