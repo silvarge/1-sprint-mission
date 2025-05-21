@@ -16,7 +16,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.authentication.RememberMeServices;
+import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -28,6 +30,8 @@ public class JsonUsernamePasswordAuthenticationFilter extends OncePerRequestFilt
   private final AuthenticationManager authenticationManager;
   private final RememberMeServices rememberMeServices;
   private final ObjectMapper objectMapper = new ObjectMapper();
+  private final SessionRegistry sessionRegistry;
+  private final SessionAuthenticationStrategy sessionAuthenticationStrategy;
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -51,13 +55,20 @@ public class JsonUsernamePasswordAuthenticationFilter extends OncePerRequestFilt
 
       // 인증 매니저에게 인증 요청 위임
       Authentication authenticate = authenticationManager.authenticate(authRequestToken);
+      log.info("principal class = {}", authenticate.getPrincipal().getClass());
 
       // 인증 성공 시 SecurityContext에 저장
       SecurityContext context = SecurityContextHolder.createEmptyContext();
       context.setAuthentication(authenticate);
 
+      request.getSession(true);
       // 세션 기반 보안 컨텍스트 저장소에 context 저장
       new HttpSessionSecurityContextRepository().saveContext(context, request, response);
+
+      sessionAuthenticationStrategy.onAuthentication(authenticate, request, response);
+
+      // SessionRegistry 등록 직후 principal 개수
+      sessionAuthenticationStrategy.onAuthentication(authenticate, request, response);
 
       // Remember Me 처리 (파라미터가 있는 경우)
       rememberMeServices.loginSuccess(request, response, authenticate);
@@ -73,6 +84,5 @@ public class JsonUsernamePasswordAuthenticationFilter extends OncePerRequestFilt
       response.getWriter().write("{\"message\":\"Invalid credentials\"}");
 
     }
-
   }
 }

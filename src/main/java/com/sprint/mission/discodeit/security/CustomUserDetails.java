@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.security;
 import com.sprint.mission.discodeit.entity.User;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -35,5 +36,22 @@ public class CustomUserDetails implements UserDetails {
   @Override
   public boolean isEnabled() {
     return user.isStatus();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof CustomUserDetails)) {
+      return false;
+    }
+    CustomUserDetails that = (CustomUserDetails) o;
+    return this.getUsername().equals(that.getUsername());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(getUsername());
   }
 }

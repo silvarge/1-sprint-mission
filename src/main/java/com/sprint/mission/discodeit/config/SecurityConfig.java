@@ -2,9 +2,12 @@ package com.sprint.mission.discodeit.config;
 
 import com.sprint.mission.discodeit.security.JsonLogoutFilter;
 import com.sprint.mission.discodeit.security.JsonUsernamePasswordAuthenticationFilter;
+import java.util.ArrayList;
+import java.util.List;
 import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -22,6 +25,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,9 +36,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.authentication.session.CompositeSessionAuthenticationStrategy;
+import org.springframework.security.web.authentication.session.ConcurrentSessionControlAuthenticationStrategy;
+import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
+import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
+import org.springframework.security.web.authentication.session.SessionFixationProtectionStrategy;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @Configuration
 @EnableWebSecurity
@@ -59,7 +70,8 @@ public class SecurityConfig {
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http,
       AuthenticationManager authenticationManager, PersistentTokenRepository tokenRepository,
-      RememberMeServices rememberMeServices)
+      RememberMeServices rememberMeServices, SessionRegistry sessionRegistry,
+      SessionAuthenticationStrategy sessionAuthenticationStrategy)
       throws Exception {
 
     CookieCsrfTokenRepository repo = CookieCsrfTokenRepository.withHttpOnlyFalse();
@@ -84,6 +96,10 @@ public class SecurityConfig {
         // 세션 정책: 인증 성공 시 세션 생성
         .sessionManagement(session -> session
             .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+            .sessionFixation().changeSessionId()
+            .maximumSessions(1)
+            .maxSessionsPreventsLogin(false)
+            .sessionRegistry(sessionRegistry)
         )
         // URL 별 인증 규칙 설정
         .authorizeHttpRequests(auth -> auth
@@ -102,7 +118,8 @@ public class SecurityConfig {
         .authenticationProvider(authenticationProvider())
         // 커스텀 로그인 필터 등록
         .addFilterBefore(
-            usernamePasswordAuthenticationFilter(authenticationManager, rememberMeServices),
+            usernamePasswordAuthenticationFilter(authenticationManager, rememberMeServices,
+                sessionRegistry, sessionAuthenticationStrategy),
             UsernamePasswordAuthenticationFilter.class)
         // 기본 세팅 해제
         .formLogin(AbstractHttpConfigurer::disable)
@@ -146,9 +163,11 @@ public class SecurityConfig {
   // 로그인 필터 등록
   @Bean
   public JsonUsernamePasswordAuthenticationFilter usernamePasswordAuthenticationFilter(
-      AuthenticationManager authenticationManager, RememberMeServices rememberMeServices) {
+      AuthenticationManager authenticationManager, RememberMeServices rememberMeServices,
+      SessionRegistry sessionRegistry,
+      SessionAuthenticationStrategy sessionAuthenticationStrategy) {
     return new JsonUsernamePasswordAuthenticationFilter(authenticationManager,
-        rememberMeServices);
+        rememberMeServices, sessionRegistry, sessionAuthenticationStrategy);
   }
 
   // 로그아웃 필터 등록
@@ -181,5 +200,24 @@ public class SecurityConfig {
     );
   }
 
+  @Bean
+  public SessionRegistry sessionRegistry() {
+    return new SessionRegistryImpl();
+  }
+
+  @Bean
+  public static ServletListenerRegistrationBean<HttpSessionEventPublisher> httpSessionEventPublisher() {
+    return new ServletListenerRegistrationBean<>(new HttpSessionEventPublisher());
+  }
+
+  @Bean
+  public SessionAuthenticationStrategy sessionAuthenticationStrategy(
+      SessionRegistry sessionRegistry) {
+    List<SessionAuthenticationStrategy> delegateStrategies = new ArrayList<>();
+    delegateStrategies.add(new ConcurrentSessionControlAuthenticationStrategy(sessionRegistry));
+    delegateStrategies.add(new SessionFixationProtectionStrategy());
+    delegateStrategies.add(new RegisterSessionAuthenticationStrategy(sessionRegistry));
+    return new CompositeSessionAuthenticationStrategy(delegateStrategies);
+  }
 
 }
