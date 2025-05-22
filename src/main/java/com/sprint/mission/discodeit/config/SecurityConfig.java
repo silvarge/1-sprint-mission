@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.config;
 
 import com.sprint.mission.discodeit.security.JsonLogoutFilter;
 import com.sprint.mission.discodeit.security.JsonUsernamePasswordAuthenticationFilter;
+import com.sprint.mission.discodeit.security.LoginStatusCheckFilter;
 import java.util.ArrayList;
 import java.util.List;
 import javax.sql.DataSource;
@@ -16,12 +17,12 @@ import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HttpBasicConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.core.session.SessionRegistry;
@@ -70,7 +71,8 @@ public class SecurityConfig {
   SecurityFilterChain securityFilterChain(HttpSecurity http,
       AuthenticationManager authenticationManager, PersistentTokenRepository tokenRepository,
       RememberMeServices rememberMeServices, SessionRegistry sessionRegistry,
-      SessionAuthenticationStrategy sessionAuthenticationStrategy)
+      SessionAuthenticationStrategy sessionAuthenticationStrategy,
+      LoginStatusCheckFilter loginStatusCheckFilter)
       throws Exception {
 
     CookieCsrfTokenRepository repo = CookieCsrfTokenRepository.withHttpOnlyFalse();
@@ -103,9 +105,22 @@ public class SecurityConfig {
         // URL 별 인증 규칙 설정
         .authorizeHttpRequests(auth -> auth
             // CSRF 토큰 발급 API는 인증하지 않음
-            .requestMatchers("/api/auth/csrf-token", "/api/users", "/api/auth/login",
-                "/api/auth/logout").permitAll()
-            // 전체적/공용/크게 변하지 않을 요소들만 이곳에 표현
+            .requestMatchers(
+                "/",
+                "/index.html",
+                "/login",
+                "/api/auth/login",
+                "/api/auth/logout",
+                "/api/auth/csrf-token",
+                "/api/users",
+                "/error",
+                "/css/**",
+                "/js/**",
+                "/images/**",
+                "/favicon.ico",
+                "/static/**",
+                "/assets/**"
+            ).permitAll()            // 전체적/공용/크게 변하지 않을 요소들만 이곳에 표현
             .requestMatchers("/api/admin/**").hasRole("ADMIN")  // 관리자 전용 API 제한
             .requestMatchers("/api/**").hasRole("USER")         // 전체적으로 USER Role 필요
             .anyRequest().authenticated()
@@ -115,12 +130,15 @@ public class SecurityConfig {
         // 커스텀 로그인 필터 등록
         .addFilterBefore(
             usernamePasswordAuthenticationFilter(authenticationManager, rememberMeServices,
-                sessionRegistry, sessionAuthenticationStrategy),
+                sessionAuthenticationStrategy),
             UsernamePasswordAuthenticationFilter.class)
+        .addFilterAfter(
+            loginStatusCheckFilter, UsernamePasswordAuthenticationFilter.class
+        )
         // 기본 세팅 해제
         .formLogin(AbstractHttpConfigurer::disable)
         .logout(AbstractHttpConfigurer::disable)
-        .httpBasic(Customizer.withDefaults())
+        .httpBasic(HttpBasicConfigurer::disable)
         .rememberMe(r -> r
             .rememberMeCookieName("PERSIST")
             .rememberMeParameter("remember")
@@ -160,16 +178,21 @@ public class SecurityConfig {
   @Bean
   public JsonUsernamePasswordAuthenticationFilter usernamePasswordAuthenticationFilter(
       AuthenticationManager authenticationManager, RememberMeServices rememberMeServices,
-      SessionRegistry sessionRegistry,
       SessionAuthenticationStrategy sessionAuthenticationStrategy) {
     return new JsonUsernamePasswordAuthenticationFilter(authenticationManager,
-        rememberMeServices, sessionRegistry, sessionAuthenticationStrategy);
+        rememberMeServices, sessionAuthenticationStrategy);
   }
 
   // 로그아웃 필터 등록
   @Bean
-  public JsonLogoutFilter jsonLogoutFilter(PersistentTokenRepository tokenRepository) {
-    return new JsonLogoutFilter(tokenRepository);
+  public JsonLogoutFilter jsonLogoutFilter(PersistentTokenRepository tokenRepository,
+      SessionRegistry sessionRegistry) {
+    return new JsonLogoutFilter(tokenRepository, sessionRegistry);
+  }
+
+  @Bean
+  public LoginStatusCheckFilter loginStatusCheckFilter() {
+    return new LoginStatusCheckFilter();
   }
 
   // 권한에 계층 부여

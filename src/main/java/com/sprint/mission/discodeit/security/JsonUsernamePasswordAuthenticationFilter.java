@@ -16,7 +16,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
@@ -30,7 +29,6 @@ public class JsonUsernamePasswordAuthenticationFilter extends OncePerRequestFilt
   private final AuthenticationManager authenticationManager;
   private final RememberMeServices rememberMeServices;
   private final ObjectMapper objectMapper = new ObjectMapper();
-  private final SessionRegistry sessionRegistry;
   private final SessionAuthenticationStrategy sessionAuthenticationStrategy;
 
   @Override
@@ -82,7 +80,6 @@ public class JsonUsernamePasswordAuthenticationFilter extends OncePerRequestFilt
       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
       response.setContentType(MediaType.APPLICATION_JSON_VALUE);
       response.getWriter().write("{\"message\":\"Invalid credentials\"}");
-
     }
   }
 }

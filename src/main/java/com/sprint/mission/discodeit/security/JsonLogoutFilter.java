@@ -7,18 +7,22 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+@Slf4j
 @RequiredArgsConstructor
 public class JsonLogoutFilter extends OncePerRequestFilter {
 
   private final PersistentTokenRepository tokenRepository;
+  private final SessionRegistry sessionRegistry;
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -36,6 +40,7 @@ public class JsonLogoutFilter extends OncePerRequestFilter {
       // 세션 무효화
       HttpSession session = request.getSession(false);
       if (session != null) {
+        sessionRegistry.removeSessionInformation(session.getId());  // 세션 정보 제거
         session.invalidate();
       }
 
@@ -62,6 +67,7 @@ public class JsonLogoutFilter extends OncePerRequestFilter {
       // 로그아웃 응답
       response.setStatus(HttpServletResponse.SC_OK);
       response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+      response.setHeader("Location", "/");
       return;
     }
 
