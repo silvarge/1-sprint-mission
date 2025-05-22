@@ -3,8 +3,6 @@ package com.sprint.mission.discodeit.docs;
 import com.sprint.mission.discodeit.dto.user.UserResponseDto;
 import com.sprint.mission.discodeit.dto.user.UserSignupRequestDto;
 import com.sprint.mission.discodeit.dto.user.UserUpdateDto;
-import com.sprint.mission.discodeit.dto.userstatus.UserStatusRequestDto;
-import com.sprint.mission.discodeit.dto.userstatus.UserStatusResponseDto;
 import com.sprint.mission.discodeit.exception.ExceptionDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -21,7 +19,6 @@ import java.util.UUID;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -82,16 +79,4 @@ public interface UserControllerDocs {
           content = @Content(schema = @Schema(implementation = ExceptionDto.class)))
   })
   ResponseEntity<UserResponseDto> deleteUser(@PathVariable UUID userId);
-
-  @Operation(summary = "유저 상태 업데이트", description = "유저의 상태(접속 시간 등)를 업데이트합니다.")
-  @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "유저 상태 업데이트 성공",
-          content = @Content(schema = @Schema(implementation = UserStatusResponseDto.class))),
-      @ApiResponse(responseCode = "400", description = "유저 상태 업데이트 실패",
-          content = @Content(schema = @Schema(implementation = ExceptionDto.class)))
-  })
-  ResponseEntity<UserStatusResponseDto> updateUserStatus(
-      @PathVariable UUID userId,
-      @RequestParam("accessAt") UserStatusRequestDto userStatusRequestDto);
-
 }

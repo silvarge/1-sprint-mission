@@ -6,7 +6,6 @@ import com.sprint.mission.discodeit.dto.user.UserSignupRequestDto;
 import com.sprint.mission.discodeit.dto.user.UserUpdateDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
 import com.sprint.mission.discodeit.exception.data.DataUpdateFailedException;
 import com.sprint.mission.discodeit.exception.user.UserAlreadyExistsException;
@@ -22,8 +21,8 @@ import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.util.validation.Validator;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +31,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Service;
@@ -48,6 +49,8 @@ public class BasicUserService implements UserService {
 
   private final UserMapper userMapper;
   private final PasswordEncoder passwordEncoder;
+
+  private final SessionRegistry sessionRegistry;
 
   private final UserRepository userRepository;
   private final BinaryContentRepository binaryContentRepository;
@@ -76,8 +79,6 @@ public class BasicUserService implements UserService {
 
     // user 생성
     User user = userMapper.toEntity(userReqDto, hashedPassword);
-    UserStatus userStatus = new UserStatus(Instant.now(), user);
-    user.updateUserStatus(userStatus);
 
     // 프로필 이미지 존재 시 생성
     if (profile != null) {
@@ -92,7 +93,7 @@ public class BasicUserService implements UserService {
         .orElseThrow(() -> new UserNotFoundException(savedUser));
 
     log.info("사용자가 생성되었습니다. - id: {}", loadUser.getId());
-    return userMapper.toResponseDto(loadUser);
+    return userMapper.toResponseDto(loadUser, isUserOnline(loadUser.getUsername()));
   }
 
   @Override
@@ -106,14 +107,20 @@ public class BasicUserService implements UserService {
     }
 
     log.info("사용자 조회 성공 - id: {}", user.getId());
-    return userMapper.toResponseDto(user);
+    return userMapper.toResponseDto(user, isUserOnline(user.getUsername()));
   }
 
   @Override
   public List<UserResponseDto> findAll() {
     log.debug("전체 사용자 조회 요청");
+
+    Set<String> onlineUsernames = sessionRegistry.getAllPrincipals().stream()
+        .filter(principal -> principal instanceof UserDetails)
+        .map(principal -> ((UserDetails) principal).getUsername())
+        .collect(Collectors.toSet());
+
     List<UserResponseDto> userList = userRepository.findAllWithDetails().stream()
-        .map(userMapper::toResponseDto)
+        .map(user -> userMapper.toResponseDto(user, onlineUsernames.contains(user.getUsername())))
         .collect(Collectors.toList());
     log.info("전체 사용자 조회 성공 - 전체 사용자 수: {}", userList.size());
     return userList;
@@ -151,7 +158,7 @@ public class BasicUserService implements UserService {
 
       log.info("사용자 정보가 수정되었습니다. - id: {}", updatedUser.getId());
 
-      return userMapper.toResponseDto(updatedUser);
+      return userMapper.toResponseDto(updatedUser, isUserOnline(updatedUser.getUsername()));
     } catch (UserUpdateDataNotFoundException ue) {
       log.warn("수정할 사용자 데이터가 없습니다. - 수정 대상 id: {}, 수정 요청 데이터: {}", userId, userUpdateDto);
       throw ue;
@@ -170,7 +177,7 @@ public class BasicUserService implements UserService {
     userRepository.delete(deleteUser);
 
     log.info("사용자가 삭제되었습니다. - id: {}", deleteUser.getId());
-    return userMapper.toResponseDto(deleteUser);
+    return userMapper.toResponseDto(deleteUser, isUserOnline(deleteUser.getUsername()));
   }
 
   @Override
@@ -179,16 +186,26 @@ public class BasicUserService implements UserService {
     if (authentication == null || !authentication.isAuthenticated()) {
       throw new AuthenticationCredentialsNotFoundException("is not authenticated");
     }
+    log.info("isAuthenticated: {}", authentication.isAuthenticated());
+    log.info("principal: {}", authentication.getPrincipal());
+    log.info("principal class: {}",
+        authentication.getPrincipal() != null ? authentication.getPrincipal().getClass() : "null");
+    log.info("authorities: {}", authentication.getAuthorities());
 
     Object principal = authentication.getPrincipal();
+
+    if (principal instanceof String principalStr && principalStr.equals("anonymousUser")) {
+      throw new AuthenticationCredentialsNotFoundException("is anonymousUser");
+    }
 
     if (!(principal instanceof CustomUserDetails userDetails)) {
       throw new AuthenticationCredentialsNotFoundException("is not CustomUserDetails");
     }
 
     User user = userDetails.getUser();
+    log.info("인증된 사용자: username={}, userId={}", user.getUsername(), user.getId());
 
-    return userMapper.toResponseDto(user);
+    return userMapper.toResponseDto(user, isUserOnline(user.getUsername()));
   }
 
   @Override
@@ -214,6 +231,14 @@ public class BasicUserService implements UserService {
       }
     }
 
-    return userMapper.toResponseDto(user);
+    return userMapper.toResponseDto(user, isUserOnline(user.getUsername()));
+  }
+
+  @Override
+  public boolean isUserOnline(String username) {
+    return sessionRegistry.getAllPrincipals().stream()
+        .filter(principal -> principal instanceof UserDetails)
+        .map(principal -> ((UserDetails) principal).getUsername())
+        .anyMatch(name -> name.equals(username));
   }
 }

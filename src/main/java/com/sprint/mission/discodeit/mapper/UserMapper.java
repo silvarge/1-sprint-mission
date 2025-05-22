@@ -13,7 +13,7 @@ public class UserMapper {
 
   private final BinaryContentMapper binaryContentMapper;
 
-  public UserResponseDto toResponseDto(User user) {
+  public UserResponseDto toResponseDto(User user, boolean isOnline) {
     return UserResponseDto.builder()
         .id(user.getId())
         .username(user.getUsername())
@@ -22,7 +22,7 @@ public class UserMapper {
         .role(user.getRole())
         .profile(
             user.getProfile() == null ? null : binaryContentMapper.toResponseDto(user.getProfile()))
-        .online(user.getUserStatus().isOnline())
+        .online(isOnline)
         .build();
   }
 

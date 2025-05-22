@@ -61,9 +61,9 @@ public class User extends BaseUpdatableEntity {
   @OnDelete(action = OnDeleteAction.SET_NULL)
   private BinaryContent profile;
 
-  @OneToOne(mappedBy = "user", cascade = {CascadeType.REMOVE, CascadeType.PERSIST,
-      CascadeType.MERGE}, orphanRemoval = true)
-  private UserStatus userStatus;  // OneToOne은 fetchType이 Eager였다
+//  @OneToOne(mappedBy = "user", cascade = {CascadeType.REMOVE, CascadeType.PERSIST,
+//      CascadeType.MERGE}, orphanRemoval = true)
+//  private UserStatus userStatus;  // OneToOne은 fetchType이 Eager였다
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<ChannelMember> joinedChannels = new ArrayList<>();
@@ -120,9 +120,9 @@ public class User extends BaseUpdatableEntity {
     this.profile = profile;
   }
 
-  public void updateUserStatus(UserStatus userStatus) {
-    this.userStatus = userStatus;
-  }
+//  public void updateUserStatus(UserStatus userStatus) {
+//    this.userStatus = userStatus;
+//  }
 
   @Override
   public String toString() {

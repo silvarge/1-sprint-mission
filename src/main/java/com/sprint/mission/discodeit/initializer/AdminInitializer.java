@@ -3,11 +3,8 @@ package com.sprint.mission.discodeit.initializer;
 import com.sprint.mission.discodeit.common.Phone;
 import com.sprint.mission.discodeit.common.Phone.RegionCode;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.security.role.Role;
-import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
@@ -21,7 +18,6 @@ public class AdminInitializer implements ApplicationRunner {
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
-  private final UserStatusRepository userStatusRepository;
 
   @Value("${discodeit.admin.username}")
   private String adminUsername;
@@ -41,9 +37,6 @@ public class AdminInitializer implements ApplicationRunner {
           passwordEncoder.encode(adminPassword), new Phone("010-1111-2222", RegionCode.KR),
           Role.ADMIN, null, null);
       userRepository.save(admin);
-
-      UserStatus userStatus = new UserStatus(Instant.now(), admin);
-      userStatusRepository.save(userStatus);
     }
 
   }

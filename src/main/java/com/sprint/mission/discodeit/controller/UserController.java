@@ -4,10 +4,7 @@ import com.sprint.mission.discodeit.docs.UserControllerDocs;
 import com.sprint.mission.discodeit.dto.user.UserResponseDto;
 import com.sprint.mission.discodeit.dto.user.UserSignupRequestDto;
 import com.sprint.mission.discodeit.dto.user.UserUpdateDto;
-import com.sprint.mission.discodeit.dto.userstatus.UserStatusRequestDto;
-import com.sprint.mission.discodeit.dto.userstatus.UserStatusResponseDto;
 import com.sprint.mission.discodeit.service.UserService;
-import com.sprint.mission.discodeit.service.UserStatusService;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.List;
@@ -22,7 +19,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,7 +31,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserController implements UserControllerDocs {
 
   private final UserService userService;
-  private final UserStatusService userStatusService;
 
   @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity<UserResponseDto> createUser(
@@ -67,12 +62,5 @@ public class UserController implements UserControllerDocs {
   @DeleteMapping(path = "/{userId}")
   public ResponseEntity<UserResponseDto> deleteUser(@PathVariable UUID userId) {
     return ResponseEntity.ok(userService.delete(userId));
-  }
-
-  @PutMapping(path = "/{userId}/userStatus")
-  public ResponseEntity<UserStatusResponseDto> updateUserStatus(
-      @PathVariable UUID userId,
-      @RequestParam("updateStatus") UserStatusRequestDto userStatusRequestDto) {
-    return ResponseEntity.ok(userStatusService.update(userId, userStatusRequestDto));
   }
 }

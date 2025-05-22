@@ -7,6 +7,7 @@ import com.sprint.mission.discodeit.exception.auth.LoginFailedException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.AuthService;
+import com.sprint.mission.discodeit.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ public class BasicAuthService implements AuthService {
 
   private final UserRepository userRepository;
   private final UserMapper userMapper;
+  private final UserService userService;
 
   @Transactional
   @Override
@@ -25,8 +27,7 @@ public class BasicAuthService implements AuthService {
       // 유저가 존재하는지 찾기
       User user = userRepository.findByUsername(loginDTO.username());
       // 로그인 했으니 시간 업데이트
-      user.getUserStatus().updateLastActiveAt();  // 변경 감지
-      return userMapper.toResponseDto(user);
+      return userMapper.toResponseDto(user, userService.isUserOnline(user.getUsername()));
     }
     throw new LoginFailedException(loginDTO.username());
   }

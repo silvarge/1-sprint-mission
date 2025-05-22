@@ -32,4 +32,6 @@ public interface UserService {
 
   UserResponseDto updateUserRole(RoleUpdateRequest roleUpdateRequest,
       HttpServletRequest httpServletRequest);
+
+  boolean isUserOnline(String username);
 }
