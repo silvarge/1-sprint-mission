@@ -151,4 +151,9 @@ public class BasicMessageService implements MessageService {
     log.info("메시지가 삭제되었습니다. - id: {}", deletedMessage.getId());
     return messageMapper.toResponseDto(deletedMessage);
   }
+
+  @Override
+  public boolean isAuthor(UUID messageId, UUID userId) {
+    return messageRepository.existsMessageByIdAndAuthorId(messageId, userId);
+  }
 }

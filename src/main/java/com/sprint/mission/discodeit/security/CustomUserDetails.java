@@ -4,6 +4,7 @@ import com.sprint.mission.discodeit.entity.User;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -36,6 +37,10 @@ public class CustomUserDetails implements UserDetails {
   @Override
   public boolean isEnabled() {
     return user.isStatus();
+  }
+
+  public UUID getId() {
+    return user.getId();
   }
 
   @Override

@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,6 +41,7 @@ public class MessageController implements MessageControllerDocs {
         .body(messageService.create(messageReqDto, attachments));
   }
 
+  @PreAuthorize("@basicMessageService.isAuthor(#messageId, authentication.principal.id)")
   @PutMapping(path = "/{messageId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE,
       MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity<MessageResponseDto> updateMessage(@PathVariable UUID messageId,
@@ -50,6 +52,7 @@ public class MessageController implements MessageControllerDocs {
         .body(messageService.update(messageId, content, attachments));
   }
 
+  @PreAuthorize("@basicMessageService.isAuthor(#messageId, authentication.principal.id) or hasRole('ADMIN')")
   @DeleteMapping("/{messageId}")
   public ResponseEntity<MessageResponseDto> deleteMessage(@PathVariable UUID messageId) {
     return ResponseEntity.status(HttpStatus.CREATED).body(messageService.delete(messageId));
