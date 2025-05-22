@@ -12,6 +12,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,6 +30,7 @@ public class ChannelController implements ChannelControllerDocs {
 
   private final ChannelService channelService;
 
+  @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   @PostMapping("/public")
   public ResponseEntity<ChannelResponseDto> createPublicChannel(
       @Valid @RequestBody PublicChannelRequestDto channelReqDto) {
@@ -43,12 +45,14 @@ public class ChannelController implements ChannelControllerDocs {
         .body(channelService.createPrivateChannel(channelReqDto));
   }
 
+  @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   @PutMapping("/{channelId}")
   public ResponseEntity<ChannelResponseDto> updatePublicChannel(
       @PathVariable UUID channelId, @RequestBody ChannelUpdateDto updateDto) {
     return ResponseEntity.ok(channelService.update(channelId, updateDto));
   }
 
+  @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   @DeleteMapping("/{channelId}")
   public ResponseEntity<ChannelResponseDto> deleteChannel(@PathVariable UUID channelId) {
     return ResponseEntity.ok(channelService.delete(channelId));

@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyAuthoritiesMapper;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
@@ -103,15 +102,12 @@ public class SecurityConfig {
         )
         // URL 별 인증 규칙 설정
         .authorizeHttpRequests(auth -> auth
-            // CSRF 토큰 발급 API는 인증하지 않음 /
+            // CSRF 토큰 발급 API는 인증하지 않음
             .requestMatchers("/api/auth/csrf-token", "/api/users", "/api/auth/login",
                 "/api/auth/logout").permitAll()
-            .requestMatchers("/api/admin/**").hasRole("ADMIN")
-            .requestMatchers("/api/channels/public").hasRole("CHANNEL_MANAGER")
-            .requestMatchers(HttpMethod.PUT, "/api/channels/**").hasRole("CHANNEL_MANAGER")
-            .requestMatchers(HttpMethod.DELETE, "/api/channels/**").hasRole("CHANNEL_MANAGER")
-            .requestMatchers("/api/**").hasRole("USER")
-
+            // 전체적/공용/크게 변하지 않을 요소들만 이곳에 표현
+            .requestMatchers("/api/admin/**").hasRole("ADMIN")  // 관리자 전용 API 제한
+            .requestMatchers("/api/**").hasRole("USER")         // 전체적으로 USER Role 필요
             .anyRequest().authenticated()
         )
         // 인증 공급자 등록 (UserDetailsService + PasswordEncoder 기반)
