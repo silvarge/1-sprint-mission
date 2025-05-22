@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.docs;
 
 import com.sprint.mission.discodeit.dto.readstatus.ReadStatusRequestDto;
 import com.sprint.mission.discodeit.dto.readstatus.ReadStatusResponseDto;
+import com.sprint.mission.discodeit.dto.readstatus.ReadStatusUpdateRequestDto;
 import com.sprint.mission.discodeit.exception.ExceptionDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -11,7 +12,6 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
@@ -43,8 +43,8 @@ public interface ReadStatusControllerDocs {
               schema = @Schema(implementation = ExceptionDto.class)))
   })
   ResponseEntity<ReadStatusResponseDto> updateReadStatus(
-      @Parameter(description = "읽음 상태 ID", required = true) @PathVariable UUID readStatusId,
-      @Parameter(description = "마지막 읽은 시간", required = true) @RequestParam("lastReadAt") Instant lastReadAt);
+      @PathVariable UUID readStatusId,
+      @RequestBody ReadStatusUpdateRequestDto readStatusUpdateRequest);
 
   @Operation(summary = "유저별 읽음 상태 조회", description = "주어진 유저 ID에 해당하는 읽음 상태 리스트를 반환합니다.")
   @ApiResponses(value = {

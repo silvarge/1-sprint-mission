@@ -3,15 +3,16 @@ package com.sprint.mission.discodeit.controller;
 import com.sprint.mission.discodeit.docs.ReadStatusControllerDocs;
 import com.sprint.mission.discodeit.dto.readstatus.ReadStatusRequestDto;
 import com.sprint.mission.discodeit.dto.readstatus.ReadStatusResponseDto;
+import com.sprint.mission.discodeit.dto.readstatus.ReadStatusUpdateRequestDto;
 import com.sprint.mission.discodeit.service.ReadStatusService;
 import jakarta.validation.Valid;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,10 +34,12 @@ public class ReadStatusController implements ReadStatusControllerDocs {
         .body(readStatusService.create(readStatusReqDto));
   }
 
-  @GetMapping(path = "/{readStatusId}")
-  public ResponseEntity<ReadStatusResponseDto> updateReadStatus(@PathVariable UUID readStatusId,
-      @RequestParam("lastReadAt") Instant lastReadAt) {
-    return ResponseEntity.ok(readStatusService.update(readStatusId, lastReadAt));
+  @PatchMapping(path = "/{readStatusId}")
+  public ResponseEntity<ReadStatusResponseDto> updateReadStatus(
+      @PathVariable UUID readStatusId,
+      @RequestBody ReadStatusUpdateRequestDto readStatusUpdateRequest) {
+    return ResponseEntity.ok(
+        readStatusService.update(readStatusId, readStatusUpdateRequest.newLastReadAt()));
   }
 
   @GetMapping

@@ -33,7 +33,7 @@ public class MessageController implements MessageControllerDocs {
 
   @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity<MessageResponseDto> createMessage(
-      @Valid @RequestPart("message") MessageRequestDto messageReqDto,
+      @Valid @RequestPart("messageCreateRequest") MessageRequestDto messageReqDto,
       @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments)
       throws IOException {
     return ResponseEntity.status(HttpStatus.CREATED)
