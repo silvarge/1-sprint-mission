@@ -11,11 +11,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.common.Phone;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.security.role.Role;
-import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,9 +41,6 @@ public class AuthTest {
   private UserRepository userRepository;
 
   @Autowired
-  private UserStatusRepository userStatusRepository;
-
-  @Autowired
   private PasswordEncoder passwordEncoder;
 
   @BeforeEach
@@ -56,9 +50,6 @@ public class AuthTest {
     User user = new User("test", "testuser", "test@email.com", passwordEncoder.encode("!@asdf1234"),
         new Phone("010-1111-2222", Phone.RegionCode.KR), Role.USER, "", null);
     userRepository.save(user);
-
-    UserStatus status = new UserStatus(Instant.now(), user);
-    userStatusRepository.save(status);
   }
 
   @Test

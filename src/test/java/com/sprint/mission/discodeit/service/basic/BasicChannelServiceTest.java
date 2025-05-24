@@ -8,11 +8,9 @@ import com.sprint.mission.discodeit.dto.channel.ChannelResponseDto;
 import com.sprint.mission.discodeit.dto.channel.PrivateChannelRequestDto;
 import com.sprint.mission.discodeit.dto.channel.PublicChannelRequestDto;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.security.role.Role;
 import com.sprint.mission.discodeit.service.ChannelService;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -86,12 +84,7 @@ class BasicChannelServiceTest {
         "!@A445" + nickname, new Phone(phone, Phone.RegionCode.KR),
         Role.USER, "", null
     );
-    userRepository.save(user);
-
-    UserStatus status = new UserStatus(Instant.now(), user);
-    user.updateUserStatus(status);
-    userRepository.save(user);
-    return user;
+    return userRepository.save(user);
   }
 
 

@@ -182,7 +182,7 @@ class BasicChannelServiceUnitTest {
       given(channel.getMembers()).willReturn(List.of(member));
 
       UserResponseDto userDto = mock(UserResponseDto.class);
-      given(userMapper.toResponseDto(userMock)).willReturn(userDto);
+      given(userMapper.toResponseDto(userMock, true)).willReturn(userDto);
 
       Instant messageTime = Instant.now();
       given(messageRepository.findLastMessageAtByChannelId(channelId)).willReturn(messageTime);
@@ -230,7 +230,7 @@ class BasicChannelServiceUnitTest {
     for (ChannelMember member : channel.getMembers()) {
       User user = mock(User.class);
       given(member.getUser()).willReturn(user);
-      given(userMapper.toResponseDto(user)).willReturn(mock(UserResponseDto.class));
+      given(userMapper.toResponseDto(user, true)).willReturn(mock(UserResponseDto.class));
     }
 
     Instant lastMessageAt = Instant.now();

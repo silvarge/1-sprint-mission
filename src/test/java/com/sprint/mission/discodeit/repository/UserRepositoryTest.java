@@ -5,9 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.sprint.mission.discodeit.common.Phone;
 import com.sprint.mission.discodeit.config.TestAuditConfig;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.security.role.Role;
-import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,10 +40,6 @@ class UserRepositoryTest {
         new Phone("010-1111-2222", Phone.RegionCode.KR), Role.USER, "", null);
     em.persist(savedUser);
 
-    UserStatus status = new UserStatus(Instant.now(), savedUser);
-    em.persist(status);
-
-    savedUser.updateUserStatus(status);
     em.flush();
   }
 
@@ -69,7 +63,6 @@ class UserRepositoryTest {
     Optional<User> result = userRepository.findByIdWithDetails(savedUser.getId());
 
     assertThat(result).isPresent();
-    assertThat(result.get().getUserStatus()).isNotNull();
     assertThat(result.get().getProfile()).isNull();
   }
 

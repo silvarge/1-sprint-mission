@@ -86,7 +86,7 @@ public class BasicUserServiceUnitTest {
     when(userRepository.save(userEntity)).thenReturn(userEntity);
     when(userEntity.getId()).thenReturn(userId);
     when(userRepository.findById(userId)).thenReturn(Optional.of(savedUser));
-    when(userMapper.toResponseDto(savedUser)).thenReturn(responseDto);
+    when(userMapper.toResponseDto(savedUser, true)).thenReturn(responseDto);
 
     // when
     UserResponseDto result = userService.create(dto, null);
@@ -96,7 +96,7 @@ public class BasicUserServiceUnitTest {
 
     verify(userValidator).validateCreate(dto);
     verify(userRepository).save(userEntity);
-    verify(userMapper).toResponseDto(savedUser);
+    verify(userMapper).toResponseDto(savedUser, true);
   }
 
   @Test
@@ -140,7 +140,7 @@ public class BasicUserServiceUnitTest {
     given(userRepository.save(userEntity)).willReturn(userEntity);
     given(userEntity.getId()).willReturn(userId);
     given(userRepository.findById(userId)).willReturn(Optional.of(savedUser));
-    given(userMapper.toResponseDto(savedUser)).willReturn(responseDto);
+    given(userMapper.toResponseDto(savedUser, true)).willReturn(responseDto);
 
     // when
     UserResponseDto result = userService.create(dto, profile);
@@ -150,7 +150,7 @@ public class BasicUserServiceUnitTest {
 
     then(userValidator).should().validateCreate(dto);
     then(userRepository).should().save(userEntity);
-    then(userMapper).should().toResponseDto(savedUser);
+    then(userMapper).should().toResponseDto(savedUser, true);
   }
 
   @Test
@@ -248,7 +248,7 @@ public class BasicUserServiceUnitTest {
     willDoNothing().given(updatedUser).updateProfile(newProfile);
 
     given(userRepository.save(updatedUser)).willReturn(updatedUser);
-    given(userMapper.toResponseDto(updatedUser)).willReturn(responseDto);
+    given(userMapper.toResponseDto(updatedUser, true)).willReturn(responseDto);
 
     // when
     UserResponseDto result = userService.update(userId, requestDto, profile);
@@ -263,7 +263,7 @@ public class BasicUserServiceUnitTest {
     verify(binaryContentRepository).findById(newProfileId);
     verify(updatedUser).updateProfile(newProfile);
     verify(userRepository).save(updatedUser);
-    verify(userMapper).toResponseDto(updatedUser);
+    verify(userMapper).toResponseDto(updatedUser, true);
   }
 
   @Test
@@ -309,7 +309,7 @@ public class BasicUserServiceUnitTest {
 
     given(userRepository.findById(userId)).willReturn(Optional.of(deleteUser));
     willDoNothing().given(userRepository).delete(deleteUser);
-    given(userMapper.toResponseDto(deleteUser)).willReturn(responseDto);
+    given(userMapper.toResponseDto(deleteUser, true)).willReturn(responseDto);
 
     // when
     UserResponseDto result = userService.delete(userId);

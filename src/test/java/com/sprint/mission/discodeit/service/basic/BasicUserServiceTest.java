@@ -6,12 +6,10 @@ import com.sprint.mission.discodeit.common.Phone;
 import com.sprint.mission.discodeit.dto.user.UserResponseDto;
 import com.sprint.mission.discodeit.dto.user.UserSignupRequestDto;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.security.role.Role;
 import com.sprint.mission.discodeit.service.UserService;
 import java.io.IOException;
-import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -63,11 +61,6 @@ class BasicUserServiceTest {
         Role.USER, "", null
     );
     userRepository.save(user); // 저장 후 ID를 얻기 위함
-
-    UserStatus status = new UserStatus(Instant.now(), user);
-    user.updateUserStatus(status);
-
-    userRepository.save(user);
 
     // when
     UserResponseDto userDeleteResult = userService.delete(user.getId());

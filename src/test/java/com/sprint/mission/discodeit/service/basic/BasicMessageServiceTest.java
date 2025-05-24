@@ -6,13 +6,11 @@ import com.sprint.mission.discodeit.dto.message.MessageResponseDto;
 import com.sprint.mission.discodeit.dto.page.PageResponse;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.security.role.Role;
 import com.sprint.mission.discodeit.service.MessageService;
 import java.io.IOException;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.assertj.core.api.Assertions;
@@ -92,12 +90,7 @@ class BasicMessageServiceTest {
         "!@A445" + nickname, new Phone(phone, Phone.RegionCode.KR),
         Role.USER, "", null
     );
-    userRepository.save(user);
-
-    UserStatus status = new UserStatus(Instant.now(), user);
-    user.updateUserStatus(status);
-    userRepository.save(user);
-    return user;
+    return userRepository.save(user);
   }
 
   private Channel getChannel(User owner) {
