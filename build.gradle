@@ -27,7 +27,7 @@ ext {
 }
 
 group = 'com.sprint.mission'
-version = 'v2.0-M9'
+version = 'v2.2-M10'
 
 java {
     toolchain {
