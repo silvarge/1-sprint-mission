@@ -27,7 +27,7 @@ ext {
 }
 
 group = 'com.sprint.mission'
-version = 'v2.2-M10'
+version = 'v2.3-M11'
 
 java {
     toolchain {
@@ -64,7 +64,7 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     implementation 'io.jsonwebtoken:jjwt-impl:0.12.6'
     implementation 'io.jsonwebtoken:jjwt-jackson:0.12.6'
-    
+
     // actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     // spring boot admin (client)
