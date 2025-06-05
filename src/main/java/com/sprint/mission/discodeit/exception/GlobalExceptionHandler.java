@@ -24,6 +24,7 @@ public class GlobalExceptionHandler {
       HttpRequestMethodNotSupportedException.class})
   public ResponseEntity<?> handleNoPageFoundException(Exception e) {
     log.error("Invalid route or method: : {}", e.getMessage());
+    e.printStackTrace();
     return ResponseEntity.status(ErrorCode.METHOD_NOT_ALLOWED.getStatus())
         .body(CustomApiResponse.fail(
             ExceptionDto.of(new DiscodeitException(ErrorCode.METHOD_NOT_ALLOWED))));
@@ -74,6 +75,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(value = {Exception.class})
   public ResponseEntity<?> handleException(Exception e) {
     log.error("Unhandled exception caught in GlobalExceptionHandler : {}", e.getMessage());
+    e.printStackTrace();
     return ResponseEntity.status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus())
         .body(CustomApiResponse.fail(
             ExceptionDto.of(new DiscodeitException(ErrorCode.INTERNAL_SERVER_ERROR))));
