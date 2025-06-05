@@ -88,6 +88,13 @@ dependencies {
 
     // postgreSQL
     runtimeOnly 'org.postgresql:postgresql'
+
+    // Retryable
+    implementation 'org.springframework.retry:spring-retry:2.0.8'
+
+    // prometheus
+    implementation 'io.micrometer:micrometer-registry-prometheus:1.13.5'
+    implementation 'io.micrometer:micrometer-core:1.13.6'
 }
 
 dependencyManagement {

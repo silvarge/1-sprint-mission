@@ -17,6 +17,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -133,6 +134,24 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
       log.error("파일 다운로드 데이터 전달 시 오류 발생 - id: {}, path: {}, message: {}",
           binaryContentResponseDto.id(), filePath, e.getMessage(), e);
       throw new DataSaveFailedException("FileStorage", binaryContentResponseDto.id(), e);
+    }
+  }
+
+  @Override
+  public void delete(UUID fileId) {
+    try (Stream<Path> paths = Files.list(root)) {
+      paths.filter(path -> path.getFileName().toString().startsWith(fileId.toString()))
+          .findFirst()
+          .ifPresent(path -> {
+            try {
+              Files.deleteIfExists(path);
+              log.debug("파일 삭제 완료 - id: {}", fileId);
+            } catch (IOException e) {
+              log.warn("파일 삭제 실패 - id: {}, message: {}", fileId, e.getMessage(), e);
+            }
+          });
+    } catch (IOException e) {
+      log.error("파일 삭제 중 디렉토리 탐색 실패 - id: {}, message: {}", fileId, e.getMessage(), e);
     }
   }
 }

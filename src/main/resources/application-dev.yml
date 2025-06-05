@@ -36,10 +36,14 @@ management:
     web:
       base-path: /actuator
       exposure:
-        include: health, info, metrics, loggers
+        include: health, info, metrics, loggers, prometheus
   info:
     env:
       enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
 
 # actuator - info
 info:
@@ -70,14 +74,14 @@ logging:
     org:
       springframework:
         core:
-          env: debug
-        security: trace
+          env: off
+        security: off
         web: debug
       hibernate:
-        sql: debug
+        sql: off
         type:
           descriptor:
-            sql: debug
+            sql: off
 
 # swagger
 springdoc:

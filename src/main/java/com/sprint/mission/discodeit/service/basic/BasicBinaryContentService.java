@@ -1,9 +1,9 @@
 package com.sprint.mission.discodeit.service.basic;
 
 
+import com.sprint.mission.discodeit.async.event.FileUploadEvent;
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentResponseDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
-import com.sprint.mission.discodeit.event.FileUploadEvent;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
 import com.sprint.mission.discodeit.exception.binarycontent.EmptyFileUploadException;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
@@ -42,7 +42,6 @@ public class BasicBinaryContentService implements BinaryContentService {
     }
     BinaryContent savedFile = binaryContentRepository.save(binaryContentMapper.toEntity(file));
     eventPublisher.publishEvent(new FileUploadEvent(savedFile.getId(), file));
-//        binaryContentStorage.put(savedFile.getId(), file);
 
     log.info("파일 업로드를 성공하였습니다. - id: {}, 파일명: {}, 크기: {} bytes", savedFile.getId(),
         file.getOriginalFilename(), file.getSize());

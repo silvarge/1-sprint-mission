@@ -1,4 +1,4 @@
-package com.sprint.mission.discodeit.event;
+package com.sprint.mission.discodeit.async.event;
 
 import java.util.UUID;
 import org.springframework.web.multipart.MultipartFile;

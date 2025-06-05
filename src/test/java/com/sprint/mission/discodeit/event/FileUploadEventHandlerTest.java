@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.sprint.mission.discodeit.async.event.FileUploadEvent;
+import com.sprint.mission.discodeit.async.handler.FileUploadEventHandler;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -67,7 +69,7 @@ class FileUploadEventHandlerTest {
 
     // when
     uploadEventHandler.handle(event);
-    
+
     // then
     String filename = testImageFile.getOriginalFilename();
     String extension = filename.substring(filename.lastIndexOf('.'));
@@ -79,5 +81,6 @@ class FileUploadEventHandlerTest {
 
     Files.deleteIfExists(expectedPath);
   }
+
 
 }
