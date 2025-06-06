@@ -42,7 +42,7 @@ public class ReadStatusController implements ReadStatusControllerDocs {
       @PathVariable UUID readStatusId,
       @RequestBody ReadStatusUpdateRequestDto readStatusUpdateRequest) {
     return ResponseEntity.ok(
-        readStatusService.update(readStatusId, readStatusUpdateRequest.newLastReadAt()));
+        readStatusService.update(readStatusId, readStatusUpdateRequest));
   }
 
   @GetMapping
