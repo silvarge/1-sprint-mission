@@ -1,5 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
+import com.sprint.mission.discodeit.async.event.RoleChangedNotificationEvent;
+import com.sprint.mission.discodeit.common.NotificationType;
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentResponseDto;
 import com.sprint.mission.discodeit.dto.user.UserResponseDto;
 import com.sprint.mission.discodeit.dto.user.UserSignupRequestDto;
@@ -34,6 +36,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -59,6 +62,7 @@ public class BasicUserService implements UserService {
   private final BinaryContentService binaryContentService;
   private final JwtSessionRepository jwtSessionRepository;
   private final JwtService jwtService;
+  private final ApplicationEventPublisher applicationEventPublisher;
 
   // TODO: LoadData Entity Name Magic Number를 어떻게 하면 좋을까?
 
@@ -86,7 +90,7 @@ public class BasicUserService implements UserService {
 
     // 프로필 이미지 존재 시 생성
     if (profile != null) {
-      BinaryContentResponseDto profileDto = binaryContentService.create(profile);
+      BinaryContentResponseDto profileDto = binaryContentService.create(profile, user.getId());
       BinaryContent loadProfile = binaryContentRepository.findById(profileDto.id())
           .orElseThrow(() -> new BinaryContentNotFoundException(profileDto.id()));
       user.updateProfile(loadProfile);
@@ -150,7 +154,7 @@ public class BasicUserService implements UserService {
           binaryContentRepository.delete(updatedUser.getProfile());
         }
 
-        BinaryContentResponseDto updateFile = binaryContentService.create(updateProfile);
+        BinaryContentResponseDto updateFile = binaryContentService.create(updateProfile, userId);
         BinaryContent update = binaryContentRepository.findById(updateFile.id())
             .orElseThrow(() -> new BinaryContentNotFoundException(updateFile.id()));
         updatedUser.updateProfile(update);
@@ -235,6 +239,7 @@ public class BasicUserService implements UserService {
   }
 
   @Override
+  @Transactional
   public UserResponseDto updateUserRole(RoleUpdateRequest roleUpdateRequest,
       HttpServletRequest httpServletRequest) {
     log.info("사용자 역할 업데이트 요청");
@@ -246,6 +251,10 @@ public class BasicUserService implements UserService {
       user.updateRole(roleUpdateRequest.newRole());
       userRepository.save(user);
 
+      applicationEventPublisher.publishEvent(
+          new RoleChangedNotificationEvent(roleUpdateRequest.userId(), roleUpdateRequest.userId(),
+              NotificationType.ROLE_CHANGED));
+
       // 로그인 중이라면 JWTSession 제거 -> 강제 로그아웃
       Optional<JwtSession> sessionOptional = jwtSessionRepository.findByUsername(
           user.getUsername());
@@ -254,6 +263,7 @@ public class BasicUserService implements UserService {
         log.info("사용자 역할 변경으로 인한 JWT 세션 무효화: {}", user.getUsername());
       });
     }
+
     return userMapper.toResponseDto(user, isUserOnline(user.getUsername()));
   }
 

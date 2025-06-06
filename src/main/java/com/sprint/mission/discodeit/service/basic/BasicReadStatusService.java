@@ -6,7 +6,6 @@ import com.sprint.mission.discodeit.dto.readstatus.ReadStatusUpdateRequestDto;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.exception.readstatus.ReadStatusNotFoundException;
 import com.sprint.mission.discodeit.mapper.ReadStatusMapper;
-import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.service.ReadStatusService;
 import java.util.List;
@@ -20,20 +19,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BasicReadStatusService implements ReadStatusService {
 
-  private final ChannelRepository channelRepository;
   private final ReadStatusRepository readStatusRepository;
   private final ReadStatusMapper readStatusMapper;
 
   @Transactional
   @Override
   public ReadStatusResponseDto create(ReadStatusRequestDto readStatusReqDto) {
-    boolean notificationEnabled = true;
 
-    if (channelRepository.findChannelTypeById(readStatusReqDto.channelId()).equals("PRIVATE")) {
-      notificationEnabled = false;
-    }
-
-    ReadStatus readStatus = readStatusMapper.toEntity(readStatusReqDto, notificationEnabled);
+    ReadStatus readStatus = readStatusMapper.toEntity(readStatusReqDto);
     readStatusRepository.save(readStatus);
     return readStatusMapper.toResponseDto(readStatus);
   }

@@ -28,12 +28,11 @@ public class ReadStatusMapper {
         .build();
   }
 
-  public ReadStatus toEntity(ReadStatusRequestDto readStatusRequestDto,
-      boolean notificationEnabled) {
+  public ReadStatus toEntity(ReadStatusRequestDto readStatusRequestDto) {
     User user = userRepository.findById(readStatusRequestDto.userId())
         .orElseThrow(() -> new UserNotFoundException(readStatusRequestDto.userId()));
     Channel channel = channelRepository.findById(readStatusRequestDto.channelId())
         .orElseThrow(() -> new ChannelNotFoundException(readStatusRequestDto.channelId()));
-    return new ReadStatus(user, channel, readStatusRequestDto.lastReadAt(), notificationEnabled);
+    return new ReadStatus(user, channel, readStatusRequestDto.lastReadAt());
   }
 }

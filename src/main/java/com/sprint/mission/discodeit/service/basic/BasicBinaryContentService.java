@@ -35,13 +35,13 @@ public class BasicBinaryContentService implements BinaryContentService {
 
   @Transactional
   @Override
-  public BinaryContentResponseDto create(MultipartFile file) throws IOException {
+  public BinaryContentResponseDto create(MultipartFile file, UUID userId) throws IOException {
     log.debug("파일 업로드(생성) 요청 - 원본 파일명: {}", file.getOriginalFilename());
     if (file.isEmpty()) {
       throw new EmptyFileUploadException(file.getOriginalFilename());
     }
     BinaryContent savedFile = binaryContentRepository.save(binaryContentMapper.toEntity(file));
-    eventPublisher.publishEvent(new FileUploadEvent(savedFile.getId(), file));
+    eventPublisher.publishEvent(new FileUploadEvent(savedFile.getId(), file, userId));
 
     log.info("파일 업로드를 성공하였습니다. - id: {}, 파일명: {}, 크기: {} bytes", savedFile.getId(),
         file.getOriginalFilename(), file.getSize());

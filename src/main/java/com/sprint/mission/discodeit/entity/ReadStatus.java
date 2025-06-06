@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.sprint.mission.discodeit.entity.Channel.ChannelType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,6 +10,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
@@ -49,11 +51,10 @@ public class ReadStatus extends BaseUpdatableEntity {
   @Column(name = "notification_enabled")
   private boolean notificationEnabled;
 
-  public ReadStatus(User user, Channel channel, Instant lastReadAt, boolean notificationEnabled) {
+  public ReadStatus(User user, Channel channel, Instant lastReadAt) {
     this.user = user;
     this.channel = channel;
     this.lastReadAt = lastReadAt;
-    this.notificationEnabled = notificationEnabled;
   }
 
   public void updateLastReadAt() {    // 읽을 시 시간 갱신을 위함
@@ -66,6 +67,15 @@ public class ReadStatus extends BaseUpdatableEntity {
 
   public void updateNotificationEnabled(boolean notificationEnabled) {
     this.notificationEnabled = notificationEnabled;
+  }
+
+  @PrePersist
+  public void setDefaultNotification() {
+    if (channel.getChannelType() == ChannelType.PRIVATE) {
+      this.notificationEnabled = false;
+    } else {
+      this.notificationEnabled = true;
+    }
   }
 
   @Override

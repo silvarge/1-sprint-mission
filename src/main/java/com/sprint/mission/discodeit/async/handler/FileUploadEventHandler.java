@@ -1,8 +1,10 @@
 package com.sprint.mission.discodeit.async.handler;
 
+import com.sprint.mission.discodeit.async.event.AsyncFailedNotificationEvent;
 import com.sprint.mission.discodeit.async.event.FileUploadEvent;
 import com.sprint.mission.discodeit.async.failure.AsyncTaskFailure;
 import com.sprint.mission.discodeit.async.failure.AsyncTaskFailureRepository;
+import com.sprint.mission.discodeit.common.NotificationType;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.BinaryContent.BinaryContentUploadStatus;
 import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
@@ -13,6 +15,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
@@ -40,6 +43,7 @@ public class FileUploadEventHandler {
   private final FileUploadEventHandler self = this;
   private final EntityManager entityManager;
   private final TransactionTemplate transactionTemplate;
+  private final ApplicationEventPublisher applicationEventPublisher;
 
   @Async("unifiedPool")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -52,7 +56,7 @@ public class FileUploadEventHandler {
         binaryContentRepository.saveAndFlush(content);
       });
     } catch (Exception e) {
-      self.recover(e, event.fileId(), event.file());
+      self.recover(e, event);
     }
   }
 
@@ -64,34 +68,37 @@ public class FileUploadEventHandler {
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void uploadWithRetry(UUID fileId, MultipartFile file) {
     log.info("파일 저장 시도 - fileId: {}", fileId);
-    log.info("파일 이름: {} / fail 요소: {}", file.getOriginalFilename(),
-        file.getOriginalFilename().contains("fail"));
     binaryContentStorage.put(fileId, file).join();
   }
 
   @Recover
   @Transactional(propagation = Propagation.REQUIRES_NEW)  // 신규 트랜잭션 강제
-  public void recover(Exception e, UUID fileId, MultipartFile file) {
-    log.error("파일 저장 재시도 실패 - fileId: {}, filename: {}", fileId, file.getOriginalFilename());
+  public void recover(Exception e, FileUploadEvent event) {
+    log.error("파일 저장 재시도 실패 - fileId: {}, filename: {}", event.fileId(),
+        event.file().getOriginalFilename());
     entityManager.clear();
 
-    BinaryContent content = binaryContentRepository.findById(fileId)
-        .orElseThrow(() -> new BinaryContentNotFoundException(fileId));
+    BinaryContent content = binaryContentRepository.findById(event.fileId())
+        .orElseThrow(() -> new BinaryContentNotFoundException(event.fileId()));
 
     content.updateUploadStatus(BinaryContentUploadStatus.FAILED);
     binaryContentRepository.saveAndFlush(content);
-    binaryContentStorage.delete(fileId);
+    binaryContentStorage.delete(event.fileId());
+
+    String requestIdStr = MDC.get(REQUEST_ID);
+    UUID requestId = requestIdStr != null ? UUID.fromString(requestIdStr) : null;
 
     transactionTemplate.executeWithoutResult(transactionStatus -> {
           AsyncTaskFailure failure = AsyncTaskFailure.builder()
-              .requestId(MDC.get(REQUEST_ID))
+              .requestId(requestIdStr)
               .taskName(TASK_NAME)
               .failureReason(e.getMessage())
               .build();
           asyncTaskFailureRepository.save(failure);
+          applicationEventPublisher.publishEvent(
+              new AsyncFailedNotificationEvent(event.receiverId(), requestId,
+                  NotificationType.ASYNC_FAILED));
         }
     );
-
   }
-
 }
