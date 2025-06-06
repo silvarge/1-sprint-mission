@@ -78,10 +78,10 @@ logging:
         security: off
         web: debug
       hibernate:
-        sql: off
+        sql: debug
         type:
           descriptor:
-            sql: off
+            sql: debug
 
 # swagger
 springdoc:
