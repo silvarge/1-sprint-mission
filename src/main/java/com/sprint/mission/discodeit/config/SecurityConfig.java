@@ -65,32 +65,32 @@ public class SecurityConfig {
             UsernamePasswordAuthenticationFilter.class)
         // URL 별 인증 규칙 설정
         .authorizeHttpRequests(auth -> auth
-                // 정적 리소스 / 기타 토큰 발급
-                .requestMatchers(
-                    "/",
-                    "/index.html",
-                    "/login",
-                    "/api/auth/login",
-                    "/api/auth/logout",
-                    "/api/auth/csrf-token",
-                    "/api/users",
-                    "/error",
-                    "/css/**",
-                    "/js/**",
-                    "/images/**",
-                    "/favicon.ico",
-                    "/static/**",
-                    "/assets/**",
-                    "/actuator/**"
-//                "/test/**"
-                ).permitAll()
-                // Swagger - API 문서 공개 경로
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                // 전체적/공용/크게 변하지 않을 요소들만 이곳에 표현
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")  // 관리자 전용 API 제한
-                .requestMatchers("/api/**").hasRole("USER")         // 전체적으로 USER Role 필요
-                // 그 외 경로는 모두 인증 필요
-                .anyRequest().authenticated()
+            // 정적 리소스 / 기타 토큰 발급
+            .requestMatchers(
+                "/",
+                "/index.html",
+                "/login",
+                "/api/auth/login",
+                "/api/auth/logout",
+                "/api/auth/csrf-token",
+                "/api/users",
+                "/error",
+                "/css/**",
+                "/js/**",
+                "/images/**",
+                "/favicon.ico",
+                "/static/**",
+                "/assets/**",
+                "/actuator/**",
+                "/test/**"
+            ).permitAll()
+            // Swagger - API 문서 공개 경로
+            .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+            // 전체적/공용/크게 변하지 않을 요소들만 이곳에 표현
+            .requestMatchers("/api/admin/**").hasRole("ADMIN")  // 관리자 전용 API 제한
+            .requestMatchers("/api/**").hasRole("USER")         // 전체적으로 USER Role 필요
+            // 그 외 경로는 모두 인증 필요
+            .anyRequest().authenticated()
         );
     return http.build();
   }

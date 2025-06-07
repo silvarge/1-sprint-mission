@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +29,8 @@ public class BasicNotificationService implements NotificationService {
   private final NotificationMapper notificationMapper;
 
   @Override
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  @CacheEvict(value = "userNotifications", key = "#receiverId")
+  @Transactional(propagation = Propagation.REQUIRED)
   public NotificationDto create(UUID receiverId, UUID targetId, NotificationType type) {
     User receiver = userRepository.findById(receiverId)
         .orElseThrow(() -> new UserNotFoundException(receiverId));
@@ -47,10 +50,9 @@ public class BasicNotificationService implements NotificationService {
   }
 
   @Override
+  @Cacheable(value = "userNotifications", key = "#userId", unless = "#result.isEmpty()")
   public List<NotificationDto> getNotifications(UUID userId) {
-    log.info("✨ 사용자 아이디: {}, 타입: {}", userId, userId.getClass().getName());
-
-    log.info("✨ 받아 오기는 잘하니? {}", notificationRepository.findAll());
+    log.info("알림 불러오기 - 사용자 아이디: {}", userId);
 
     return notificationRepository.getAllByReceiverId(userId)
         .stream()
@@ -59,6 +61,7 @@ public class BasicNotificationService implements NotificationService {
   }
 
   @Override
+  @CacheEvict(value = "userNotifications", key = "#userId")
   public void deleteNotification(UUID notificationId, UUID userId) {
     Notification notification = notificationRepository.findById(notificationId).orElseThrow();
     notificationRepository.delete(notification);

@@ -16,6 +16,10 @@ spring:
         instance:
           name: Discodeit
 
+  cache:
+    # todo: 얜 뭐다냐
+    cache-names: userChannels, userNotifications, allUsers
+
 discodeit:
   storage:
     type:

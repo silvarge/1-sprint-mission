@@ -36,6 +36,8 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
@@ -67,6 +69,7 @@ public class BasicUserService implements UserService {
   // TODO: LoadData Entity Name Magic Number를 어떻게 하면 좋을까?
 
   @Transactional
+  @CacheEvict(value = "allUsers")
   @Override
   public UserResponseDto create(UserSignupRequestDto userReqDto, MultipartFile profile)
       throws IOException {
@@ -119,6 +122,7 @@ public class BasicUserService implements UserService {
   }
 
   @Override
+  @Cacheable(value = "allUsers")
   public List<UserResponseDto> findAll() {
     log.debug("전체 사용자 조회 요청");
     // sessionRegistry를 사용하지 않게 되어 리팩토링
@@ -135,6 +139,7 @@ public class BasicUserService implements UserService {
   }
 
   @Transactional
+  @CacheEvict(value = "allUsers")
   @Override
   public UserResponseDto update(UUID userId, UserUpdateDto userUpdateDto,
       MultipartFile updateProfile) {
@@ -177,6 +182,7 @@ public class BasicUserService implements UserService {
   }
 
   @Transactional
+  @CacheEvict(value = "allUsers")
   @Override
   public UserResponseDto delete(UUID userId) {
     log.debug("사용자 삭제 요청 - 삭제 대상 id: {}", userId);
@@ -239,6 +245,7 @@ public class BasicUserService implements UserService {
   }
 
   @Override
+  @CacheEvict(value = "allUsers")
   @Transactional
   public UserResponseDto updateUserRole(RoleUpdateRequest roleUpdateRequest,
       HttpServletRequest httpServletRequest) {
