@@ -82,10 +82,10 @@ public class BasicUserService implements UserService {
 
     // 중복 검사
     if (userRepository.existsUserByEmail(userReqDto.email()) || userRepository.existsUserByUsername(
-        userReqDto.username())) {
-      log.warn("사용자가 이미 존재합니다. - email: {}, username: {}", userReqDto.email(),
-          userReqDto.username());
-      throw new UserAlreadyExistsException(userReqDto.email(), userReqDto.username());
+        userReqDto.userName())) {
+      log.warn("사용자가 이미 존재합니다. - email: {}, userName: {}", userReqDto.email(),
+          userReqDto.userName());
+      throw new UserAlreadyExistsException(userReqDto.email(), userReqDto.userName());
     }
 
     // user 생성
@@ -217,7 +217,7 @@ public class BasicUserService implements UserService {
     }
 
     User user = userDetails.getUser();
-    log.info("인증된 사용자: username={}, userId={}", user.getUsername(), user.getId());
+    log.info("인증된 사용자: userName={}, userId={}", user.getUsername(), user.getId());
 
     return userMapper.toResponseDto(user, isUserOnline(user.getUsername()));
   }

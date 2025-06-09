@@ -40,7 +40,7 @@ public class AsyncContextPropagationTest {
 
     // then
     assertThat(context.get("requestId")).isEqualTo(testReqId);
-    assertThat(context.get("username")).isEqualTo(testUsername);
+    assertThat(context.get("userName")).isEqualTo(testUsername);
   }
 
 }

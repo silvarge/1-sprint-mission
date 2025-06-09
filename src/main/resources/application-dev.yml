@@ -101,6 +101,7 @@ springdoc:
 
 # port
 server:
+  port: ${APP_PORT:80}
   tomcat:
     uri-encoding: UTF-8
   servlet:

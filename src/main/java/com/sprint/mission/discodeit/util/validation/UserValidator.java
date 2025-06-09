@@ -16,8 +16,8 @@ public class UserValidator implements Validator<User, UserSignupRequestDto, User
 
   @Override
   public void validateCreate(UserSignupRequestDto entity) {
-    if (!ValidatorExp.USERNAME.matches(entity.username())) {
-      throw new UserValidationException(ErrorCode.INVALID_USERNAME, entity.username());
+    if (!ValidatorExp.USERNAME.matches(entity.userName())) {
+      throw new UserValidationException(ErrorCode.INVALID_USERNAME, entity.userName());
     }
 
     if (!ValidatorExp.NICKNAME.matches(entity.nickname())) {

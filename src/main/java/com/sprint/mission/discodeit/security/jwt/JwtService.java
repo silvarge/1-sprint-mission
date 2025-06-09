@@ -78,7 +78,7 @@ public class JwtService {
         .signWith(getSigningKey())
         .compact();
 
-    // 기존 세션에서 username 기반으로 조회
+    // 기존 세션에서 userName 기반으로 조회
     jwtSessionRepository.findByUsername(username).ifPresent(session -> {
       session.setRefreshToken(refreshToken);
       session.setIssuedAt(now.toInstant());
