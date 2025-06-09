@@ -49,9 +49,9 @@ public class FileUploadEventHandler {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handle(FileUploadEvent event) {
     try {
-      self.uploadWithRetry(event.fileId(), event.file());
+      self.uploadWithRetry(event.getFileId(), event.getFile());
       // 상태 업데이트
-      binaryContentRepository.findById(event.fileId()).ifPresent(content -> {
+      binaryContentRepository.findById(event.getFileId()).ifPresent(content -> {
         content.updateUploadStatus(BinaryContentUploadStatus.SUCCESS);
         binaryContentRepository.saveAndFlush(content);
       });
@@ -74,16 +74,16 @@ public class FileUploadEventHandler {
   @Recover
   @Transactional(propagation = Propagation.REQUIRES_NEW)  // 신규 트랜잭션 강제
   public void recover(Exception e, FileUploadEvent event) {
-    log.error("파일 저장 재시도 실패 - fileId: {}, filename: {}", event.fileId(),
-        event.file().getOriginalFilename());
+    log.error("파일 저장 재시도 실패 - fileId: {}, filename: {}", event.getFileId(),
+        event.getFile().getOriginalFilename());
     entityManager.clear();
 
-    BinaryContent content = binaryContentRepository.findById(event.fileId())
-        .orElseThrow(() -> new BinaryContentNotFoundException(event.fileId()));
+    BinaryContent content = binaryContentRepository.findById(event.getFileId())
+        .orElseThrow(() -> new BinaryContentNotFoundException(event.getFileId()));
 
     content.updateUploadStatus(BinaryContentUploadStatus.FAILED);
     binaryContentRepository.saveAndFlush(content);
-    binaryContentStorage.delete(event.fileId());
+    binaryContentStorage.delete(event.getFileId());
 
     String requestIdStr = MDC.get(REQUEST_ID);
     UUID requestId = requestIdStr != null ? UUID.fromString(requestIdStr) : null;
@@ -96,7 +96,7 @@ public class FileUploadEventHandler {
               .build();
           asyncTaskFailureRepository.save(failure);
           applicationEventPublisher.publishEvent(
-              new AsyncFailedNotificationEvent(event.receiverId(), requestId,
+              new AsyncFailedNotificationEvent(event.getReceiverId(), requestId,
                   NotificationType.ASYNC_FAILED));
         }
     );
