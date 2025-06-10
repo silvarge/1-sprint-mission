@@ -20,6 +20,10 @@ spring:
         use_sql_comments: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
   # sql initialize를 사용하지 않을 것
   sql:
     init:

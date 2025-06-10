@@ -44,6 +44,9 @@ services:
       PERSISTENT_COOKIE_KEY: ${PERSISTENT_COOKIE_KEY}
       KAFKA_NAME: ${KAFKA_NAME}
       KAFKA_INNER_PORT: ${KAFKA_INNER_PORT}
+      SPRING_DATA_REDIS_HOST: ${SPRING_DATA_REDIS_HOST}
+      SPRING_DATA_REDIS_PORT: ${SPRING_DATA_REDIS_PORT}
+
 
 
   adminer:
@@ -78,6 +81,16 @@ services:
     volumes:
       - kafka-data:/tmp/kraft-combinde-logs
 
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    ports:
+      - "${SPRING_DATA_REDIS_PORT}:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+
 volumes:
   discodeit-postgres-data:
   kafka-data:
+  redis-data:

@@ -1,6 +1,5 @@
 package com.sprint.mission.discodeit.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.sprint.mission.discodeit.entity.Channel.ChannelType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -45,7 +44,6 @@ public class ReadStatus extends BaseUpdatableEntity {
   private Channel channel;
 
   @Column(name = "last_read_at", nullable = false)
-  @JsonFormat(shape = JsonFormat.Shape.STRING)
   private Instant lastReadAt;
 
   @Column(name = "notification_enabled")

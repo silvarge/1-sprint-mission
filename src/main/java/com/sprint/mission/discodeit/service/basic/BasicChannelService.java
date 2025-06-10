@@ -162,7 +162,7 @@ public class BasicChannelService implements ChannelService {
     List<UserResponseDto> participants = getChannelParticipants(channel);
     Instant lastMessageAt = getLastMessageAt(channelId);
 
-    evictUserChannelsCaches(participants.stream().map(UserResponseDto::id).toList());
+    evictUserChannelsCaches(participants.stream().map(UserResponseDto::getId).toList());
 
     log.info("private 채널 정보가 수정되었습니다. - id: {}", channel.getId());
     return channelMapper.toResponseDto(channel, participants, lastMessageAt);
@@ -178,7 +178,7 @@ public class BasicChannelService implements ChannelService {
     channelRepository.delete(deleteChannel);
 
     evictUserChannelsCaches(
-        getChannelParticipants(deleteChannel).stream().map(UserResponseDto::id).toList());
+        getChannelParticipants(deleteChannel).stream().map(UserResponseDto::getId).toList());
 
     log.info("대상 채널이 삭제되었습니다. - id: {}", deleteChannel.getId());
     return channelMapper.toResponseDto(deleteChannel, null, null);

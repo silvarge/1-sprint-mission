@@ -10,11 +10,16 @@ spring:
       enabled: true
       max-file-size: 10MB
       max-request-size: 30MB
+
   boot:
     admin:
       client:
         instance:
           name: Discodeit
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
 
   cache:
     cache-names: userChannels, userNotifications, allUsers
@@ -34,6 +39,7 @@ spring:
         spring.json.trusted.packages: "*"
     listener:
       ack-mode: batch
+
 
 discodeit:
   storage:

@@ -1,14 +1,6 @@
 package com.sprint.mission.discodeit.config;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
-import java.util.concurrent.TimeUnit;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.caffeine.CaffeineCacheManager;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
+/*
 @Slf4j
 @Configuration
 @EnableCaching
@@ -35,3 +27,4 @@ public class CaffeineCacheConfig {
         });
   }
 }
+*/
