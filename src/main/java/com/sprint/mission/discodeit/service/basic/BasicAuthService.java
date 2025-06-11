@@ -66,7 +66,7 @@ public class BasicAuthService implements AuthService {
           .httpOnly(true)
           .secure(true)
           .path("/")
-          .maxAge(Duration.ofDays(14))
+          .maxAge(Duration.ofDays(7))
           .sameSite("None")
           .build();
 
