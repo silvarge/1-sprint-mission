@@ -49,6 +49,7 @@ public class FileUploadEventHandler {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handle(FileUploadEvent event) {
     try {
+      // todo: FileUploadEvent file을 넣는 것이 아니라 Id만 넣고 해서 리팩토링이 필요할 듯
       self.uploadWithRetry(event.getFileId(), event.getFile());
       // 상태 업데이트
       binaryContentRepository.findById(event.getFileId()).ifPresent(content -> {
