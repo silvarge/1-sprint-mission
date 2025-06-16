@@ -99,6 +99,29 @@ public class BasicMessageService implements MessageService {
   }
 
   @Override
+  public MessageResponseDto create(MessageRequestDto messageReqDTO) {
+    log.debug("단일 텍스트 메시지 생성 요청 - 메시지 요청 데이터: {}", messageReqDTO);
+    Message savedMessage = messageRepository.save(messageMapper.toEntity(messageReqDTO));
+
+    List<User> users = readStatusRepository.findByChannelIdAndNotificationEnabledTrue(
+            messageReqDTO.channelId())
+        .stream()
+        .map(ReadStatus::getUser)
+        .toList();
+
+    log.info("✨ 채널 사용자 확인: {}", users);
+
+    for (User receiver : users) {
+      applicationEventPublisher.publishEvent(new NewMessageNotificationEvent(
+          receiver.getId(), messageReqDTO.channelId(), NotificationType.NEW_MESSAGE
+      ));
+    }
+
+    log.info("메시지가 생성되었습니다. - id: {}", savedMessage.getId());
+    return messageMapper.toResponseDto(savedMessage);
+  }
+
+  @Override
   public MessageResponseDto find(UUID messageId) {
     log.debug("메시지 조회 요청 - id: {}", messageId);
     Message message = messageRepository.findById(messageId)

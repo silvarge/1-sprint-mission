@@ -20,8 +20,7 @@ public class MessageSocketController {
 
   @MessageMapping("/messages")
   public void sendMessage(MessageRequestDto chatMessage) throws IOException {
-    // todo: 메시지 서비스 생성 시 첨부파일 안 담긴거라.. 새 메서드를 짓는 것이 좋지 않을까?
-    MessageResponseDto response = messageService.create(chatMessage, null);
+    MessageResponseDto response = messageService.create(chatMessage);
 
     String destination = "/sub/channels." + chatMessage.channelId() + ".messages";
     log.info("🐰 broadcast destination: {} / response: {}", destination, response);
