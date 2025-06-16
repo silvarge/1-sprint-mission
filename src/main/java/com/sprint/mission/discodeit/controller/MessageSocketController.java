@@ -3,7 +3,6 @@ package com.sprint.mission.discodeit.controller;
 import com.sprint.mission.discodeit.dto.message.MessageRequestDto;
 import com.sprint.mission.discodeit.dto.message.MessageResponseDto;
 import com.sprint.mission.discodeit.service.MessageService;
-import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -19,7 +18,7 @@ public class MessageSocketController {
   private final SimpMessagingTemplate messagingTemplate;
 
   @MessageMapping("/messages")
-  public void sendMessage(MessageRequestDto chatMessage) throws IOException {
+  public void sendMessage(MessageRequestDto chatMessage) {
     MessageResponseDto response = messageService.create(chatMessage);
 
     String destination = "/sub/channels." + chatMessage.channelId() + ".messages";
