@@ -98,7 +98,7 @@ services:
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
     volumes:
-      - kafka-data:/tmp/kraft-combine-logs
+      - kafka-data:/tmp/kraft-combined-logs
     networks:
       - discodeit-network
 

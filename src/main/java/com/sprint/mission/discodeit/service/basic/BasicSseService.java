@@ -88,6 +88,7 @@ public class BasicSseService implements SseService {
             .data(data));
       } catch (IOException ioe) {
         emitter.completeWithError(ioe);
+        emitterRepository.remove(userId, emitter);
       }
     }
   }

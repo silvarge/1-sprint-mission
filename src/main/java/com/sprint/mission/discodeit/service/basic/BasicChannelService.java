@@ -22,6 +22,7 @@ import com.sprint.mission.discodeit.security.jwt.JwtSessionRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import com.sprint.mission.discodeit.service.SseService;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -83,7 +84,7 @@ public class BasicChannelService implements ChannelService {
     List<UserResponseDto> participants = getChannelParticipants(savedChannel);
     Instant lastMessageAt = getLastMessageAt(savedChannel.getId());
 
-    List<UUID> userIds = channelReqDTO.participantIds();
+    List<UUID> userIds = new ArrayList<>(channelReqDTO.participantIds());
     userIds.add(channelReqDTO.ownerId());
 
     // private 채널 리프레시 알림
@@ -199,7 +200,8 @@ public class BasicChannelService implements ChannelService {
         getChannelParticipants(deleteChannel).stream().map(UserResponseDto::getId).toList());
 
     // private 채널 리프레시 알림
-    List<UUID> userIds = deleteChannel.getMembers().stream().map(BaseEntity::getId).toList();
+    List<UUID> userIds = new ArrayList<>(
+        deleteChannel.getMembers().stream().map(BaseEntity::getId).toList());
     userIds.add(deleteChannel.getOwner().getId());
 
     sseService.sendChannelRefreshToIdList(userIds, deleteChannel.getId());
