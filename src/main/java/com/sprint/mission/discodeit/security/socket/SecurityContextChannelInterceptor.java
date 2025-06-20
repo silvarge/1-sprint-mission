@@ -20,13 +20,18 @@ public class SecurityContextChannelInterceptor implements ChannelInterceptor {
   public Message<?> preSend(Message<?> message, MessageChannel channel) {
     log.info("🚀 SecurityContextChannelInterceptor 접근");
     StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
-    log.info("🚀 Accessor 확인: {}", accessor.getUser());
-
     if (accessor.getSessionId() != null) {
-      if (accessor.getUser() != null) {
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication((Authentication) accessor.getUser());
-        SecurityContextHolder.setContext(context);
+      if (accessor.getUser() instanceof Authentication auth) {
+        SecurityContext originalContext = SecurityContextHolder.getContext();
+        try {
+          SecurityContext context = SecurityContextHolder.createEmptyContext();
+          context.setAuthentication(auth);
+          SecurityContextHolder.setContext(context);
+          log.debug("🚀 SecurityContextChannel 설정 완료: {}", auth.getName());
+        } catch (Exception e) {
+          SecurityContextHolder.setContext(originalContext);
+          log.error("SecurityContext 설정 실패", e);
+        }
       }
     }
     return message;

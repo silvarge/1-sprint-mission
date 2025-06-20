@@ -1,7 +1,5 @@
 package com.sprint.mission.discodeit.config;
 
-import com.sprint.mission.discodeit.security.socket.CustomAuthorizationChannelInterceptor;
-import com.sprint.mission.discodeit.security.socket.SecurityContextChannelInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -20,8 +18,8 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
   private final ChannelInterceptor jwtChannelInterceptor;
-  private final CustomAuthorizationChannelInterceptor authorizationChannelInterceptor;
-  private final SecurityContextChannelInterceptor securityContextChannelInterceptor;
+  private final ChannelInterceptor authorizationChannelInterceptor;
+  private final ChannelInterceptor securityContextChannelInterceptor;
 
   // 메시지 브로커 관련 설정
   @Override
