@@ -47,6 +47,9 @@ logging:
     org:
       hibernate:
         sql: debug
+      springframework:
+        messaging: trace
+        security: debug
 
 # swagger
 springdoc:

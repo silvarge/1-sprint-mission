@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.config;
 import com.sprint.mission.discodeit.exception.CustomAuthenticationEntryPoint;
 import com.sprint.mission.discodeit.security.jwt.JwtAuthenticationFilter;
 import com.sprint.mission.discodeit.security.jwt.JwtService;
+import jakarta.annotation.PostConstruct;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,8 +20,10 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -45,6 +48,13 @@ public class SecurityConfig {
   @Value("${discodeit.security.csrf.cookie.secure}")
   private boolean secure;
 
+  @PostConstruct
+  public void init() {
+    SecurityContextHolder.setStrategyName(
+        SecurityContextHolder.MODE_INHERITABLETHREADLOCAL
+    );
+  }
+
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http,
       JwtAuthenticationFilter jwtAuthenticationFilter)
@@ -59,10 +69,11 @@ public class SecurityConfig {
 
     http
         .cors(Customizer.withDefaults())
-        .csrf(csrf -> csrf
-            .csrfTokenRepository(repo)
-            .csrfTokenRequestHandler(handler::handle)
-        )
+        .csrf(AbstractHttpConfigurer::disable)
+//        .csrf(csrf -> csrf
+//            .csrfTokenRepository(repo)
+//            .csrfTokenRequestHandler(handler::handle)
+//        )
         // 세션 정책: 세션 사용 안함
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -158,7 +169,7 @@ public class SecurityConfig {
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
     config.setAllowedOrigins(List.of("http://localhost:3000"));
-    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
     config.setAllowedHeaders(List.of("*"));
     config.setAllowCredentials(true);
 

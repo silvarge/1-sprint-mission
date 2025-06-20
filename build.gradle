@@ -111,6 +111,7 @@ dependencies {
     // JSR-310 모듈
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
+    implementation 'org.springframework.security:spring-security-messaging:6.3.3'
 }
 
 dependencyManagement {
