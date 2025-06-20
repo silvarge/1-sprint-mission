@@ -12,7 +12,6 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
@@ -32,9 +31,10 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
         StompHeaderAccessor.class);
     if (accessor != null && StompCommand.CONNECT.equals(
         accessor.getCommand())) {
-      String token = accessor.getFirstNativeHeader("Authorization");
-      if (token != null && token.startsWith("Bearer ")) {
-        token = token.substring(7);
+      String authHeader = accessor.getFirstNativeHeader("Authorization");
+      String token = null;
+      if (authHeader != null && authHeader.startsWith("Bearer ") && authHeader.length() > 7) {
+        token = authHeader.substring(7).trim();
       }
       if (token != null && jwtService.validateToken(token)) {
         String username = jwtService.getUsernameFromToken(token);
@@ -45,11 +45,11 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
             auth.getAuthorities());
         accessor.setUser(auth);
         Objects.requireNonNull(accessor.getSessionAttributes()).put("user", userDetails);
-        SecurityContextHolder.getContext().setAuthentication(auth);
       } else {
+        log.warn("🚀 JWT 토큰 검증 실패: 세션 ID {}", accessor.getSessionId());
         accessor.setHeader("error", "Invalid token");
-//        throw new IllegalStateException("Invalid or Missing JWT Token");
-        return null;
+        // todo: Exception
+        throw new IllegalStateException("Invalid or Missing JWT Token");
       }
     }
     return message;

@@ -9,6 +9,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.authorization.AuthorizationManager;
+import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.messaging.access.intercept.MessageMatcherDelegatingAuthorizationManager;
 
 @Slf4j
@@ -16,16 +17,8 @@ import org.springframework.security.messaging.access.intercept.MessageMatcherDel
 @RequiredArgsConstructor
 public class WebSocketSecurityConfig {
 
-  @Bean
-  public AuthorizationManager<Message<?>> messageAuthorizationManager() {
-    return (authentication, message) -> {
-      StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
-      log.info("🔐 인가 검증: command={}, dest={}, user={}",
-          accessor.getCommand(),
-          accessor.getDestination(),
-          (authentication != null) ? authentication.get() : "null"
-      );
-      return MessageMatcherDelegatingAuthorizationManager.builder()
+  private final AuthorizationManager<Message<?>> delegatingManager =
+      MessageMatcherDelegatingAuthorizationManager.builder()
           .simpTypeMatchers(
               SimpMessageType.CONNECT,
               SimpMessageType.DISCONNECT,
@@ -34,21 +27,24 @@ public class WebSocketSecurityConfig {
           .simpDestMatchers("/pub/**").authenticated()
           .simpSubscribeDestMatchers("/sub/**").authenticated()
           .anyMessage().denyAll()
-          .build().check(authentication, message);
+          .build();
+
+  @Bean
+  public AuthorizationManager<Message<?>> messageAuthorizationManager() {
+    return (authentication, message) -> {
+      AuthorizationResult authorize = delegatingManager.authorize(authentication,
+          message);
+      StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+
+      if (log.isDebugEnabled()) {
+        log.debug("🚀 인가 결과: command={}, dest={}, user={}, granted={}",
+            accessor.getCommand(),
+            accessor.getDestination(),
+            (authentication != null) ? authentication.get().getName() : "null",
+            authorize != null && authorize.isGranted());
+      }
+      return delegatingManager.check(authentication, message);
     };
-//    return MessageMatcherDelegatingAuthorizationManager.builder()
-//        // 시스템 메시지 허용 (인증 없이)
-//        .simpTypeMatchers(
-//            SimpMessageType.CONNECT,
-//            SimpMessageType.DISCONNECT,
-//            SimpMessageType.UNSUBSCRIBE
-//        ).permitAll()
-//        // 애플리케이션 메시지 인증 요구
-//        .simpDestMatchers("/pub/**").authenticated()
-//        .simpSubscribeDestMatchers("/sub/**").authenticated()
-//        // 기타 모든 메시지 차단
-//        .anyMessage().denyAll()
-//        .build();
   }
 
   @Bean
