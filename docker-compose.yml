@@ -9,7 +9,9 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./frontend:/usr/share/nginx/html:ro
     depends_on:
-      - backend
+      - backend1
+      - backend2
+      - backend3
     networks:
       - discodeit-network
 
@@ -25,46 +27,6 @@ services:
     volumes:
       - discodeit-postgres-data:/var/lib/postgresql/data
       - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
-    networks:
-      - discodeit-network
-
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        PROJECT_NAME: ${PROJECT_NAME}
-        PROJECT_VERSION: ${PROJECT_VERSION}
-    image: ${PROJECT_NAME}:local-slim
-    ports:
-      - "${APP_PORT}:8080"
-    depends_on:
-      - db
-      - redis
-      - broker
-    environment:
-      PROJECT_NAME: ${PROJECT_NAME}
-      PROJECT_VERSION: ${PROJECT_VERSION}
-      JVM_OPTS: ${JVM_OPTS:-""}
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
-      STORAGE_TYPE: ${STORAGE_TYPE}
-      STORAGE_LOCAL_ROOT_PATH: ${STORAGE_LOCAL_ROOT_PATH}
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      AWS_S3_REGION: ${AWS_S3_REGION}
-      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      ADMIN_USERNAME: ${ADMIN_USERNAME}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
-      PERSISTENT_COOKIE_KEY: ${PERSISTENT_COOKIE_KEY}
-      KAFKA_NAME: ${KAFKA_NAME}
-      KAFKA_INNER_PORT: ${KAFKA_INNER_PORT}
-      SPRING_DATA_REDIS_HOST: ${SPRING_DATA_REDIS_HOST}
-      SPRING_DATA_REDIS_PORT: ${SPRING_DATA_REDIS_PORT}
     networks:
       - discodeit-network
 
@@ -112,6 +74,130 @@ services:
     volumes:
       - redis-data:/data
     command: redis-server --appendonly yes
+    networks:
+      - discodeit-network
+
+  # backend - 로드밸런서, 3개
+  backend1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_NAME: ${PROJECT_NAME}
+        PROJECT_VERSION: ${PROJECT_VERSION}
+    container_name: backend-1
+    image: ${PROJECT_NAME}:local-slim
+    expose:
+      - "8080"
+    depends_on:
+      - db
+      - redis
+      - broker
+    environment:
+      PROJECT_NAME: ${PROJECT_NAME}
+      PROJECT_VERSION: ${PROJECT_VERSION}
+      JVM_OPTS: ${JVM_OPTS:-""}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      STORAGE_TYPE: ${STORAGE_TYPE}
+      STORAGE_LOCAL_ROOT_PATH: ${STORAGE_LOCAL_ROOT_PATH}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_S3_REGION: ${AWS_S3_REGION}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      PERSISTENT_COOKIE_KEY: ${PERSISTENT_COOKIE_KEY}
+      KAFKA_NAME: ${KAFKA_NAME}
+      KAFKA_INNER_PORT: ${KAFKA_INNER_PORT}
+      SPRING_DATA_REDIS_HOST: ${SPRING_DATA_REDIS_HOST}
+      SPRING_DATA_REDIS_PORT: ${SPRING_DATA_REDIS_PORT}
+    networks:
+      - discodeit-network
+
+  backend2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_NAME: ${PROJECT_NAME}
+        PROJECT_VERSION: ${PROJECT_VERSION}
+    image: ${PROJECT_NAME}:local-slim
+    container_name: backend-2
+    expose:
+      - "8080"
+    depends_on:
+      - db
+      - redis
+      - broker
+    environment:
+      PROJECT_NAME: ${PROJECT_NAME}
+      PROJECT_VERSION: ${PROJECT_VERSION}
+      JVM_OPTS: ${JVM_OPTS:-""}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      STORAGE_TYPE: ${STORAGE_TYPE}
+      STORAGE_LOCAL_ROOT_PATH: ${STORAGE_LOCAL_ROOT_PATH}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_S3_REGION: ${AWS_S3_REGION}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      PERSISTENT_COOKIE_KEY: ${PERSISTENT_COOKIE_KEY}
+      KAFKA_NAME: ${KAFKA_NAME}
+      KAFKA_INNER_PORT: ${KAFKA_INNER_PORT}
+      SPRING_DATA_REDIS_HOST: ${SPRING_DATA_REDIS_HOST}
+      SPRING_DATA_REDIS_PORT: ${SPRING_DATA_REDIS_PORT}
+    networks:
+      - discodeit-network
+
+  backend3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_NAME: ${PROJECT_NAME}
+        PROJECT_VERSION: ${PROJECT_VERSION}
+    image: ${PROJECT_NAME}:local-slim
+    container_name: backend-3
+    expose:
+      - "8080"
+    depends_on:
+      - db
+      - redis
+      - broker
+    environment:
+      PROJECT_NAME: ${PROJECT_NAME}
+      PROJECT_VERSION: ${PROJECT_VERSION}
+      JVM_OPTS: ${JVM_OPTS:-""}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      STORAGE_TYPE: ${STORAGE_TYPE}
+      STORAGE_LOCAL_ROOT_PATH: ${STORAGE_LOCAL_ROOT_PATH}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_S3_REGION: ${AWS_S3_REGION}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      PERSISTENT_COOKIE_KEY: ${PERSISTENT_COOKIE_KEY}
+      KAFKA_NAME: ${KAFKA_NAME}
+      KAFKA_INNER_PORT: ${KAFKA_INNER_PORT}
+      SPRING_DATA_REDIS_HOST: ${SPRING_DATA_REDIS_HOST}
+      SPRING_DATA_REDIS_PORT: ${SPRING_DATA_REDIS_PORT}
     networks:
       - discodeit-network
 
